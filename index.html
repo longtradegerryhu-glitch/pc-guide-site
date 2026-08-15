@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="电脑使用指南与配套硬件总结 —— 从系统优化、文件管理到 CPU、显卡、散热、支架等硬件参数解读与按场景的装机清单。" />
+  <title>电脑使用指南与配套硬件总结</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232563eb'/%3E%3Crect x='7' y='8' width='18' height='12' rx='2' fill='white'/%3E%3Crect x='13' y='21' width='6' height='3' fill='white'/%3E%3Crect x='10' y='25' width='12' height='2' rx='1' fill='white'/%3E%3C/svg%3E" />
+  <meta property="og:title" content="电脑使用指南与配套硬件总结" />
+  <meta property="og:description" content="从系统优化、文件管理到 CPU、显卡、散热、支架等硬件参数解读与按场景的装机清单。" />
+  <meta property="og:type" content="website" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <!-- 滚动进度条 -->
+  <div class="scroll-progress" id="scrollProgress"></div>
+
+  <!-- ===== 顶部导航 ===== -->
+  <header class="site-header" id="top">
+    <div class="container nav-bar">
+      <a href="#top" class="brand">
+        <span class="brand-mark">⌘</span>
+        <span class="brand-text">电脑指南</span>
+      </a>
+
+      <button class="theme-toggle" id="themeToggle" aria-label="切换深色模式" title="切换深色模式">🌙</button>
+
+      <button class="nav-toggle" id="navToggle" aria-label="打开菜单" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+
+      <nav class="nav-links" id="navLinks">
+        <a href="#guide" class="nav-link">使用指南</a>
+        <a href="#hardware" class="nav-link">硬件总结</a>
+        <a href="#builds" class="nav-link">装机方案</a>
+        <a href="#scenarios" class="nav-link">使用场景</a>
+        <a href="#faq" class="nav-link">常见问题</a>
+        <a href="#resources" class="nav-link">资源</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ===== Hero ===== -->
+    <section class="hero">
+      <div class="container hero-inner reveal">
+        <div class="hero-text">
+          <p class="hero-eyebrow">PC USAGE &amp; HARDWARE</p>
+          <h1 class="hero-title">电脑使用指南<br />与配套硬件总结</h1>
+          <p class="hero-sub">
+            面向新手与进阶用户的电脑知识库：从系统优化、文件管理，到 CPU、显卡、散热、支架等硬件参数解读，
+            再到按场景的装机清单与常见问题。帮你少踩坑、买得明白、用得顺手。
+          </p>
+          <div class="hero-actions">
+            <a href="#guide" class="btn btn-primary">开始阅读</a>
+            <a href="#hardware" class="btn btn-ghost">查看硬件总结</a>
+          </div>
+          <div class="hero-stats">
+            <div class="stat"><span class="stat-num">4</span><span class="stat-label">指南模块</span></div>
+            <div class="stat"><span class="stat-num">14</span><span class="stat-label">硬件品类</span></div>
+            <div class="stat"><span class="stat-num">3</span><span class="stat-label">装机方案</span></div>
+          </div>
+        </div>
+
+        <div class="hero-art" aria-hidden="true">
+          <svg viewBox="0 0 420 360" xmlns="http://www.w3.org/2000/svg" role="img">
+            <defs>
+              <linearGradient id="bar" x1="0" y1="1" x2="0" y2="0">
+                <stop offset="0" stop-color="#93c5fd" />
+                <stop offset="1" stop-color="#2563eb" />
+              </linearGradient>
+            </defs>
+            <!-- 显示器 -->
+            <rect x="70" y="48" width="250" height="162" rx="14" fill="#ffffff" stroke="#e2e8f0" />
+            <rect x="84" y="62" width="222" height="120" rx="8" fill="#eff6ff" />
+            <rect x="104" y="142" width="34" height="28" rx="4" fill="url(#bar)" />
+            <rect x="150" y="120" width="34" height="50" rx="4" fill="url(#bar)" />
+            <rect x="196" y="98" width="34" height="72" rx="4" fill="url(#bar)" />
+            <rect x="242" y="126" width="34" height="44" rx="4" fill="url(#bar)" />
+            <polyline points="104,118 150,98 196,78 242,96 288,68" fill="none" stroke="#1d4ed8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+            <rect x="185" y="210" width="20" height="26" fill="#cbd5e1" />
+            <rect x="150" y="236" width="90" height="12" rx="6" fill="#94a3b8" />
+            <!-- CPU 芯片 -->
+            <rect x="300" y="36" width="96" height="96" rx="14" fill="#1e293b" />
+            <rect x="318" y="54" width="60" height="60" rx="8" fill="#334155" />
+            <g stroke="#64748b" stroke-width="3">
+              <line x1="330" y1="44" x2="330" y2="54" /><line x1="348" y1="44" x2="348" y2="54" /><line x1="366" y1="44" x2="366" y2="54" />
+              <line x1="330" y1="114" x2="330" y2="124" /><line x1="348" y1="114" x2="348" y2="124" /><line x1="366" y1="114" x2="366" y2="124" />
+              <line x1="308" y1="66" x2="318" y2="66" /><line x1="308" y1="84" x2="318" y2="84" /><line x1="308" y1="102" x2="318" y2="102" />
+              <line x1="378" y1="66" x2="388" y2="66" /><line x1="378" y1="84" x2="388" y2="84" /><line x1="378" y1="102" x2="388" y2="102" />
+            </g>
+            <!-- 浮动节点 -->
+            <circle cx="58" cy="250" r="11" fill="#bfdbfe" />
+            <circle cx="372" cy="210" r="15" fill="#dbeafe" />
+            <circle cx="40" cy="120" r="7" fill="#93c5fd" />
+          </svg>
+        </div>
+      </div>
+    </section>
+
+  <main>
+    <!-- ===== 使用指南 ===== -->
+    <section class="section" id="guide">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="section-kicker">GUIDE</span>
+          <h2 class="section-title">电脑使用指南</h2>
+          <p class="section-desc">日常使用电脑的核心技巧，按主题分小节，方便按需查阅。</p>
+        </div>
+
+        <div class="card-grid">
+          <article class="card reveal">
+            <div class="card-icon">⚙️</div>
+            <h3 class="card-title">系统设置与优化</h3>
+            <p class="card-text">
+              · 启动项：任务管理器→“启动”，禁用不必要的自启程序，开机更快。<br />
+              · 电源计划：笔记本插电用“高性能”，外出用“平衡/省电”。<br />
+              · 系统更新：保持安全更新；大版本升级前先备份。<br />
+              · 老机提速：关闭透明特效与动画，释放更多资源。<br />
+              · 磁盘：SSD 无需碎片整理（靠 TRIM），机械硬盘才需整理。
+            </p>
+          </article>
+
+          <article class="card reveal">
+            <div class="card-icon">🗂️</div>
+            <h3 class="card-title">文件与数据管理</h3>
+            <p class="card-text">
+              · 目录规范：按“项目 / 年份 / 类型”分层，桌面只放临时文件。<br />
+              · 备份原则（3-2-1）：3 份副本、2 种介质、1 份离线/异地。<br />
+              · 云同步 + 本地备份结合，重要文件双重保护。<br />
+              · 清理：用“存储感知”与大文件排查清理空间，卸载冗余软件。
+            </p>
+          </article>
+
+          <article class="card reveal">
+            <div class="card-icon">🧩</div>
+            <h3 class="card-title">常用软件推荐</h3>
+            <p class="card-text">
+              · 办公：Office / WPS、浏览器。<br />
+              · 效率：Everything（秒搜文件）、Snipaste（截图贴图）、Listary。<br />
+              · 解压：7-Zip / Bandizip。<br />
+              · 影音：VLC / PotPlayer。<br />
+              · 清理：Dism++、系统自带工具（慎用“全家桶”）。
+            </p>
+          </article>
+
+          <article class="card reveal">
+            <div class="card-icon">🛡️</div>
+            <h3 class="card-title">安全、备份与维护</h3>
+            <p class="card-text">
+              · 杀毒：Windows Defender 已足够，谨慎安装第三方“全家桶”。<br />
+              · 密码：用密码管理器 + 开启双重验证（2FA）。<br />
+              · 还原：定期建系统还原点，重要机做镜像备份。<br />
+              · 维护清单：每月清灰、查更新、验证备份是否可用。
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 硬件总结 ===== -->
+    <section class="section section-alt" id="hardware">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="section-kicker">HARDWARE</span>
+          <h2 class="section-title">配套硬件总结</h2>
+          <p class="section-desc">从核心部件到外设与散热支架，梳理关键参数与选购逻辑。</p>
+        </div>
+
+        <h3 class="block-title reveal">核心部件</h3>
+        <div class="card-grid">
+          <article class="card reveal">
+            <div class="card-icon">🔲</div>
+            <h3 class="card-title">CPU 处理器</h3>
+            <p class="card-text">
+              看核心/线程数（办公 4–6 核、游戏 6–8 核、创作 8–16 核+）、频率与缓存；
+              注意与主板插座匹配（Intel LGA / AMD AM）。多核利于剪辑渲染，高主频利于游戏响应。
+            </p>
+          </article>
+          <article class="card reveal">
+            <div class="card-icon">🎮</div>
+            <h3 class="card-title">GPU 显卡</h3>
+            <p class="card-text">
+              游戏看帧率与光追，创作看显存与编解码。显存建议 1080p 8G 起、2K/4K 12G+；
+              位宽与带宽越高越好。品牌含 NVIDIA / AMD / 核显，按用途取舍。
+            </p>
+          </article>
+          <article class="card reveal">
+            <div class="card-icon">🧠</div>
+            <h3 class="card-title">内存</h3>
+            <p class="card-text">
+              容量：办公 8–16G、游戏 16G、创作 32G+。频率与时序影响性能，
+              优先双通道（两根同规格）。注意平台是 DDR4 还是 DDR5。
+            </p>
+          </article>
+          <article class="card reveal">
+            <div class="card-icon">💾</div>
+            <h3 class="card-title">存储</h3>
+            <p class="card-text">
+              系统盘用 NVMe SSD（512G–1T），仓储用 SATA SSD / 机械盘。
+              看接口（M.2 PCIe 4.0）与 4K 随机读写（比顺序速度更影响日常流畅度）。
+            </p>
+          </article>
+          <article class="card reveal">
+            <div class="card-icon">🔌</div>
+            <h3 class="card-title">主板</h3>
+            <p class="card-text">
+              芯片组决定扩展与超频能力；插座须匹配 CPU。看 M.2、USB、PCIe 数量与版本，
+              以及供电与散热（高功耗平台更关键）。
+            </p>
+          </article>
+          <article class="card reveal">
+            <div class="card-icon">🔋</div>
+            <h3 class="card-title">电源</h3>
+            <p class="card-text">
+              额定功率留约 30% 余量；选 80 PLUS 铜/金/白金认证；模组化便于理线。
+              电源是稳定与安全的基石，优先品牌与长质保。
+            </p>
+          </article>
+        </div>
+
+        <h3 class="block-title reveal">外设与网络</h3>
+        <div class="card-grid">
+          <article class="card reveal">
+            <div class="card-icon">🖥️</div>
+            <h3 class="card-title">显示器</h3>
+            <p class="card-text">
+              尺寸/分辨率（24" 1080p、27" 2K、32" 4K）；刷新率（办公 60Hz、游戏 144Hz+）；
+              色域（sRGB / AdobeRGB / DCI-P3）；面板 IPS 色彩好、VA 对比高、TN 响应快。
+            </p>
+          </article>
+          <article class="card reveal">
+            <div class="card-icon">⌨️</div>
+            <h3 class="card-title">键鼠</h3>
+            <p class="card-text">
+              机械键盘轴体：红轴线性、茶轴段落、静音轴安静；鼠标看传感器与 DPI。
+              按手型选人体工学，长时间使用更舒适。
+            </p>
+          </article>
+          <article class="card reveal">
+            <div class="card-icon">🎧</div>
+            <h3 class="card-title">音频设备</h3>
+            <p class="card-text">
+              耳机分封闭（隔音）与开放（声场）；会议/直播看麦克风；
+              追求音质可加 USB 声卡/耳放。按需而非堆参数。
+            </p>
+          </article>
+          <article class="card reveal">
+            <div class="card-icon">📶</div>
+            <h3 class="card-title">网络设备</h3>
+            <p class="card-text">
+              路由器看 Wi-Fi 6 / 6E / 7 与带机量；大户型用 Mesh 组网；
+              网线 Cat5e 起步、Cat6 更稳；台式机优先有线网卡低延迟。
+            </p>
+          </article>
+        </div>
+
+        <h3 class="block-title reveal">散热与支架</h3>
+        <div class="card-grid">
+          <article class="card reveal">
+            <div class="card-icon">❄️</div>
+            <h3 class="card-title">散热器</h3>
+            <p class="card-text">
+              风冷：塔式/下压，便宜可靠，单塔压中端、双塔压高端。
+              水冷：一体式 AIO（240/360），压旗舰、颜值高，注意泵噪与漏液风险。
+              笔记本可配散热底座辅助进风。保持前进后出/下进上出的风道，定期清灰、必要时换硅脂。
+            </p>
+          </article>
+          <article class="card reveal">
+            <div class="card-icon">🪧</div>
+            <h3 class="card-title">支架</h3>
+            <p class="card-text">
+              显示器升降支架（VESA 100×100）可旋转升降、省桌面、护颈；
+              笔记本支架抬高视线、底部进风辅助散热。配合理线让桌面清爽、散热更好。
+            </p>
+          </article>
+        </div>
+
+        <h3 class="block-title reveal">硬件参数速查表</h3>
+        <div class="table-wrap reveal">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>品类</th>
+                <th>关键参数</th>
+                <th>入门建议</th>
+                <th>进阶建议</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>CPU</td><td>核数 / 频率 / 插座</td><td>4–6 核，基础 3GHz+</td><td>8 核+，高睿频 / 大缓存</td></tr>
+              <tr><td>GPU</td><td>显存 / 位宽 / 光追</td><td>8G 核显或入门独显</td><td>12G+，光追，高带宽</td></tr>
+              <tr><td>内存</td><td>容量 / 频率 / 双通道</td><td>16G DDR4 3200</td><td>32G DDR5 6000 双通道</td></tr>
+              <tr><td>存储</td><td>类型 / 容量 / 接口</td><td>512G NVMe 系统盘</td><td>1T+ PCIe 4.0 + 仓储盘</td></tr>
+              <tr><td>显示器</td><td>尺寸 / 分辨率 / 刷新</td><td>24" 1080p 60Hz</td><td>27" 2K 144Hz IPS</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 装机方案 ===== -->
+    <section class="section" id="builds">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="section-kicker">BUILDS</span>
+          <h2 class="section-title">装机与选购方案</h2>
+          <p class="section-desc">按用途与预算给出参考配置方向（价格为区间示例，随行情浮动）。</p>
+        </div>
+
+        <div class="card-grid builds-grid">
+          <article class="card build-card reveal">
+            <span class="build-tag">办公入门</span>
+            <h3 class="card-title">轻办公 / 网课</h3>
+            <p class="card-text">
+              核显平台：6 核 CPU + 16G 内存 + 512G SSD。
+              不玩游戏也能流畅办公、看视频、上网课。预算约 ¥2500–3500。
+            </p>
+            <a href="#scenarios" class="card-link">查看适用场景 →</a>
+          </article>
+          <article class="card build-card reveal">
+            <span class="build-tag build-tag-hot">游戏畅玩</span>
+            <h3 class="card-title">主流游戏</h3>
+            <p class="card-text">
+              中端 CPU（6–8 核）+ 主流独显 + 16G 内存 + 1T SSD。
+              2K 高画质畅玩多数游戏。预算约 ¥6000–8000。
+            </p>
+            <a href="#scenarios" class="card-link">查看适用场景 →</a>
+          </article>
+          <article class="card build-card reveal">
+            <span class="build-tag">创作旗舰</span>
+            <h3 class="card-title">剪辑 / 设计</h3>
+            <p class="card-text">
+              高端多核 CPU + 大显存显卡 + 32G+ 内存 + 高速大容量存储。
+              胜任 4K 剪辑、三维与渲染。预算 ¥12000+。
+            </p>
+            <a href="#scenarios" class="card-link">查看适用场景 →</a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 使用场景 ===== -->
+    <section class="section section-alt" id="scenarios">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="section-kicker">SCENARIOS</span>
+          <h2 class="section-title">使用场景</h2>
+          <p class="section-desc">不同场景下硬件与配件的关注重点，便于按需取舍。</p>
+        </div>
+
+        <div class="card-grid">
+          <article class="card reveal">
+            <div class="card-icon">📚</div>
+            <h3 class="card-title">办公 / 学习</h3>
+            <p class="card-text">
+              关注静音、稳定与人体工学：笔记本支架抬高视线、静音风冷不打扰、
+              显示器支架或双屏提升效率，备份防丢资料。
+            </p>
+          </article>
+          <article class="card reveal">
+            <div class="card-icon">🎮</div>
+            <h3 class="card-title">游戏 / 电竞</h3>
+            <p class="card-text">
+              关注散热与高刷：强力风冷或水冷压住热量、高刷显示器减少拖影、
+              笔记本可配散热底座保障长时间稳定运行。
+            </p>
+          </article>
+          <article class="card reveal">
+            <div class="card-icon">🎬</div>
+            <h3 class="card-title">内容创作</h3>
+            <p class="card-text">
+              关注多核性能与色彩：大显存显卡加速渲染、专业广色域显示器、
+
+              良好风道与散热让长时间导出更稳。
+            </p>
+          </article>
+          <article class="card reveal">
+            <div class="card-icon">🎒</div>
+            <h3 class="card-title">移动 / 便携</h3>
+            <p class="card-text">
+              关注轻便与续航：笔记本散热支架辅助散热、便携拓展坞扩展接口、
+              轻量键鼠外设随行，云同步随时取用文件。
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 常见问题 ===== -->
+    <section class="section" id="faq">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="section-kicker">FAQ</span>
+          <h2 class="section-title">常见问题</h2>
+          <p class="section-desc">点击展开查看解答。</p>
+        </div>
+
+        <div class="faq-list">
+          <div class="faq-item reveal">
+            <button class="faq-q" aria-expanded="false">
+              <span>新手第一台电脑该怎么选？</span><span class="faq-plus">+</span>
+            </button>
+            <div class="faq-a"><p>
+              先定用途与预算：办公/网课选笔记本或核显台式；游戏重点看显卡；
+              创作看 CPU + 内存 + 显卡。再比售后与扩展性——懂硬件选组装机性价比更高，
+              求省心选品牌机。最后留一点预算给显示器、键鼠等外设。
+            </p></div>
+          </div>
+          <div class="faq-item reveal">
+            <button class="faq-q" aria-expanded="false">
+              <span>组装机与品牌机哪个更划算？</span><span class="faq-plus">+</span>
+            </button>
+            <div class="faq-a"><p>
+              组装机性价比高、可自由定制与升级，但需要自己装系统与排错；
+              品牌机省心、售后与预装稳定，但同配置通常溢价。
+              建议：爱折腾/重性价比选组装，图省心/要发票质保选品牌。
+            </p></div>
+          </div>
+          <div class="faq-item reveal">
+            <button class="faq-q" aria-expanded="false">
+              <span>电脑卡顿如何排查？</span><span class="faq-plus">+</span>
+            </button>
+            <div class="faq-a"><p>
+              先看任务管理器的 CPU / 内存 / 磁盘占用：自启过多就禁用、内存不足就加条、
+              磁盘 100% 多为机械盘或中毒。清灰换硅脂改善散热降频。
+              最有效升级通常是加内存和把系统盘换成 SSD；疑似中毒先全盘查杀。
+            </p></div>
+          </div>
+          <div class="faq-item reveal">
+            <button class="faq-q" aria-expanded="false">
+              <span>如何延长电脑寿命？</span><span class="faq-plus">+</span>
+            </button>
+            <div class="faq-a"><p>
+              良好散热是关键：定期清灰、用支架/散热底座改善风道、必要时换硅脂；
+              笔记本避免长期满电插电（可设充电阈值）；使用稳定电源、防跌落与液体；
+              重要数据定期备份，系统异常及时还原。
+            </p></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 资源 ===== -->
+    <section class="section section-alt" id="resources">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="section-kicker">RESOURCES</span>
+          <h2 class="section-title">工具与资源推荐</h2>
+          <p class="section-desc">精选实用工具与渠道，购机前后都管用。</p>
+        </div>
+
+        <div class="card-grid">
+          <a class="card resource-card reveal" href="#">
+            <h3 class="card-title">检测工具</h3>
+            <p class="card-text">CPU-Z（规格识别）、HWiNFO（传感器/温度）、CrystalDiskInfo（硬盘健康）、AIDA64（压力测试）。</p>
+          </a>
+          <a class="card resource-card reveal" href="#">
+            <h3 class="card-title">跑分与评测</h3>
+            <p class="card-text">3DMark / Cinebench / Geekbench 量化性能；结合专业评测站横向对比再做决定。</p>
+          </a>
+          <a class="card resource-card reveal" href="#">
+            <h3 class="card-title">社区与答疑</h3>
+            <p class="card-text">硬件论坛、问答平台与视频教程渠道，购机前看真实用户反馈、避坑更稳。</p>
+          </a>
+          <a class="card resource-card reveal" href="#">
+            <h3 class="card-title">选购比价</h3>
+            <p class="card-text">电商比价与历史价格查询工具，大促前查价、避免“先涨后降”套路。</p>
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ===== 页脚 ===== -->
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <span class="brand-mark">⌘</span>
+        <span>电脑指南</span>
+      </div>
+      <p class="footer-note">© 2026 电脑使用指南与配套硬件总结 · 知识框架版，参数随行情更新，购机以实测为准。</p>
+      <a href="#top" class="footer-top">回到顶部 ↑</a>
+    </div>
+  </footer>
+
+  <!-- 回到顶部（悬浮按钮） -->
+  <button id="backToTop" class="back-to-top" aria-label="回到顶部" title="回到顶部">↑</button>
+
+  <!-- 回到顶部悬浮按钮 -->
+  <button id="backToTop" class="back-to-top" aria-label="回到顶部" title="回到顶部">↑</button>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
