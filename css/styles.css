@@ -467,3 +467,153 @@ a { color: inherit; text-decoration: none; }
   color: #fff;
   border-color: var(--color-primary);
 }
+
+/* ===========================================================
+   配件价格库 / 搭配计划 / 个性化测评
+   =========================================================== */
+.empty-box { padding: 28px; text-align: center; color: var(--color-soft); border: 1px dashed var(--color-border); border-radius: var(--radius); }
+
+/* ---- 筛选面板 ---- */
+.filter-panel {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  margin-bottom: 14px;
+  box-shadow: var(--shadow);
+}
+.filter-group { display: flex; align-items: flex-start; gap: 12px; padding: 8px 0; }
+.filter-group + .filter-group { border-top: 1px dashed var(--color-border); }
+.filter-label { flex: 0 0 46px; font-size: 13px; font-weight: 700; color: var(--color-soft); padding-top: 7px; }
+.filter-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  border: 1px solid var(--color-border);
+  background: var(--color-card);
+  color: var(--color-text);
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all .18s ease;
+}
+.chip:hover { border-color: var(--color-primary); color: var(--color-primary); }
+.chip.active { background: var(--color-primary); border-color: var(--color-primary); color: #fff; font-weight: 600; }
+.acc-count { font-size: 13px; color: var(--color-soft); margin-bottom: 12px; }
+
+/* ---- 配件卡片 ---- */
+.acc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+.acc-card {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.acc-card:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(15, 23, 42, .10); }
+.acc-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.acc-cat { font-size: 12px; color: var(--color-primary); font-weight: 700; }
+.acc-name { font-size: 16px; margin-top: 2px; }
+.acc-price { font-size: 15px; font-weight: 800; color: var(--color-primary); white-space: nowrap; }
+.acc-specs { font-size: 13px; color: var(--color-soft); line-height: 1.55; }
+.acc-meta { display: flex; align-items: center; gap: 10px; font-size: 12px; flex-wrap: wrap; }
+.acc-style { background: var(--color-primary-soft, #eff6ff); color: var(--color-primary); padding: 2px 10px; border-radius: 999px; font-weight: 600; }
+.acc-rating { color: #f59e0b; letter-spacing: 1px; }
+.use-dot { font-size: 14px; }
+.acc-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag-pill { background: #f1f5f9; color: #334155; border: 1px solid var(--color-border); padding: 2px 10px; border-radius: 999px; font-size: 12px; }
+.tag-pill.big { font-size: 13px; padding: 4px 12px; }
+.acc-compat { font-size: 12.5px; color: var(--color-soft); border-top: 1px dashed var(--color-border); padding-top: 8px; }
+
+/* ---- 搭配计划 ---- */
+.plan-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 18px; }
+.plan-card {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg, 16px);
+  padding: 22px 24px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.plan-head { display: flex; align-items: center; gap: 12px; }
+.plan-icon { font-size: 30px; }
+.plan-name { font-size: 18px; }
+.plan-budget { font-size: 13px; color: var(--color-primary); font-weight: 700; }
+.plan-summary { font-size: 14px; color: var(--color-soft); }
+.plan-personas { display: flex; flex-wrap: wrap; gap: 6px; }
+.plan-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.plan-table th { text-align: left; color: var(--color-soft); font-size: 12px; padding: 6px 8px; border-bottom: 1px solid var(--color-border); }
+.plan-table td { padding: 7px 8px; border-bottom: 1px dashed var(--color-border); vertical-align: top; }
+.plan-table td:first-child { white-space: nowrap; font-weight: 600; }
+.plan-price { color: var(--color-primary); font-weight: 700; white-space: nowrap; }
+.plan-tip { font-size: 13px; background: var(--color-primary-soft, #eff6ff); color: var(--color-primary); border-radius: 10px; padding: 10px 12px; line-height: 1.5; }
+.persona-strip { margin-top: 40px; }
+.persona-card .card-icon { font-size: 30px; }
+
+/* ---- 个性化测评 ---- */
+.quiz-panel {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg, 16px);
+  padding: 26px 26px 30px;
+  box-shadow: var(--shadow);
+}
+.quiz-step { margin-bottom: 22px; }
+.q-title { font-size: 15px; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+.q-step { font-size: 12px; background: var(--color-primary); color: #fff; padding: 2px 9px; border-radius: 999px; }
+.q-opts { display: flex; flex-wrap: wrap; gap: 10px; }
+.q-opt {
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  border-radius: 12px;
+  padding: 10px 16px;
+  cursor: pointer;
+  text-align: left;
+  transition: all .18s ease;
+  min-width: 150px;
+}
+.q-opt:hover { border-color: var(--color-primary); }
+.q-opt.selected { border-color: var(--color-primary); background: var(--color-primary); color: #fff; box-shadow: 0 4px 12px rgba(37, 99, 235, .25); }
+.q-opt-label { display: block; font-size: 14px; font-weight: 600; }
+.q-opt-desc { display: block; font-size: 12px; opacity: .75; margin-top: 2px; }
+.q-opt.selected .q-opt-desc { color: #e0e7ff; }
+.q-submit { margin-top: 8px; width: 100%; }
+
+/* ---- 测评结果 ---- */
+.result-box { border: 1px solid var(--color-primary); border-radius: var(--radius-lg, 16px); padding: 22px 24px; background: linear-gradient(180deg, var(--color-primary-soft, #eff6ff), transparent 60%); }
+.result-title { font-size: 18px; margin-bottom: 14px; }
+.result-persona, .res-section { margin-bottom: 14px; }
+.res-label { display: block; font-size: 12px; font-weight: 700; color: var(--color-soft); letter-spacing: 1px; margin-bottom: 8px; text-transform: uppercase; }
+.res-plan { font-size: 15px; background: var(--color-card); border: 1px solid var(--color-border); border-radius: 12px; padding: 12px 16px; margin-bottom: 14px; line-height: 1.6; }
+.res-budget { color: var(--color-primary); font-weight: 700; white-space: nowrap; }
+.pick-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+}
+.pick-icon { font-size: 22px; }
+.pick-main { flex: 1; min-width: 0; }
+.pick-name { display: block; font-size: 14px; font-weight: 700; }
+.pick-why { display: block; font-size: 12.5px; color: var(--color-soft); margin-top: 2px; line-height: 1.5; }
+.pick-price { font-size: 14px; font-weight: 800; color: var(--color-primary); white-space: nowrap; }
+.res-total { font-size: 15px; margin: 6px 0 10px; }
+.res-total b { color: var(--color-primary); font-size: 18px; }
+.res-note { font-size: 12px; color: var(--color-soft); margin-bottom: 16px; }
+.q-reset { width: 100%; }
+
+/* 深色模式适配 */
+[data-theme="dark"] .acc-style, [data-theme="dark"] .plan-tip, [data-theme="dark"] .result-box { background: rgba(37, 99, 235, .18); }
+[data-theme="dark"] .tag-pill { background: #1e293b; color: #cbd5e1; border-color: #334155; }
+[data-theme="dark"] .q-opt { background: #0f172a; }
+[data-theme="dark"] .plan-tip { color: #93c5fd; }
+[data-theme="dark"] .result-box { background: linear-gradient(180deg, rgba(37, 99, 235, .16), transparent 60%); }

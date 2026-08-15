@@ -32,10 +32,10 @@
       <nav class="nav-links" id="navLinks">
         <a href="#guide" class="nav-link">使用指南</a>
         <a href="#hardware" class="nav-link">硬件总结</a>
-        <a href="#builds" class="nav-link">装机方案</a>
-        <a href="#scenarios" class="nav-link">使用场景</a>
+        <a href="#accessories" class="nav-link">配件价格</a>
+        <a href="#plans" class="nav-link">搭配计划</a>
+        <a href="#quiz" class="nav-link">个性推荐</a>
         <a href="#faq" class="nav-link">常见问题</a>
-        <a href="#resources" class="nav-link">资源</a>
       </nav>
     </div>
   </header>
@@ -386,6 +386,69 @@
       </div>
     </section>
 
+    <!-- ===== 配件与价格 ===== -->
+    <section class="section section-alt" id="accessories">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="section-kicker">ACCESSORIES</span>
+          <h2 class="section-title">配件与价格</h2>
+          <p class="section-desc">散热器、支架、显示器、键鼠、音频、网络、拓展坞、电源机箱 —— 按品类/场景/预算筛选，价格区间为 2026-08 参考行情，以电商实时价为准。</p>
+        </div>
+
+        <div class="filter-panel reveal">
+          <div class="filter-group">
+            <span class="filter-label">品类</span>
+            <div class="filter-chips" id="accCats"></div>
+          </div>
+          <div class="filter-group">
+            <span class="filter-label">场景</span>
+            <div class="filter-chips" id="accScenes"></div>
+          </div>
+          <div class="filter-group">
+            <span class="filter-label">预算</span>
+            <div class="filter-chips" id="accBudget"></div>
+          </div>
+        </div>
+
+        <p class="acc-count" id="accCount"></p>
+        <div class="acc-grid" id="accWrap"></div>
+      </div>
+    </section>
+
+    <!-- ===== 搭配计划 ===== -->
+    <section class="section" id="plans">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="section-kicker">PLANS</span>
+          <h2 class="section-title">搭配计划与适合人群</h2>
+          <p class="section-desc">四套整机搭配方案：经济实用 / 主流游戏 / 创作旗舰 / 便携移动，每套标注参考预算、适合人群与关键提示。</p>
+        </div>
+
+        <div class="plan-grid" id="plansWrap"></div>
+
+        <div class="persona-strip reveal">
+          <h3 class="block-title">人群画像速览</h3>
+          <p class="section-desc">先对号入座，再看上面四套方案哪套适合你。</p>
+          <div class="card-grid persona-grid" id="personasWrap"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 个性化方案 ===== -->
+    <section class="section section-alt" id="quiz">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="section-kicker">PERSONALIZED</span>
+          <h2 class="section-title">个性化方案生成器</h2>
+          <p class="section-desc">回答 5 个问题，系统按用途、预算、设备形态与偏好，为你匹配整机方案与外设配件，并给出整体投入估算。</p>
+        </div>
+
+        <div class="quiz-panel reveal" id="quizBox">
+          <p class="empty-box">正在加载测评…</p>
+        </div>
+      </div>
+    </section>
+
     <!-- ===== 常见问题 ===== -->
     <section class="section" id="faq">
       <div class="container">
@@ -489,6 +552,8 @@
   <!-- 回到顶部悬浮按钮 -->
   <button id="backToTop" class="back-to-top" aria-label="回到顶部" title="回到顶部">↑</button>
 
+  <script src="js/data.js"></script>
+  <script src="js/recommend.js"></script>
   <script src="js/main.js"></script>
 </body>
 </html>
