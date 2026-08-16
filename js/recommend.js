@@ -13,6 +13,14 @@
   var gradeOrder = { S: 4, A: 3, B: 1, C: -1 };
   var budgetOrder = { b3000: 3000, b4500: 4500, b6000: 6000, b8500: 8500, b12000: 12000, b20000: 20000 };
 
+  /* ---- 颜值风格（Aesthetics） ---- */
+  var STYLES = window.PC_STYLES || [];
+  var LOOKS = window.PC_LOOKS || {};
+  var styleById = {};
+  STYLES.forEach(function (s) { styleById[s.id] = s; });
+  function lookOf(item) { return (item && LOOKS[item.id]) || null; }
+  function styleOf(id) { return styleById[id] || null; }
+
   /* ---- 合并真实型号数据（models.js） ---- */
   function mergeModels() {
     if (!window.PC_MODELS) return;
@@ -42,7 +50,7 @@
     var countEl = document.getElementById("accCount");
     if (!wrap || !catRow || !sceneRow || !budgetRow) return;
 
-    var state = { cat: "all", scene: "all", budget: "all" };
+    var state = { cat: "all", scene: "all", look: "all", budget: "all" };
 
     function matchesBudget(item, budget) {
       if (budget === "all") return true;
@@ -73,6 +81,7 @@
         if (state.cat !== "all" && cat.id !== state.cat) return;
         cat.items.forEach(function (item) {
           if (state.scene !== "all" && item.use.indexOf(state.scene) === -1) return;
+          if (state.look !== "all" && lookOf(item) !== state.look) return;
           if (!matchesBudget(item, state.budget)) return;
           list.push({ cat: cat, item: item });
         });
@@ -87,6 +96,13 @@
 
       wrap.innerHTML = list.map(function (o) {
         var it = o.item;
+        var look = lookOf(it);
+        var style = look ? styleOf(look) : null;
+        var banner = style
+          ? '<div class="acc-look" style="background:linear-gradient(120deg,' + style.palette[0] + ',' + style.palette[1] + ');">' +
+              '<span class="acc-look-icon">' + style.icon + '</span>' +
+              '<span class="acc-look-name">' + esc(style.name) + '</span></div>'
+          : '';
         var tags = (it.tags || []).map(function (t) {
           return '<span class="tag-pill">' + t + "</span>";
         }).join("");
@@ -97,6 +113,7 @@
         var grade = it.valueGrade ? '<span class="grade grade-' + it.valueGrade + '">' + it.valueGrade + "</span>" : "";
         return (
           '<article class="acc-card reveal in">' +
+            banner +
             '<div class="acc-head">' +
               '<div><span class="acc-cat">' + o.cat.icon + " " + esc(o.cat.name) + "</span>" +
               "<h4 class=\"acc-name\">" + esc(it.name) + "</h4>" +
@@ -137,6 +154,17 @@
         { id: "high", label: "600 元+" }
       ],
       "budget");
+
+    // 颜值风格筛选
+    var looksRow = document.getElementById("accLooks");
+    if (looksRow) {
+      renderChips(looksRow,
+        [{ id: "all", label: "全部风格" }].concat(STYLES.map(function (s) {
+          return { id: s.id, label: s.icon + " " + s.name };
+        })),
+        "look");
+    }
+
     renderCards();
   }
 
@@ -331,6 +359,7 @@
       var budget = answerOf("budget")[0] || "b6000";
       var form = answerOf("form")[0] || "desktop";
       var pref = answerOf("pref")[0] || "value";
+      var look = answerOf("look")[0] || "any";
       var intensity = answerOf("intensity")[0] || "mid";
       var lifespan = answerOf("lifespan")[0] || "y3";
       var exp = answerOf("exp")[0] || "some";
@@ -361,7 +390,7 @@
 
       // 2) 个性化配件推荐（强度/已有外设参与评分）
       var picks = focus.map(function (catId) {
-        return pickItems(catId, use, pref, budgetCap, plan, intensity);
+        return pickItems(catId, use, pref, budgetCap, plan, intensity, look);
       }).filter(Boolean);
 
       var totalLow = plan ? plan.price[0] : 0;
@@ -396,6 +425,9 @@
         '<span class="tag-pill">' + esc(lifeLabel) + "</span>" +
         '<span class="tag-pill">' + esc(expLabel) + "</span>" +
         '<span class="tag-pill">' + esc(existTxt) + "</span>";
+      if (look && look !== "any" && styleOf(look)) {
+        profile += '<span class="tag-pill">' + esc(styleOf(look).icon + " " + styleOf(look).name) + "</span>";
+      }
 
       var picksHtml = picks.map(function (p) {
         var item = p.item;
@@ -461,7 +493,7 @@
       }, pool[0]);
     }
 
-    function pickItems(catId, use, pref, budgetCap, plan, intensity) {
+    function pickItems(catId, use, pref, budgetCap, plan, intensity, look) {
       var cat = D.categories.filter(function (c) { return c.id === catId; })[0];
       if (!cat) return null;
       var allowance = catId === "monitor" ? budgetCap * 0.4 : budgetCap * 0.22;
@@ -486,6 +518,7 @@
         if (pref === "rgb" && it.tags.indexOf("RGB") > -1) s += 2;
         if (pref === "ergo" && it.tags.indexOf("人体工学") > -1) s += 2;
         if (pref === "value" && it.tags.indexOf("高性价比") > -1) s += 1;
+        if (look && look !== "any" && lookOf(it) === look) s += 3;
         s += it.rating * 0.5;
         // 性价比等级加权
         if (it.valueGrade && gradeOrder[it.valueGrade] !== undefined) s += gradeOrder[it.valueGrade];
@@ -506,6 +539,10 @@
       if (pref === "quiet" && top.item.tags.indexOf("静音") > -1) reasons.push("静音调校好");
       if (pref === "rgb" && top.item.tags.indexOf("RGB") > -1) reasons.push("RGB 灯效");
       if (pref === "ergo" && top.item.tags.indexOf("人体工学") > -1) reasons.push("符合人体工学");
+      if (look && look !== "any" && lookOf(top.item) === look) {
+        var _st = styleOf(look);
+        if (_st) reasons.push("契合" + _st.name + "风格");
+      }
       if (top.item.valueGrade) reasons.push("性价比等级 " + top.item.valueGrade);
       if (top.item.rating >= 5) reasons.push("推荐度满分");
       if (!reasons.length) reasons.push("综合性价比高");
@@ -720,12 +757,56 @@
     renderResult();
   }
 
+  /* =========================================================
+   * 颜值外观画廊（#looks）
+   * ========================================================= */
+  function initLooks() {
+    var wrap = document.getElementById("lookGallery");
+    if (!wrap || !STYLES.length) return;
+
+    wrap.innerHTML = STYLES.map(function (s) {
+      var sw = (s.palette || []).map(function (c) {
+        return '<span class="look-swatch" style="background:' + c + '"></span>';
+      }).join("");
+      var tips = (s.tips || []).map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("");
+      return (
+        '<article class="look-card reveal in">' +
+          '<div class="look-cover">' +
+            '<img src="' + s.img + '" alt="' + esc(s.name) + ' 风格参考图" loading="lazy" />' +
+            '<span class="look-badge">' + s.icon + " " + esc(s.name) + "</span>" +
+          "</div>" +
+          '<div class="look-body">' +
+            "<h3 class=\"look-name\">" + s.icon + " " + esc(s.name) + "</h3>" +
+            '<p class="look-desc">' + esc(s.desc) + "</p>" +
+            '<div class="look-swatches">' + sw + "</div>" +
+            '<ul class="look-tips">' + tips + "</ul>" +
+            '<button class="btn btn-ghost look-jump" data-look="' + s.id + '">查看该风格配件 →</button>' +
+          "</div>" +
+        "</article>"
+      );
+    }).join("");
+
+    wrap.querySelectorAll(".look-jump").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var id = b.getAttribute("data-look");
+        var looksRow = document.getElementById("accLooks");
+        if (looksRow) {
+          var target = looksRow.querySelector('.chip[data-id="' + id + '"]');
+          if (target) target.click();
+        }
+        var acc = document.getElementById("accessories");
+        if (acc) acc.scrollIntoView({ behavior: "smooth" });
+      });
+    });
+  }
+
   /* ---- 启动 ---- */
   function boot() {
     mergeModels();
     initAccessories();
     initPlans();
     initTopList();
+    initLooks();
     initQuiz();
     initBudgetTool();
   }

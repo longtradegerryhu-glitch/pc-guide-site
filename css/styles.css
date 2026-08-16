@@ -701,3 +701,84 @@ a { color: inherit; text-decoration: none; }
 [data-theme="dark"] .q-opt { background: #0f172a; }
 [data-theme="dark"] .plan-tip { color: #93c5fd; }
 [data-theme="dark"] .result-box { background: linear-gradient(180deg, rgba(37, 99, 235, .16), transparent 60%); }
+
+/* ===========================================================
+   颜值外观（Aesthetics）画廊 + 风格色带
+   =========================================================== */
+.look-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+  gap: 22px;
+  margin-bottom: 44px;
+}
+.look-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg, 16px);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+.look-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-hover); border-color: transparent; }
+.look-cover {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  background: var(--color-bg-alt);
+}
+.look-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform .4s ease;
+}
+.look-card:hover .look-cover img { transform: scale(1.05); }
+.look-badge {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(15, 23, 42, .55);
+  backdrop-filter: blur(6px);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, .5);
+}
+.look-body { display: flex; flex-direction: column; gap: 10px; padding: 18px 20px 20px; flex: 1; }
+.look-name { font-size: 17px; font-weight: 800; }
+.look-desc { font-size: 14px; color: var(--color-text-soft); line-height: 1.6; }
+.look-swatches { display: flex; gap: 8px; }
+.look-swatch { width: 30px; height: 30px; border-radius: 9px; border: 1px solid var(--color-border); box-shadow: inset 0 0 0 2px rgba(255,255,255,.35); }
+.look-tips { list-style: none; display: flex; flex-direction: column; gap: 5px; margin: 2px 0; }
+.look-tips li { position: relative; padding-left: 18px; font-size: 13px; color: var(--color-text-soft); line-height: 1.5; }
+.look-tips li::before { content: "✦"; position: absolute; left: 0; color: var(--color-primary); font-size: 12px; }
+.look-jump { margin-top: auto; width: 100%; text-align: center; }
+
+/* ---- 配件卡片上的「颜值风格」色带 ---- */
+.acc-card { overflow: hidden; }
+.acc-look {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: -18px -20px 10px;
+  padding: 10px 20px;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, .35);
+}
+.acc-look-icon { font-size: 18px; }
+.acc-look-name { font-size: 13px; font-weight: 800; letter-spacing: .04em; }
+
+/* 深色模式下色带文字保持可读 */
+:root[data-theme="dark"] .acc-look { text-shadow: 0 1px 4px rgba(0, 0, 0, .55); }
+
+@media (max-width: 560px) {
+  .look-gallery { grid-template-columns: 1fr; }
+}

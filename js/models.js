@@ -115,3 +115,47 @@ window.PC_DATA.topList = [
   { catId: "psu",     itemId: "p1", grade: "S", reason: "650W 金牌高性价比，入门游戏机标配。" },
   { catId: "psu",     itemId: "p6", grade: "S", reason: "百元级走线友好的中塔，装机新手友好。" }
 ];
+
+/* ===========================================================
+ * 颜值外观（Aesthetics）：6 种装机美学风格
+ * 用于「颜值外观」画廊展示、配件价格库的「颜值风格」筛选、
+ * 以及个性化测评中的颜值偏好加权。
+ * =========================================================== */
+window.PC_STYLES = [
+  { id: "white",    name: "白色简约",  icon: "🤍", img: "assets/looks/look-white.png",
+    desc: "通体白色机箱配浅色桌面，干净通透，适合明亮书房与办公。",
+    palette: ["#f8fafc", "#e2e8f0", "#cbd5e1", "#94a3b8"],
+    tips: ["白色海景房 / 白色显卡线，整体色调统一", "浅木或白桌，走线全部隐藏", "少即是多，桌面只留必需品"] },
+  { id: "seaview",  name: "海景房",    icon: "🪟", img: "assets/looks/look-seaview.png",
+    desc: "全景双玻侧透，把硬件与风扇灯做成「展示柜」，硬件即装饰。",
+    palette: ["#0ea5e9", "#38bdf8", "#7dd3fc", "#e0f2fe"],
+    tips: ["双仓海景房机箱，无 A 柱遮挡视野", "反向风扇统一风道，理线规整", "风扇 / 灯效统一方向更出片"] },
+  { id: "rgb",      name: "RGB 电竞",  icon: "🌈", img: "assets/looks/look-rgb.png",
+    desc: "暗色机身 + 多彩灯效，氛围感拉满，游戏桌的灵魂。",
+    palette: ["#ec4899", "#8b5cf6", "#3b82f6", "#06b6d4"],
+    tips: ["统一灯控软件，主板 / 内存 / 风扇同步", "暗环境更能显出灯效层次", "灯色与桌面 / 墙色呼应更协调"] },
+  { id: "business", name: "商务黑",    icon: "⚫", img: "assets/looks/look-business.png",
+    desc: "低调黑色 + 木质桌面，沉稳专业，会议室与居家都得体。",
+    palette: ["#1f2937", "#374151", "#4b5563", "#9ca3af"],
+    tips: ["黑色哑光机箱，克制不张扬", "理线藏背，桌面清爽", "木质 / 深色木桌提升质感"] },
+  { id: "wood",     name: "复古木质",  icon: "🪵", img: "assets/looks/look-wood.png",
+    desc: "原木机箱或木纹桌面，温润质感，给冷冰冰的硬件加点温度。",
+    palette: ["#b45309", "#92400e", "#a16207", "#d97706"],
+    tips: ["木纹机箱 / 木桌，暖光氛围灯", "绿植与复古键帽点缀", "暖白灯比冷白更温馨"] },
+  { id: "portable", name: "便携简洁",  icon: "💻", img: "assets/looks/look-portable.png",
+    desc: "笔记本 + 极简外设，清爽随行，桌面永远不拥挤。",
+    palette: ["#10b981", "#34d399", "#6ee7b7", "#ecfdf5"],
+    tips: ["无线键鼠，减少线材", "单线 Type-C 扩展坞一线连", "支架抬升视线，桌面留白"] }
+];
+
+/* 产品 → 颜值风格 映射（id 对应 PC_STYLES.id） */
+window.PC_LOOKS = {
+  c1: "white", c2: "white", c3: "white", c4: "business", c5: "rgb", c6: "business",
+  s1: "white", s2: "white", s3: "business", s4: "business", s5: "white", s6: "business",
+  m1: "white", m2: "rgb", m3: "rgb", m4: "rgb", m5: "white", m6: "rgb",
+  k1: "white", k2: "white", k3: "business", k4: "white", k5: "rgb", k6: "rgb",
+  a1: "white", a2: "business", a3: "wood", a4: "wood", a5: "wood",
+  n1: "white", n2: "business", n3: "business", n4: "white", n5: "rgb",
+  d1: "portable", d2: "portable", d3: "business", d4: "business", d5: "business",
+  p1: "white", p2: "white", p3: "white", p4: "white", p5: "business", p6: "white", p7: "seaview"
+};

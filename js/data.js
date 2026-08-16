@@ -294,6 +294,18 @@ window.PC_DATA = {
       ]
     },
     {
+      id: "look", title: "你更偏爱哪种颜值风格？", multi: false,
+      options: [
+        { id: "any",     label: "🙂 不在意", desc: "性能优先" },
+        { id: "white",   label: "🤍 白色简约", desc: "干净通透" },
+        { id: "seaview", label: "🪟 海景房", desc: "硬件展示柜" },
+        { id: "rgb",     label: "🌈 RGB 电竞", desc: "氛围灯效" },
+        { id: "business",label: "⚫ 商务黑", desc: "沉稳专业" },
+        { id: "wood",    label: "🪵 复古木质", desc: "温润质感" },
+        { id: "portable",label: "💻 便携简洁", desc: "清爽随行" }
+      ]
+    },
+    {
       id: "intensity", title: "每天使用强度大概？", multi: false,
       options: [
         { id: "light", label: "☕ 轻度（<2 小时）", desc: "偶尔办公/轻娱乐" },
