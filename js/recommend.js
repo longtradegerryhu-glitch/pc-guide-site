@@ -500,7 +500,7 @@
     var result = document.getElementById("budgetResult");
     if (!input || !chips || !useRow || !result) return;
 
-    var state = { budget: 6000, use: "all" };
+    var state = { budget: 6000, use: "all", plan: null, rows: [], total: 0 };
     var presets = [3000, 4500, 6000, 8500, 12000, 20000];
 
     function renderChips() {
@@ -563,56 +563,130 @@
       });
     }
 
+    function catalogOf(key) {
+      return (D.partCatalog || []).filter(function (c) { return c.key === key; })[0] || null;
+    }
+
+    function defaultOpt(part) {
+      var cat = catalogOf(part[0]);
+      if (!cat) return -1;
+      var refPrice = parseInt(String(part[2]).replace(/[^0-9]/g, ""), 10) || 0;
+      var best = 0, bd = Infinity;
+      cat.options.forEach(function (o, i) {
+        var d = Math.abs(o.p - refPrice);
+        if (d < bd) { bd = d; best = i; }
+      });
+      return best;
+    }
+
+    function buildRows(plan) {
+      state.plan = plan;
+      state.rows = plan.parts.map(function (part) {
+        var opt = defaultOpt(part);
+        var price = opt >= 0
+          ? catalogOf(part[0]).options[opt].p
+          : (parseInt(String(part[2]).replace(/[^0-9]/g, ""), 10) || 0);
+        return { part: part, opt: opt, price: price };
+      });
+    }
+
+    function updateTotal() {
+      var t = 0;
+      state.rows.forEach(function (r) { t += r.price || 0; });
+      state.total = t;
+    }
+
     function renderResult() {
       var b = state.budget;
       var plan = matchPlan(b);
       if (!plan) { result.innerHTML = '<div class="empty-box">暂无匹配方案。</div>'; return; }
+      if (state.plan !== plan) buildRows(plan);
+      updateTotal();
+      renderTable(plan, b);
+    }
 
-      var rows = plan.parts.map(function (r) {
-        var detail = r[3] ? '<span class="plan-detail">' + esc(r[3]) + "</span>" : "";
-        return "<tr><td>" + esc(r[0]) + "</td><td>" + esc(r[1]) + detail + "</td><td class=\"plan-price\">" + esc(r[2]) + "</td></tr>";
+    function renderTable(plan, b) {
+      var trs = state.rows.map(function (r, i) {
+        var part = r.part;
+        var cat = catalogOf(part[0]);
+        var detail = part[3] ? '<span class="plan-detail">' + esc(part[3]) + "</span>" : "";
+        var ctrl;
+        if (cat) {
+          var opts = cat.options.map(function (o, oi) {
+            return '<option value="' + oi + '"' + (oi === r.opt ? " selected" : "") + ">" + esc(o.n) + "（¥" + o.p + "）</option>";
+          }).join("");
+          ctrl =
+            '<div class="part-ctrl">' +
+              '<select class="part-select" data-i="' + i + '" aria-label="' + esc(part[0]) + ' 型号">' + opts + "</select>" +
+              '<span class="part-price-box"><span class="part-currency">¥</span>' +
+              '<input type="number" class="part-price" data-i="' + i + '" min="0" step="50" value="' + r.price + '" aria-label="' + esc(part[0]) + ' 价格" /></span>' +
+            "</div>" + detail;
+        } else {
+          ctrl = '<span class="part-static">' + esc(part[1]) + "</span>" + detail;
+        }
+        return "<tr><td>" + esc(part[0]) + "</td><td>" + ctrl + "</td><td class=\"plan-price\">" + (cat ? "¥" + r.price : esc(part[2])) + "</td></tr>";
       }).join("");
-
-      var low = plan.price[0], high = plan.price[1];
-      var mid = (low + high) / 2;
-      var diffLow = b - low, diffHigh = b - high;
-      var tipHtml;
-      if (b < low * 0.85) {
-        tipHtml = '<div class="budget-tip warn">⚠️ 预算（¥' + b + "）低于「" + esc(plan.name) + '」参考下限，建议：先去掉显示器/键鼠（约 -¥600~1000），或参考更低档「' + esc(prevPlanName(plan)) + '」。</div>';
-      } else if (b >= low * 0.85 && b < low) {
-        tipHtml = '<div class="budget-tip">💡 预算略紧于该档参考价，可把显示器/键鼠先用入门款，其余配置不变。</div>';
-      } else if (b > high * 1.15) {
-        tipHtml = '<div class="budget-tip">🎉 预算充足于该档参考价，富余部分可：升级显示器到 4K 高刷 / 加 2TB 硬盘 / 升级键鼠。</div>';
-      } else {
-        tipHtml = '<div class="budget-tip">✅ 预算落在「' + esc(plan.name) + '」参考区间内，直接照单装机即可。</div>';
-      }
 
       var personas = (plan.personas || []).map(function (pid) {
         var p = D.personas.filter(function (x) { return x.id === pid; })[0];
         return p ? '<span class="tag-pill">' + p.icon + " " + p.name + "</span>" : "";
       }).join("");
 
+      var diff = b - state.total;
+      var tipHtml;
+      if (diff >= 0 && diff <= b * 0.05) {
+        tipHtml = '<div class="budget-tip">✅ 当前配置总价 <b>¥' + state.total + '</b>，预算 ¥' + b + '，<b>刚好达标</b>，可直接照单购买。</div>';
+      } else if (diff > b * 0.05) {
+        tipHtml = '<div class="budget-tip">🎉 当前配置总价 ¥' + state.total + '，比预算省 <b>¥' + diff + '</b>。富余可：升级显示器 4K / 加 2TB 硬盘 / 升键鼠。</div>';
+      } else if (diff >= -b * 0.1) {
+        tipHtml = '<div class="budget-tip warn">⚠️ 当前配置总价 ¥' + state.total + '，超预算 <b>¥' + (-diff) + '</b>（约 ' + Math.round(-diff / b * 100) + '%）。建议：最贵的部件降一档，或去掉可后补的外设。</div>';
+      } else {
+        tipHtml = '<div class="budget-tip warn">🚨 超预算较多（¥' + (-diff) + '，' + Math.round(-diff / b * 100) + '%）。建议：切换更低档方案，或逐件下调——优先动显卡/显示器，体验影响最可控。</div>';
+      }
+
       result.innerHTML =
         '<div class="budget-result reveal in">' +
           '<div class="budget-head">' +
             '<span class="plan-icon">' + plan.icon + "</span>" +
             '<div><h3 class="plan-name">' + esc(plan.name) + '<span class="plan-tier">' + esc(plan.budgetLabel) + "</span></h3>" +
-            '<span class="plan-budget">参考预算 ' + fmtPrice(plan.price) + " ｜ 适合人群 " + personas + "</span></div>" +
+            '<span class="plan-budget">适合人群 ' + personas + " ｜ 每个部件都可换型号、改价格</span></div>" +
           "</div>" +
-          "<p class=\"plan-summary\">" + esc(plan.summary) + "</p>" +
-          '<table class="plan-table"><thead><tr><th>部件</th><th>推荐（含规格说明）</th><th>参考价</th></tr></thead><tbody>' + rows + "</tbody></table>" +
-          '<div class="res-total">你的预算 <b>¥' + b + '</b> ｜ 本档合计约 <b>' + fmtPrice([low, high]) + "</b></div>" +
+          '<table class="plan-table part-table"><thead><tr><th>部件</th><th>型号 / 档位（下拉可换）＋ 价格（可改）</th><th>小计</th></tr></thead><tbody>' + trs + "</tbody></table>" +
+          '<div class="res-total">当前配置合计：<b>¥' + state.total + '</b> ｜ 你的预算 <b>¥' + b + '</b> ｜ ' +
+            (diff >= 0 ? "结余 <b style=\"color:#16a34a\">¥" + diff + "</b>" : "超支 <b style=\"color:#dc2626\">¥" + (-diff) + "</b>") +
+          "</div>" +
           tipHtml +
-          '<div class="res-note">' + esc(D.note) + "。适配为规则推荐，购机前请复核接口兼容性与电商实时价。</div>" +
+          '<div class="res-note">' + esc(D.note) + "。改动价格仅用于预算试算，购机请以电商实时价为准。</div>" +
         "</div>";
-    }
 
-    function prevPlanName(plan) {
-      var idx = D.plans.indexOf(plan);
-      for (var i = idx - 1; i >= 0; i--) {
-        if (D.plans[i].id !== "mobile") return D.plans[i].name;
-      }
-      return "核显入门档";
+      // 绑定交互：换型号
+      result.querySelectorAll(".part-select").forEach(function (sel) {
+        sel.addEventListener("change", function () {
+          var i = parseInt(sel.getAttribute("data-i"), 10);
+          var opt = parseInt(sel.value, 10);
+          state.rows[i].opt = opt;
+          state.rows[i].price = catalogOf(state.rows[i].part[0]).options[opt].p;
+          updateTotal();
+          renderTable(plan, b);
+        });
+      });
+      // 绑定交互：改价格（仅更新合计与提示，避免整表重渲染丢焦点）
+      result.querySelectorAll(".part-price").forEach(function (inp) {
+        inp.addEventListener("input", function () {
+          var i = parseInt(inp.getAttribute("data-i"), 10);
+          var v = parseInt(inp.value, 10);
+          state.rows[i].price = isNaN(v) ? 0 : Math.max(0, v);
+          updateTotal();
+          var t = state.total, d = b - t;
+          var totalEl = result.querySelector(".res-total");
+          if (totalEl) {
+            totalEl.innerHTML = '当前配置合计：<b>¥' + t + '</b> ｜ 你的预算 <b>¥' + b + '</b> ｜ ' +
+              (d >= 0 ? "结余 <b style=\"color:#16a34a\">¥" + d + "</b>" : "超支 <b style=\"color:#dc2626\">¥" + (-d) + "</b>");
+          }
+          var tipEl = result.querySelector(".budget-tip");
+          if (tipEl) tipEl.className = "budget-tip" + (d < 0 ? " warn" : "");
+        });
+      });
     }
 
     renderChips();
