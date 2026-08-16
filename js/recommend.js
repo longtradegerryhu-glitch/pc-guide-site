@@ -206,33 +206,60 @@
       return item ? { cat: cat, item: item, entry: entry } : null;
     }
 
+    function rankSort(a, b) {
+      return gradeOrder[b.entry.grade] - gradeOrder[a.entry.grade] ||
+        (a.item.price[0] + a.item.price[1]) / 2 - (b.item.price[0] + b.item.price[1]) / 2;
+    }
+
+    function cardHtml(o, rankLabel) {
+      return (
+        '<article class="top-card reveal in">' +
+          '<span class="top-rank">' + rankLabel + "</span>" +
+          '<div class="top-main">' +
+            '<span class="top-cat">' + esc(o.cat.name) + "</span>" +
+            '<h4 class="top-name">' + esc(o.item.name) + "</h4>" +
+            '<p class="top-reason">' + esc(o.entry.reason) + "</p>" +
+          "</div>" +
+          '<div class="top-side">' +
+            '<span class="grade grade-' + o.entry.grade + '">' + o.entry.grade + "</span>" +
+            '<span class="top-price">' + fmtPrice(o.item.price) + "</span>" +
+          "</div>" +
+        "</article>"
+      );
+    }
+
     function render(mode) {
       var rows = D.topList.map(lookup).filter(Boolean);
-      if (mode === "all") rows.sort(function (a, b) {
-        return gradeOrder[b.entry.grade] - gradeOrder[a.entry.grade] || (a.item.price[0] + a.item.price[1]) / 2 - (b.item.price[0] + b.item.price[1]) / 2;
-      });
-      wrap.innerHTML = rows.map(function (o) {
-        var rank = D.topList.indexOf(o.entry) + 1;
-        return (
-          '<article class="top-card reveal in">' +
-            '<span class="top-rank">' + (mode === "all" ? "#" + rank : o.cat.icon) + "</span>" +
-            '<div class="top-main">' +
-              '<span class="top-cat">' + esc(o.cat.name) + "</span>" +
-              '<h4 class="top-name">' + esc(o.item.name) + "</h4>" +
-              '<p class="top-reason">' + esc(o.entry.reason) + "</p>" +
-            "</div>" +
-            '<div class="top-side">' +
-              '<span class="grade grade-' + o.entry.grade + '">' + o.entry.grade + "</span>" +
-              '<span class="top-price">' + fmtPrice(o.item.price) + "</span>" +
-            "</div>" +
-          "</article>"
-        );
-      }).join("");
+      if (mode === "cat") {
+        // 按品类分组，组内按等级+价格排行
+        var html = D.categories.map(function (cat) {
+          var group = rows.filter(function (o) { return o.cat.id === cat.id; }).sort(rankSort);
+          if (!group.length) return "";
+          var cards = group.map(function (o, i) {
+            return cardHtml(o, '<span class="group-rank r' + (i + 1) + '">#' + (i + 1) + "</span>");
+          }).join("");
+          return (
+            '<div class="top-group reveal in">' +
+              '<div class="top-group-head"><span class="top-group-icon">' + cat.icon + "</span>" +
+              "<h3 class=\"top-group-name\">" + esc(cat.name) + "</h3>" +
+              '<span class="top-group-count">' + group.length + " 款上榜</span></div>" +
+              '<div class="top-group-grid">' + cards + "</div>" +
+            "</div>"
+          );
+        }).join("");
+        wrap.innerHTML = html;
+      } else {
+        // 全站总榜
+        rows.sort(rankSort);
+        wrap.innerHTML = rows.map(function (o, i) {
+          return cardHtml(o, "#" + (i + 1));
+        }).join("");
+      }
     }
 
     tabs.innerHTML = [
-      '<button class="chip active" data-mode="all">全站 TOP 10</button>',
-      '<button class="chip" data-mode="cat">按品类</button>'
+      '<button class="chip active" data-mode="cat">按品类排行</button>',
+      '<button class="chip" data-mode="all">全站总榜</button>'
     ].join("");
     tabs.querySelectorAll(".chip").forEach(function (b) {
       b.addEventListener("click", function () {
@@ -241,7 +268,7 @@
         render(b.getAttribute("data-mode"));
       });
     });
-    render("all");
+    render("cat");
   }
 
   /* =========================================================

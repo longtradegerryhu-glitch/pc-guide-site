@@ -87,17 +87,31 @@ window.PC_MODELS = {
   ]
 };
 
-/* ---------- 性价比 TOP 榜单（全站精选 10 款 S 级） ---------- */
+/* ---------- 性价比 TOP 榜单（按品类分类排行，每类 2-3 款） ---------- */
 window.PC_DATA = window.PC_DATA || {};
 window.PC_DATA.topList = [
   { catId: "cooler",  itemId: "c1", grade: "S", reason: "百元内单塔之王，四热管压主流 CPU，闭眼入。" },
   { catId: "cooler",  itemId: "c3", grade: "S", reason: "双塔性价比标杆，200 元内压住 i7/R7。" },
+  { catId: "cooler",  itemId: "c2", grade: "A", reason: "5 热管+大鳍片，办公机静音优选。" },
   { catId: "stand",   itemId: "s1", grade: "S", reason: "入门单臂性价比之王，109 元解锁人体工学。" },
+  { catId: "stand",   itemId: "s2", grade: "S", reason: "9kg 真机械臂，百元档越级做工。" },
+  { catId: "stand",   itemId: "s3", grade: "A", reason: "气弹簧顺滑自带理线槽，办公进阶之选。" },
   { catId: "monitor", itemId: "m2", grade: "S", reason: "2K 180Hz 卷到 800 元档，游戏党首选。" },
   { catId: "monitor", itemId: "m5", grade: "S", reason: "4K 性价比之王，Type-C 一线连笔记本。" },
+  { catId: "monitor", itemId: "m1", grade: "S", reason: "27 英寸 2K 入门高性价比，办公游戏两相宜。" },
   { catId: "input",   itemId: "k4", grade: "S", reason: "百元内 3395 传感器+48g 轻量化，卷无可卷。" },
   { catId: "input",   itemId: "k2", grade: "S", reason: "200 元档 Gasket 三模热插拔全配齐。" },
+  { catId: "input",   itemId: "k1", grade: "S", reason: "百元内机械键盘入门，办公学生党首选。" },
   { catId: "audio",   itemId: "a1", grade: "S", reason: "154 元蓝牙 2.0，桌面影音一步到位。" },
+  { catId: "audio",   itemId: "a2", grade: "A", reason: "四单元一体式，音质均衡性价比高。" },
+  { catId: "audio",   itemId: "a3", grade: "A", reason: "入门木质箱体标杆，小空间 HiFi 启蒙。" },
   { catId: "network", itemId: "n4", grade: "S", reason: "最便宜的全 2.5G 口 WiFi7，300 元档王者。" },
-  { catId: "psu",     itemId: "p3", grade: "S", reason: "750W ATX3.1 全日系电容，十年质保热销王。" }
+  { catId: "network", itemId: "n1", grade: "S", reason: "百元 WiFi7 带 2.5G 口，小户型神器。" },
+  { catId: "network", itemId: "n3", grade: "A", reason: "家用爆款，带机量大发热控制好。" },
+  { catId: "dock",    itemId: "d1", grade: "S", reason: "轻薄本标配，HDMI+USB+PD 一线连。" },
+  { catId: "dock",    itemId: "d2", grade: "A", reason: "基础扩展低价方案，出差备用。" },
+  { catId: "dock",    itemId: "d3", grade: "A", reason: "双 HDMI+千兆+读卡，桌面一步到位。" },
+  { catId: "psu",     itemId: "p3", grade: "S", reason: "750W ATX3.1 全日系电容，十年质保热销王。" },
+  { catId: "psu",     itemId: "p1", grade: "S", reason: "650W 金牌高性价比，入门游戏机标配。" },
+  { catId: "psu",     itemId: "p6", grade: "S", reason: "百元级走线友好的中塔，装机新手友好。" }
 ];

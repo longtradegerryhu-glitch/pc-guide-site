@@ -561,6 +561,18 @@ a { color: inherit; text-decoration: none; }
 .top-side { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
 .top-price { font-size: 13px; font-weight: 700; color: var(--color-primary); white-space: nowrap; }
 
+/* ---- 按品类分组榜单 ---- */
+.top-group { margin-bottom: 26px; }
+.top-group-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.top-group-icon { font-size: 20px; }
+.top-group-name { font-size: 17px; font-weight: 800; }
+.top-group-count { font-size: 12px; color: var(--color-soft); background: var(--color-primary-soft, #eff6ff); padding: 2px 10px; border-radius: 999px; }
+.top-group-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; }
+.group-rank { font-weight: 800; }
+.group-rank.r1 { color: #d97706; }
+.group-rank.r2 { color: #475569; }
+.group-rank.r3 { color: #b45309; }
+
 /* ---- 预算档位徽章 ---- */
 .plan-tier { display: inline-block; font-size: 12px; font-weight: 700; color: #fff; background: var(--color-primary); padding: 2px 10px; border-radius: 999px; margin-left: 8px; }
 
