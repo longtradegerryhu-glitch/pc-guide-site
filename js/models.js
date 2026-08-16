@@ -122,7 +122,7 @@ window.PC_DATA.topList = [
  * 以及个性化测评中的颜值偏好加权。
  * =========================================================== */
 window.PC_STYLES = [
-  { id: "white",    name: "白色简约",  icon: "🤍", img: "assets/looks/look-white.png",
+  { id: "white",    name: "白色简约",  icon: "🤍", img: "assets/looks/look-white.jpg",
     desc: "通体白色机箱配浅色桌面，干净通透，像把雪放进书房。明亮环境下最显干净，是「不费力就好看」的安全牌。",
     paletteName: "奶白 / 浅灰 / 银",
     palette: ["#f8fafc", "#e2e8f0", "#cbd5e1", "#94a3b8"],
@@ -133,7 +133,7 @@ window.PC_STYLES = [
     accents: "浅木桌垫、白色支架、极简白色摆件，绿植选淡色盆。",
     avoid: "别混进黑色风扇或花线，一旦杂色整体就垮；也别堆太多摆件。",
     tips: ["白色海景房 / 白色显卡线，整体色调统一", "浅木或白桌，走线全部隐藏", "少即是多，桌面只留必需品"] },
-  { id: "seaview",  name: "海景房",    icon: "🪟", img: "assets/looks/look-seaview.png",
+  { id: "seaview",  name: "海景房",    icon: "🪟", img: "assets/looks/look-seaview.jpg",
     desc: "全景双玻侧透，把硬件与风扇灯做成「展示柜」，硬件即装饰。出片率最高的风格，也是理线功力的试金石。",
     paletteName: "冰蓝 / 青 / 透白",
     palette: ["#0ea5e9", "#38bdf8", "#7dd3fc", "#e0f2fe"],
@@ -144,7 +144,7 @@ window.PC_STYLES = [
     accents: "透明或浅色桌垫、ARGB 风扇包、显卡支架（延长线也选白色/透明）。",
     avoid: "海景房最怕露乱线——只买侧透不理线，比不透明机箱更尴尬。",
     tips: ["双仓海景房机箱，无 A 柱遮挡视野", "反向风扇统一风道，理线规整", "风扇 / 灯效统一方向更出片"] },
-  { id: "rgb",      name: "RGB 电竞",  icon: "🌈", img: "assets/looks/look-rgb.png",
+  { id: "rgb",      name: "RGB 电竞",  icon: "🌈", img: "assets/looks/look-rgb.jpg",
     desc: "暗色机身 + 多彩灯效，氛围感拉满，游戏桌的灵魂。贵在「同步与克制」，而非灯越多越好。",
     paletteName: "粉 / 紫 / 蓝 / 青",
     palette: ["#ec4899", "#8b5cf6", "#3b82f6", "#06b6d4"],
@@ -155,7 +155,7 @@ window.PC_STYLES = [
     accents: "RGB 键鼠、灯带、桌垫灯边；灯色与墙色/桌垫呼应更协调。",
     avoid: "各灯各闪像 KTV，务必同步；亮度别拉满，过曝刺眼不耐看。",
     tips: ["统一灯控软件，主板 / 内存 / 风扇同步", "暗环境更能显出灯效层次", "灯色与桌面 / 墙色呼应更协调"] },
-  { id: "business", name: "商务黑",    icon: "⚫", img: "assets/looks/look-business.png",
+  { id: "business", name: "商务黑",    icon: "⚫", img: "assets/looks/look-business.jpg",
     desc: "低调黑色 + 木质桌面，沉稳专业，会议室与居家都得体。靠克制的质感打动人，而非装饰。",
     paletteName: "炭黑 / 深灰 / 银",
     palette: ["#1f2937", "#374151", "#4b5563", "#9ca3af"],
@@ -166,7 +166,7 @@ window.PC_STYLES = [
     accents: "深色木桌 / 木纹桌垫、黑色机械臂支架、金属摆件。",
     avoid: "别加花哨 RGB，会破坏专业感；桌面别堆满，留白显克制。",
     tips: ["黑色哑光机箱，克制不张扬", "理线藏背，桌面清爽", "木质 / 深色木桌提升质感"] },
-  { id: "wood",     name: "复古木质",  icon: "🪵", img: "assets/looks/look-wood.png",
+  { id: "wood",     name: "复古木质",  icon: "🪵", img: "assets/looks/look-wood.jpg",
     desc: "原木机箱或木纹桌面，温润质感，给冷冰冰的硬件加点温度。治愈系桌面的顶流。",
     paletteName: "胡桃 / 焦糖 / 暖橙",
     palette: ["#b45309", "#92400e", "#a16207", "#d97706"],
@@ -177,7 +177,7 @@ window.PC_STYLES = [
     accents: "绿植、复古键帽、木质托盘、暖光小台灯，营造温度。",
     avoid: "冷白强光会破坏暖调；别堆冷色塑料感外设，选木质/金属质感。",
     tips: ["木纹机箱 / 木桌，暖光氛围灯", "绿植与复古键帽点缀", "暖白灯比冷白更温馨"] },
-  { id: "portable", name: "便携简洁",  icon: "💻", img: "assets/looks/look-portable.png",
+  { id: "portable", name: "便携简洁",  icon: "💻", img: "assets/looks/look-portable.jpg",
     desc: "笔记本 + 极简外设，清爽随行，桌面永远不拥挤。把「少」做到极致，也最易保持整洁。",
     paletteName: "薄荷绿 / 浅绿 / 透白",
     palette: ["#10b981", "#34d399", "#6ee7b7", "#ecfdf5"],
@@ -212,21 +212,21 @@ window.PC_LOOK_PITFALLS = [
 
 /* 细节赏析图廊（用于「细节赏析」区块，补充图片样式） */
 window.PC_LOOK_DETAILS = [
-  { img: "assets/looks/look-detail-cable.png", tag: "理线细节", text: "背线 + 束线 + 隐藏供电，是高级感的分水岭。" },
-  { img: "assets/looks/look-detail-white.png", tag: "白色海景房", text: "全白机身 + 白色延长线，纯净到像展品。" },
-  { img: "assets/looks/look-detail-rgb.png",   tag: "RGB 氛围",  text: "统一灯控下的暗房氛围，层次比亮度更重要。" }
+  { img: "assets/looks/look-detail-cable.jpg", tag: "理线细节", text: "背线 + 束线 + 隐藏供电，是高级感的分水岭。" },
+  { img: "assets/looks/look-detail-white.jpg", tag: "白色海景房", text: "全白机身 + 白色延长线，纯净到像展品。" },
+  { img: "assets/looks/look-detail-rgb.jpg",   tag: "RGB 氛围",  text: "统一灯控下的暗房氛围，层次比亮度更重要。" }
 ];
 
 /* 性价比榜单实物图：品类 → 产品实物参考图（用于榜单项卡片） */
 window.PC_TOP_IMG = {
-  cooler:  "assets/top/top-cooler.png",
-  stand:   "assets/top/top-stand.png",
-  monitor: "assets/top/top-monitor.png",
-  input:   "assets/top/top-input.png",
-  audio:   "assets/top/top-audio.png",
-  network: "assets/top/top-network.png",
-  dock:    "assets/top/top-dock.png",
-  psu:     "assets/top/top-psu.png"
+  cooler:  "assets/top/top-cooler.jpg",
+  stand:   "assets/top/top-stand.jpg",
+  monitor: "assets/top/top-monitor.jpg",
+  input:   "assets/top/top-input.jpg",
+  audio:   "assets/top/top-audio.jpg",
+  network: "assets/top/top-network.jpg",
+  dock:    "assets/top/top-dock.jpg",
+  psu:     "assets/top/top-psu.jpg"
 };
 
 /* 产品 → 颜值风格 映射（id 对应 PC_STYLES.id） */
