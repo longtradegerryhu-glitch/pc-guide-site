@@ -16,10 +16,18 @@
   /* ---- 颜值风格（Aesthetics） ---- */
   var STYLES = window.PC_STYLES || [];
   var LOOKS = window.PC_LOOKS || {};
+  var PRINCIPLES = window.PC_LOOK_PRINCIPLES || [];
+  var PITFALLS = window.PC_LOOK_PITFALLS || [];
+  var DETAILS = window.PC_LOOK_DETAILS || [];
   var styleById = {};
   STYLES.forEach(function (s) { styleById[s.id] = s; });
   function lookOf(item) { return (item && LOOKS[item.id]) || null; }
   function styleOf(id) { return styleById[id] || null; }
+  function countByStyle(sid) {
+    var n = 0;
+    Object.keys(LOOKS).forEach(function (id) { if (LOOKS[id] === sid) n++; });
+    return n;
+  }
 
   /* ---- 合并真实型号数据（models.js） ---- */
   function mergeModels() {
@@ -768,7 +776,7 @@
       var sw = (s.palette || []).map(function (c) {
         return '<span class="look-swatch" style="background:' + c + '"></span>';
       }).join("");
-      var tips = (s.tips || []).map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("");
+      var cnt = countByStyle(s.id);
       return (
         '<article class="look-card reveal in">' +
           '<div class="look-cover">' +
@@ -778,9 +786,19 @@
           '<div class="look-body">' +
             "<h3 class=\"look-name\">" + s.icon + " " + esc(s.name) + "</h3>" +
             '<p class="look-desc">' + esc(s.desc) + "</p>" +
-            '<div class="look-swatches">' + sw + "</div>" +
-            '<ul class="look-tips">' + tips + "</ul>" +
-            '<button class="btn btn-ghost look-jump" data-look="' + s.id + '">查看该风格配件 →</button>' +
+            '<div class="look-pal"><span class="look-pal-name">配色 · ' + esc(s.paletteName || "") + "</span>" +
+              '<div class="look-swatches">' + sw + "</div></div>" +
+            '<ul class="look-meta">' +
+              '<li><span class="lm-k">适合</span><span class="lm-v">' + esc(s.suits || "") + "</span></li>" +
+              '<li><span class="lm-k">机箱</span><span class="lm-v">' + esc(s.caseType || "") + " — " + esc(s.caseTip || "") + "</span></li>" +
+              '<li><span class="lm-k">灯光</span><span class="lm-v">' + esc(s.lighting || "") + "</span></li>" +
+              '<li><span class="lm-k">点缀</span><span class="lm-v">' + esc(s.accents || "") + "</span></li>" +
+              '<li class="lm-avoid"><span class="lm-k">避坑</span><span class="lm-v">' + esc(s.avoid || "") + "</span></li>" +
+            "</ul>" +
+            '<div class="look-foot">' +
+              '<span class="look-count">' + cnt + " 款配件适配</span>" +
+              '<button class="btn btn-ghost look-jump" data-look="' + s.id + '">查看该风格配件 →</button>' +
+            "</div>" +
           "</div>" +
         "</article>"
       );
@@ -800,6 +818,72 @@
     });
   }
 
+  /* 颜值搭配 6 大原则 */
+  function initLookPrinciples() {
+    var wrap = document.getElementById("lookPrinciples");
+    if (!wrap || !PRINCIPLES.length) return;
+    wrap.innerHTML = PRINCIPLES.map(function (p) {
+      return (
+        '<article class="card reveal in">' +
+          '<div class="card-icon">' + p.icon + "</div>" +
+          '<h3 class="card-title">' + esc(p.title) + "</h3>" +
+          '<p class="card-text">' + esc(p.text) + "</p>" +
+        "</article>"
+      );
+    }).join("");
+  }
+
+  /* 机箱 × 风格 速查 */
+  function initLookCases() {
+    var wrap = document.getElementById("lookCases");
+    if (!wrap || !STYLES.length) return;
+    wrap.innerHTML = STYLES.map(function (s) {
+      var sw = (s.palette || []).slice(0, 3).map(function (c) {
+        return '<span class="look-swatch sm" style="background:' + c + '"></span>';
+      }).join("");
+      return (
+        '<div class="case-row reveal in">' +
+          '<div class="case-head">' +
+            '<span class="case-icon">' + s.icon + "</span>" +
+            '<div class="case-titles"><span class="case-name">' + esc(s.name) + "</span>" +
+              '<span class="case-type">' + esc(s.caseType || "") + "</span></div>" +
+            '<div class="look-swatches">' + sw + "</div>" +
+          "</div>" +
+          '<p class="case-tip">' + esc(s.caseTip || "") + "</p>" +
+        "</div>"
+      );
+    }).join("");
+  }
+
+  /* 细节赏析图廊 */
+  function initLookDetails() {
+    var wrap = document.getElementById("lookDetails");
+    if (!wrap || !DETAILS.length) return;
+    wrap.innerHTML = DETAILS.map(function (d) {
+      return (
+        '<figure class="detail-fig reveal in">' +
+          '<div class="detail-cover"><img src="' + d.img + '" alt="' + esc(d.tag) + '" loading="lazy" />' +
+            '<span class="detail-tag">' + esc(d.tag) + "</span></div>" +
+          '<figcaption class="detail-cap">' + esc(d.text) + "</figcaption>" +
+        "</figure>"
+      );
+    }).join("");
+  }
+
+  /* 颜值避坑指南 */
+  function initLookPitfalls() {
+    var wrap = document.getElementById("lookPitfalls");
+    if (!wrap || !PITFALLS.length) return;
+    wrap.innerHTML = PITFALLS.map(function (p) {
+      return (
+        '<div class="pitfall reveal in">' +
+          '<span class="pf-badge">✕ ' + esc(p.bad) + "</span>" +
+          '<p class="pf-text">' + esc(p.text) + "</p>" +
+        "</div>"
+      );
+    }).join("");
+  }
+
   /* ---- 启动 ---- */
   function boot() {
     mergeModels();
@@ -807,6 +891,10 @@
     initPlans();
     initTopList();
     initLooks();
+    initLookPrinciples();
+    initLookCases();
+    initLookDetails();
+    initLookPitfalls();
     initQuiz();
     initBudgetTool();
   }

@@ -762,6 +762,55 @@ a { color: inherit; text-decoration: none; }
 .look-tips li::before { content: "✦"; position: absolute; left: 0; color: var(--color-primary); font-size: 12px; }
 .look-jump { margin-top: auto; width: 100%; text-align: center; }
 
+/* ---- 新版块间距 ---- */
+.look-block { margin-top: 52px; }
+.look-block .block-title { margin-bottom: 8px; }
+
+/* 风格卡：配色 / 元信息 / 底部 */
+.look-pal { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.look-pal-name { font-size: 12.5px; font-weight: 700; color: var(--color-text-soft); letter-spacing: .03em; }
+.look-swatches { display: flex; gap: 8px; }
+.look-swatch.sm { width: 20px; height: 20px; border-radius: 6px; }
+.look-meta { list-style: none; display: flex; flex-direction: column; gap: 7px; margin: 4px 0; }
+.look-meta li { display: flex; gap: 8px; font-size: 13px; line-height: 1.55; }
+.lm-k { flex: 0 0 34px; font-weight: 800; color: var(--color-primary); font-size: 12px; padding-top: 1px; }
+.lm-v { color: var(--color-text-soft); }
+.lm-avoid { background: rgba(239, 68, 68, .08); border-radius: 8px; padding: 6px 9px; }
+.lm-avoid .lm-k { color: #ef4444; }
+.look-foot { margin-top: auto; padding-top: 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.look-count { font-size: 12px; font-weight: 700; color: var(--color-text-soft); }
+
+/* 机箱 × 风格 速查 */
+.look-cases { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; margin-top: 14px; }
+.case-row { background: var(--color-card); border: 1px solid var(--color-border); border-radius: 14px; padding: 14px 16px; box-shadow: var(--shadow-sm); }
+.case-head { display: flex; align-items: center; gap: 12px; }
+.case-icon { font-size: 22px; }
+.case-titles { display: flex; flex-direction: column; gap: 1px; flex: 1; min-width: 0; }
+.case-name { font-size: 15px; font-weight: 800; }
+.case-type { font-size: 12px; color: var(--color-primary); font-weight: 700; }
+.case-tip { margin: 10px 0 0; font-size: 13px; color: var(--color-text-soft); line-height: 1.6; }
+
+/* 细节赏析图廊 */
+.look-details { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; margin-top: 14px; }
+.detail-fig { margin: 0; background: var(--color-card); border: 1px solid var(--color-border); border-radius: 14px; overflow: hidden; box-shadow: var(--shadow-sm); }
+.detail-cover { position: relative; aspect-ratio: 16 / 10; overflow: hidden; background: var(--color-bg-alt); }
+.detail-cover img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .4s ease; }
+.detail-fig:hover .detail-cover img { transform: scale(1.05); }
+.detail-tag { position: absolute; left: 12px; bottom: 12px; padding: 4px 12px; border-radius: 999px; font-size: 12.5px; font-weight: 800; color: #fff; background: rgba(15, 23, 42, .55); backdrop-filter: blur(6px); text-shadow: 0 1px 3px rgba(0, 0, 0, .5); }
+.detail-cap { padding: 12px 14px 14px; font-size: 13px; color: var(--color-text-soft); line-height: 1.6; }
+
+/* 颜值避坑指南 */
+.look-pitfalls { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; margin-top: 14px; }
+.pitfall { background: var(--color-card); border: 1px solid var(--color-border); border-left: 3px solid #ef4444; border-radius: 12px; padding: 13px 16px; box-shadow: var(--shadow-sm); }
+.pf-badge { display: inline-block; font-size: 12.5px; font-weight: 800; color: #ef4444; margin-bottom: 5px; }
+.pf-text { margin: 0; font-size: 13px; color: var(--color-text-soft); line-height: 1.6; }
+
+@media (max-width: 560px) {
+  .look-cases, .look-details, .look-pitfalls { grid-template-columns: 1fr; }
+  .look-foot { flex-direction: column; align-items: stretch; }
+  .look-foot .look-jump { width: 100%; }
+}
+
 /* ---- 配件卡片上的「颜值风格」色带 ---- */
 .acc-card { overflow: hidden; }
 .acc-look {
