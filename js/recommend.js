@@ -19,6 +19,7 @@
   var PRINCIPLES = window.PC_LOOK_PRINCIPLES || [];
   var PITFALLS = window.PC_LOOK_PITFALLS || [];
   var DETAILS = window.PC_LOOK_DETAILS || [];
+  var TOP_IMG = window.PC_TOP_IMG || {};
   var styleById = {};
   STYLES.forEach(function (s) { styleById[s.id] = s; });
   function lookOf(item) { return (item && LOOKS[item.id]) || null; }
@@ -248,8 +249,13 @@
     }
 
     function cardHtml(o, rankLabel) {
+      var img = TOP_IMG[o.cat.id];
+      var thumb = img
+        ? '<div class="top-thumb"><img src="' + img + '" alt="' + esc(o.cat.name) + ' 实物图" loading="lazy" /></div>'
+        : "";
       return (
         '<article class="top-card reveal in">' +
+          thumb +
           '<span class="top-rank">' + rankLabel + "</span>" +
           '<div class="top-main">' +
             '<span class="top-cat">' + esc(o.cat.name) + "</span>" +
@@ -368,6 +374,7 @@
       var form = answerOf("form")[0] || "desktop";
       var pref = answerOf("pref")[0] || "value";
       var look = answerOf("look")[0] || "any";
+      var style = (look && look !== "any") ? styleOf(look) : null;
       var intensity = answerOf("intensity")[0] || "mid";
       var lifespan = answerOf("lifespan")[0] || "y3";
       var exp = answerOf("exp")[0] || "some";
@@ -455,11 +462,33 @@
           ' <span class="res-budget">参考 ' + fmtPrice(plan.price) + "</span></div>"
         : '<div class="res-plan">未匹配到整机方案，请参考「搭配计划」板块。</div>';
 
+      var lookHtml = "";
+      if (style) {
+        var sw = (style.palette || []).map(function (c) {
+          return '<span class="look-swatch sm" style="background:' + c + '"></span>';
+        }).join("");
+        lookHtml =
+          '<div class="res-section res-look">' +
+            '<span class="res-label">你偏好的颜值风格</span>' +
+            '<div class="res-look-card">' +
+              '<img class="res-look-img" src="' + style.img + '" alt="' + esc(style.name) + '" loading="lazy" />' +
+              '<div class="res-look-body">' +
+                '<div class="res-look-head">' + style.icon + " " + esc(style.name) +
+                  '<span class="res-look-pal">' + sw + "</span></div>" +
+                '<p class="res-look-desc">' + esc(style.desc) + "</p>" +
+                '<p class="res-look-tip">💡 ' + esc((style.tips && style.tips[0]) || "") + "</p>" +
+                '<button class="btn btn-ghost res-look-jump" data-look="' + style.id + '">看这类风格配件 →</button>' +
+              "</div>" +
+            "</div>" +
+          "</div>";
+      }
+
       box.innerHTML =
         '<div class="result-box reveal in">' +
           '<h3 class="result-title">🎯 你的个性化方案</h3>' +
           '<div class="result-persona"><span class="res-label">需求画像</span>' + profile + "</div>" +
           '<div class="result-persona"><span class="res-label">适合人群</span>' + personas + "</div>" +
+          lookHtml +
           planHtml +
           '<div class="res-section"><span class="res-label">外设/配件推荐（按你的升级重点）</span>' +
             (picksHtml || '<div class="empty-box">暂无匹配配件。</div>') +
@@ -473,6 +502,18 @@
       if (reset) reset.addEventListener("click", function () {
         answers = {};
         render();
+      });
+
+      var lookJump = box.querySelector(".res-look-jump");
+      if (lookJump) lookJump.addEventListener("click", function () {
+        var id = lookJump.getAttribute("data-look");
+        var looksRow = document.getElementById("accLooks");
+        if (looksRow) {
+          var target = looksRow.querySelector('.chip[data-id="' + id + '"]');
+          if (target) target.click();
+        }
+        var acc = document.getElementById("accessories");
+        if (acc) acc.scrollIntoView({ behavior: "smooth" });
       });
     }
 

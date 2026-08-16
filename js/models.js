@@ -217,6 +217,18 @@ window.PC_LOOK_DETAILS = [
   { img: "assets/looks/look-detail-rgb.png",   tag: "RGB 氛围",  text: "统一灯控下的暗房氛围，层次比亮度更重要。" }
 ];
 
+/* 性价比榜单实物图：品类 → 产品实物参考图（用于榜单项卡片） */
+window.PC_TOP_IMG = {
+  cooler:  "assets/top/top-cooler.png",
+  stand:   "assets/top/top-stand.png",
+  monitor: "assets/top/top-monitor.png",
+  input:   "assets/top/top-input.png",
+  audio:   "assets/top/top-audio.png",
+  network: "assets/top/top-network.png",
+  dock:    "assets/top/top-dock.png",
+  psu:     "assets/top/top-psu.png"
+};
+
 /* 产品 → 颜值风格 映射（id 对应 PC_STYLES.id） */
 window.PC_LOOKS = {
   c1: "white", c2: "white", c3: "white", c4: "business", c5: "rgb", c6: "business",
