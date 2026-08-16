@@ -527,6 +527,42 @@ a { color: inherit; text-decoration: none; }
 .tag-pill { background: #f1f5f9; color: #334155; border: 1px solid var(--color-border); padding: 2px 10px; border-radius: 999px; font-size: 12px; }
 .tag-pill.big { font-size: 13px; padding: 4px 12px; }
 .acc-compat { font-size: 12.5px; color: var(--color-soft); border-top: 1px dashed var(--color-border); padding-top: 8px; }
+.acc-model { display: inline-block; font-size: 12px; color: var(--color-soft); margin-top: 2px; }
+.acc-note { font-size: 13px; color: var(--color-primary); background: var(--color-primary-soft, #eff6ff); border-radius: 8px; padding: 6px 10px; line-height: 1.5; }
+
+/* ---- 性价比等级徽章 ---- */
+.grade { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 6px; font-size: 13px; font-weight: 800; color: #fff; }
+.grade-S { background: linear-gradient(135deg, #f59e0b, #d97706); }
+.grade-A { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+.grade-B { background: linear-gradient(135deg, #94a3b8, #64748b); }
+.grade-C { background: linear-gradient(135deg, #cbd5e1, #94a3b8); }
+[data-theme="dark"] .grade-C { background: linear-gradient(135deg, #475569, #334155); }
+
+/* ---- 性价比 TOP 榜单 ---- */
+.top-tabs { margin-bottom: 16px; }
+.top-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; }
+.top-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  box-shadow: var(--shadow);
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.top-card:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(15, 23, 42, .10); }
+.top-rank { flex: 0 0 40px; width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 800; color: var(--color-primary); background: var(--color-primary-soft, #eff6ff); border-radius: 10px; }
+.top-main { flex: 1; min-width: 0; }
+.top-cat { font-size: 11px; color: var(--color-soft); font-weight: 700; letter-spacing: 1px; }
+.top-name { font-size: 15px; margin: 1px 0 3px; }
+.top-reason { font-size: 12.5px; color: var(--color-soft); line-height: 1.5; }
+.top-side { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
+.top-price { font-size: 13px; font-weight: 700; color: var(--color-primary); white-space: nowrap; }
+
+/* ---- 预算档位徽章 ---- */
+.plan-tier { display: inline-block; font-size: 12px; font-weight: 700; color: #fff; background: var(--color-primary); padding: 2px 10px; border-radius: 999px; margin-left: 8px; }
 
 /* ---- 搭配计划 ---- */
 .plan-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 18px; }

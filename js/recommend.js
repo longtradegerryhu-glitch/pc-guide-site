@@ -10,7 +10,16 @@
 
   var useLabels = { office: "办公学习", game: "游戏电竞", create: "内容创作", portable: "移动便携" };
   var useIcons = { office: "💼", game: "🎮", create: "🎬", portable: "💻" };
-  var budgetOrder = { b1: 3000, b2: 6000, b3: 10000, b4: 20000 };
+  var gradeOrder = { S: 4, A: 3, B: 1, C: -1 };
+  var budgetOrder = { b3000: 3000, b4500: 4500, b6000: 6000, b8500: 8500, b12000: 12000, b20000: 20000 };
+
+  /* ---- 合并真实型号数据（models.js） ---- */
+  function mergeModels() {
+    if (!window.PC_MODELS) return;
+    D.categories.forEach(function (cat) {
+      cat.items = window.PC_MODELS[cat.id] || [];
+    });
+  }
 
   function fmtPrice(p) {
     if (!p) return "随行情";
@@ -85,19 +94,24 @@
           return '<span class="use-dot" title="' + useLabels[u] + '">' + useIcons[u] + "</span>";
         }).join("");
         var stars = "★★★★★".slice(0, it.rating) + "☆☆☆☆☆".slice(0, 5 - it.rating);
+        var grade = it.valueGrade ? '<span class="grade grade-' + it.valueGrade + '">' + it.valueGrade + "</span>" : "";
         return (
           '<article class="acc-card reveal in">' +
             '<div class="acc-head">' +
               '<div><span class="acc-cat">' + o.cat.icon + " " + esc(o.cat.name) + "</span>" +
-              "<h4 class=\"acc-name\">" + esc(it.name) + "</h4></div>" +
+              "<h4 class=\"acc-name\">" + esc(it.name) + "</h4>" +
+              (it.brand && it.model ? '<span class="acc-model">' + esc(it.brand + " " + it.model) + "</span>" : "") +
+              "</div>" +
               '<span class="acc-price">' + fmtPrice(it.price) + "</span>" +
             "</div>" +
-            '<div class="acc-specs">' + esc(it.specs) + "</div>" +
             '<div class="acc-meta">' +
               '<span class="acc-style">' + esc(it.style) + "</span>" +
               '<span class="acc-rating" title="推荐度 ' + it.rating + "/5\">" + stars + "</span>" +
+              grade +
               uses +
             "</div>" +
+            (it.valueNote ? '<div class="acc-note">' + esc(it.valueNote) + "</div>" : "") +
+            '<div class="acc-specs">' + esc(it.specs) + "</div>" +
             '<div class="acc-tags">' + tags + "</div>" +
             '<div class="acc-compat">搭配：' + esc(it.compat) + "</div>" +
           "</article>"
@@ -160,7 +174,9 @@
           '<div class="plan-head">' +
             '<span class="plan-icon">' + pl.icon + "</span>" +
             '<div><h3 class="plan-name">' + esc(pl.name) + "</h3>" +
-            '<span class="plan-budget">参考预算 ' + fmtPrice(pl.price) + "</span></div>" +
+            '<span class="plan-budget">参考预算 ' + fmtPrice(pl.price) + "</span>" +
+            (pl.budgetLabel ? '<span class="plan-tier">' + esc(pl.budgetLabel) + "</span>" : "") +
+            "</div>" +
           "</div>" +
           "<p class=\"plan-summary\">" + esc(pl.summary) + "</p>" +
           '<div class="plan-personas">' + personas + "</div>" +
@@ -172,7 +188,63 @@
   }
 
   /* =========================================================
-   * 三、个性化测评（#quiz）：问答 → 生成方案
+   * 三、性价比 TOP 榜单（#toplist）
+   * ========================================================= */
+  function initTopList() {
+    var tabs = document.getElementById("topTabs");
+    var wrap = document.getElementById("topWrap");
+    if (!tabs || !wrap || !D.topList) return;
+
+    var byCat = {};
+    D.categories.forEach(function (c) { byCat[c.id] = c; });
+
+    function lookup(entry) {
+      var cat = byCat[entry.catId];
+      if (!cat) return null;
+      var item = cat.items.filter(function (x) { return x.id === entry.itemId; })[0];
+      return item ? { cat: cat, item: item, entry: entry } : null;
+    }
+
+    function render(mode) {
+      var rows = D.topList.map(lookup).filter(Boolean);
+      if (mode === "all") rows.sort(function (a, b) {
+        return gradeOrder[b.entry.grade] - gradeOrder[a.entry.grade] || (a.item.price[0] + a.item.price[1]) / 2 - (b.item.price[0] + b.item.price[1]) / 2;
+      });
+      wrap.innerHTML = rows.map(function (o) {
+        var rank = D.topList.indexOf(o.entry) + 1;
+        return (
+          '<article class="top-card reveal in">' +
+            '<span class="top-rank">' + (mode === "all" ? "#" + rank : o.cat.icon) + "</span>" +
+            '<div class="top-main">' +
+              '<span class="top-cat">' + esc(o.cat.name) + "</span>" +
+              '<h4 class="top-name">' + esc(o.item.name) + "</h4>" +
+              '<p class="top-reason">' + esc(o.entry.reason) + "</p>" +
+            "</div>" +
+            '<div class="top-side">' +
+              '<span class="grade grade-' + o.entry.grade + '">' + o.entry.grade + "</span>" +
+              '<span class="top-price">' + fmtPrice(o.item.price) + "</span>" +
+            "</div>" +
+          "</article>"
+        );
+      }).join("");
+    }
+
+    tabs.innerHTML = [
+      '<button class="chip active" data-mode="all">全站 TOP 10</button>',
+      '<button class="chip" data-mode="cat">按品类</button>'
+    ].join("");
+    tabs.querySelectorAll(".chip").forEach(function (b) {
+      b.addEventListener("click", function () {
+        tabs.querySelectorAll(".chip").forEach(function (x) { x.classList.remove("active"); });
+        b.classList.add("active");
+        render(b.getAttribute("data-mode"));
+      });
+    });
+    render("all");
+  }
+
+  /* =========================================================
+   * 四、个性化测评（#quiz）：问答 → 生成方案
    * ========================================================= */
   function initQuiz() {
     var box = document.getElementById("quizBox");
@@ -357,6 +429,8 @@
         if (pref === "ergo" && it.tags.indexOf("人体工学") > -1) s += 2;
         if (pref === "value" && it.tags.indexOf("高性价比") > -1) s += 1;
         s += it.rating * 0.5;
+        // 性价比等级加权
+        if (it.valueGrade && gradeOrder[it.valueGrade] !== undefined) s += gradeOrder[it.valueGrade];
         return { item: it, score: s };
       }).sort(function (a, b) { return b.score - a.score; });
 
@@ -372,9 +446,10 @@
       if (pref === "quiet" && top.item.tags.indexOf("静音") > -1) reasons.push("静音调校好");
       if (pref === "rgb" && top.item.tags.indexOf("RGB") > -1) reasons.push("RGB 灯效");
       if (pref === "ergo" && top.item.tags.indexOf("人体工学") > -1) reasons.push("符合人体工学");
+      if (top.item.valueGrade) reasons.push("性价比等级 " + top.item.valueGrade);
       if (top.item.rating >= 5) reasons.push("推荐度满分");
       if (!reasons.length) reasons.push("综合性价比高");
-      why += reasons.join("，") + "。" + top.item.specs;
+      why += reasons.join("，") + "。" + (top.item.valueNote || top.item.specs);
 
       return { cat: cat, item: top.item, why: why };
     }
@@ -384,8 +459,10 @@
 
   /* ---- 启动 ---- */
   function boot() {
+    mergeModels();
     initAccessories();
     initPlans();
+    initTopList();
     initQuiz();
   }
 
