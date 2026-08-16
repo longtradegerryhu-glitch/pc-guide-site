@@ -857,3 +857,34 @@ a { color: inherit; text-decoration: none; }
 @media (max-width: 560px) {
   .look-gallery { grid-template-columns: 1fr; }
 }
+
+/* ===========================================================
+   首页分类入口卡片（可点击，整卡跳转）
+   =========================================================== */
+.entry-grid { margin-top: 8px; }
+a.entry-card {
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+a.entry-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--color-primary, #2563eb);
+  box-shadow: 0 14px 30px rgba(37, 99, 235, .14);
+}
+a.entry-card .card-icon { transition: transform .18s ease; }
+a.entry-card:hover .card-icon { transform: scale(1.08); }
+a.entry-card .entry-go {
+  margin-top: auto;
+  padding-top: 14px;
+  color: var(--color-primary, #2563eb);
+  font-weight: 700;
+  font-size: 14px;
+  transition: letter-spacing .18s ease;
+}
+a.entry-card:hover .entry-go { letter-spacing: .03em; }
+a.entry-card .card-title { margin-top: 0; }
+

@@ -74,6 +74,13 @@
 
     var state = { cat: "all", scene: "all", look: "all", budget: "all" };
 
+    // 跨页跳转：从颜值/测评页带 ?look=xxx 进来时，自动按该风格预筛选
+    try {
+      var _sp = new URLSearchParams(window.location.search);
+      var _lp = _sp.get("look");
+      if (_lp && styleById[_lp]) state.look = _lp;
+    } catch (e) {}
+
     function matchesBudget(item, budget) {
       if (budget === "all") return true;
       var mid = (item.price[0] + item.price[1]) / 2;
@@ -519,13 +526,7 @@
       var lookJump = box.querySelector(".res-look-jump");
       if (lookJump) lookJump.addEventListener("click", function () {
         var id = lookJump.getAttribute("data-look");
-        var looksRow = document.getElementById("accLooks");
-        if (looksRow) {
-          var target = looksRow.querySelector('.chip[data-id="' + id + '"]');
-          if (target) target.click();
-        }
-        var acc = document.getElementById("accessories");
-        if (acc) acc.scrollIntoView({ behavior: "smooth" });
+        window.location.href = "accessories.html?look=" + encodeURIComponent(id);
       });
     }
 
@@ -860,13 +861,7 @@
     wrap.querySelectorAll(".look-jump").forEach(function (b) {
       b.addEventListener("click", function () {
         var id = b.getAttribute("data-look");
-        var looksRow = document.getElementById("accLooks");
-        if (looksRow) {
-          var target = looksRow.querySelector('.chip[data-id="' + id + '"]');
-          if (target) target.click();
-        }
-        var acc = document.getElementById("accessories");
-        if (acc) acc.scrollIntoView({ behavior: "smooth" });
+        window.location.href = "accessories.html?look=" + encodeURIComponent(id);
       });
     });
   }
