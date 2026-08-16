@@ -190,7 +190,42 @@ window.PC_DATA = {
       ]
     },
     {
-      id: "focus", title: "外设升级重点？（可多选）", multi: true,
+      id: "intensity", title: "每天使用强度大概？", multi: false,
+      options: [
+        { id: "light", label: "☕ 轻度（<2 小时）", desc: "偶尔办公/轻娱乐" },
+        { id: "mid",   label: "🖥️ 中度（2-6 小时）", desc: "重度办公 + 日常游戏" },
+        { id: "heavy", label: "🔥 重度（6 小时+）", desc: "游戏/创作/长期渲染" }
+      ]
+    },
+    {
+      id: "lifespan", title: "这台电脑打算用多久？", multi: false,
+      options: [
+        { id: "y1", label: "1 年内", desc: "过渡期/学生短期" },
+        { id: "y3", label: "3 年左右", desc: "主流更新节奏" },
+        { id: "y5", label: "5 年+", desc: "一次到位战未来" }
+      ]
+    },
+    {
+      id: "exp", title: "你的装机/折腾经验？", multi: false,
+      options: [
+        { id: "new",  label: "🍼 纯新手", desc: "希望省心、少折腾" },
+        { id: "some", label: "🔧 会折腾", desc: "能自己装机排错" },
+        { id: "pro",  label: "⚙️ 老玩家", desc: "追求极致与细节" }
+      ]
+    },
+    {
+      id: "existing", title: "你已经有哪些外设？（可多选）", multi: true,
+      options: [
+        { id: "monitor", label: "🖥️ 显示器", desc: "已有屏幕" },
+        { id: "input",   label: "⌨️ 键鼠", desc: "已有键盘鼠标" },
+        { id: "audio",   label: "🎧 音频", desc: "已有耳机音箱" },
+        { id: "stand",   label: "🛠️ 支架", desc: "已有支架/升降桌" },
+        { id: "cooler",  label: "❄️ 散热器", desc: "已有散热方案" },
+        { id: "none",    label: "🚫 都没有", desc: "从零开始配" }
+      ]
+    },
+    {
+      id: "focus", title: "外设升级重点？（可多选，已拥有的会智能跳过）", multi: true,
       options: [
         { id: "cooler",   label: "❄️ 散热器", desc: "CPU/笔记本散热" },
         { id: "monitor",  label: "🖥️ 显示器", desc: "屏幕素质" },

@@ -301,9 +301,13 @@
 
     function generate() {
       var use = answerOf("use");
-      var budget = answerOf("budget")[0] || "b2";
+      var budget = answerOf("budget")[0] || "b6000";
       var form = answerOf("form")[0] || "desktop";
       var pref = answerOf("pref")[0] || "value";
+      var intensity = answerOf("intensity")[0] || "mid";
+      var lifespan = answerOf("lifespan")[0] || "y3";
+      var exp = answerOf("exp")[0] || "some";
+      var existing = answerOf("existing");
       var focus = answerOf("focus");
 
       if (!use.length) {
@@ -318,15 +322,19 @@
         else if (use.indexOf("create") > -1) focus = ["monitor", "input", "audio"];
         else focus = ["monitor", "stand", "input"];
       }
+      // 智能跳过已拥有的外设（选了"都没有"除外）
+      if (existing.indexOf("none") === -1 && existing.length) {
+        focus = focus.filter(function (c) { return existing.indexOf(c) === -1; });
+      }
 
       var budgetCap = budgetOrder[budget];
 
-      // 1) 基础整机方案
-      var plan = pickPlan(use, form, budgetCap);
+      // 1) 基础整机方案（年限/强度参与匹配）
+      var plan = pickPlan(use, form, budgetCap, lifespan, intensity);
 
-      // 2) 个性化配件推荐
+      // 2) 个性化配件推荐（强度/已有外设参与评分）
       var picks = focus.map(function (catId) {
-        return pickItems(catId, use, pref, budgetCap, plan);
+        return pickItems(catId, use, pref, budgetCap, plan, intensity);
       }).filter(Boolean);
 
       var totalLow = plan ? plan.price[0] : 0;
@@ -347,6 +355,20 @@
         var p = D.personas.filter(function (x) { return x.id === pid; })[0];
         return p ? '<span class="tag-pill big">' + p.icon + " " + esc(p.name) + "</span>" : "";
       }).join("");
+
+      // 4) 需求画像（强度/年限/经验/已有外设）
+      var intLabel = { light: "☕ 轻度使用", mid: "🖥️ 中度使用", heavy: "🔥 重度使用" }[intensity] || "";
+      var lifeLabel = { y1: "短期过渡", y3: "主流 3 年", y5: "战未来 5 年+" }[lifespan] || "";
+      var expLabel = { new: "纯新手", some: "会折腾", pro: "老玩家" }[exp] || "";
+      var existLabels = { monitor: "🖥️", input: "⌨️", audio: "🎧", stand: "🛠️", cooler: "❄️" };
+      var existTxt = existing.indexOf("none") > -1 || !existing.length
+        ? "外设从零开始"
+        : "已有" + existing.map(function (c) { return existLabels[c] || c; }).join(" ");
+      var profile =
+        '<span class="tag-pill">' + esc(intLabel) + "</span>" +
+        '<span class="tag-pill">' + esc(lifeLabel) + "</span>" +
+        '<span class="tag-pill">' + esc(expLabel) + "</span>" +
+        '<span class="tag-pill">' + esc(existTxt) + "</span>";
 
       var picksHtml = picks.map(function (p) {
         var item = p.item;
@@ -369,6 +391,7 @@
       box.innerHTML =
         '<div class="result-box reveal in">' +
           '<h3 class="result-title">🎯 你的个性化方案</h3>' +
+          '<div class="result-persona"><span class="res-label">需求画像</span>' + profile + "</div>" +
           '<div class="result-persona"><span class="res-label">适合人群</span>' + personas + "</div>" +
           planHtml +
           '<div class="res-section"><span class="res-label">外设/配件推荐（按你的升级重点）</span>' +
@@ -386,7 +409,7 @@
       });
     }
 
-    function pickPlan(use, form, budgetCap) {
+    function pickPlan(use, form, budgetCap, lifespan, intensity) {
       var candidates = D.plans.filter(function (pl) {
         if (form === "laptop" && pl.form.indexOf("laptop") === -1 && pl.form.indexOf("both") === -1) return false;
         if (form === "desktop" && pl.form.indexOf("desktop") === -1) return false;
@@ -394,17 +417,24 @@
         return hit;
       });
       if (!candidates.length) return null;
-      // 预算匹配优先，其次取第一个
-      var exact = candidates.filter(function (pl) { return pl.price[1] <= budgetCap * 1.15; });
+      // 预算匹配优先（战未来放宽上浮）；其次取第一个
+      var cap = (lifespan === "y5" ? budgetCap * 1.35 : budgetCap * 1.15);
+      var exact = candidates.filter(function (pl) { return pl.price[1] <= cap; });
       var pool = exact.length ? exact : candidates;
       return pool.reduce(function (best, pl) {
         var score = pl.uses.filter(function (u) { return use.indexOf(u) > -1; }).length;
         var bestScore = best ? best.uses.filter(function (u) { return use.indexOf(u) > -1; }).length : -1;
+        if (score === bestScore && lifespan === "y5" && intensity === "heavy") {
+          // 战未来 + 重度使用：同匹配度下优先配置更足的高一档
+          var m = (pl.price[0] + pl.price[1]) / 2;
+          var bm = (best.price[0] + best.price[1]) / 2;
+          if (m > bm) return pl;
+        }
         return score > bestScore ? pl : best;
       }, pool[0]);
     }
 
-    function pickItems(catId, use, pref, budgetCap, plan) {
+    function pickItems(catId, use, pref, budgetCap, plan, intensity) {
       var cat = D.categories.filter(function (c) { return c.id === catId; })[0];
       if (!cat) return null;
       var allowance = catId === "monitor" ? budgetCap * 0.4 : budgetCap * 0.22;
@@ -432,6 +462,8 @@
         s += it.rating * 0.5;
         // 性价比等级加权
         if (it.valueGrade && gradeOrder[it.valueGrade] !== undefined) s += gradeOrder[it.valueGrade];
+        // 重度使用：静音/散热优先
+        if (intensity === "heavy" && (it.tags.indexOf("静音") > -1 || it.tags.indexOf("散热") > -1)) s += 2;
         return { item: it, score: s };
       }).sort(function (a, b) { return b.score - a.score; });
 
