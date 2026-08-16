@@ -443,8 +443,35 @@
 
         <div class="persona-strip reveal">
           <h3 class="block-title">人群画像速览</h3>
-          <p class="section-desc">先对号入座，再看上面四套方案哪套适合你。</p>
+          <p class="section-desc">先对号入座，再看上面六套方案哪套适合你。</p>
           <div class="card-grid persona-grid" id="personasWrap"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 预算适配器 ===== -->
+    <section class="section section-alt" id="budget">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="section-kicker">BUDGET FIT</span>
+          <h2 class="section-title">预算适配器</h2>
+          <p class="section-desc">输入你的预算（或点击快捷档位），系统自动匹配最合适的整机方案并给出完整配置单、规格说明与预算建议。</p>
+        </div>
+
+        <div class="quiz-panel reveal">
+          <div class="budget-row">
+            <label class="budget-label" for="budgetInput">我的预算（元）</label>
+            <input type="number" id="budgetInput" class="budget-input" min="1000" max="50000" step="500" value="6000" placeholder="例如 6000" />
+          </div>
+          <div class="budget-row">
+            <span class="budget-label">快捷档位</span>
+            <div class="filter-chips" id="budgetChips"></div>
+          </div>
+          <div class="budget-row">
+            <span class="budget-label">主要用途</span>
+            <div class="filter-chips" id="budgetUse"></div>
+          </div>
+          <div class="budget-out" id="budgetResult"></div>
         </div>
       </div>
     </section>

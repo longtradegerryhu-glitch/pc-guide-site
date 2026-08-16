@@ -167,7 +167,8 @@
         return p ? '<span class="tag-pill">' + p.icon + " " + p.name + "</span>" : "";
       }).join("");
       var rows = (pl.parts || []).map(function (r) {
-        return "<tr><td>" + esc(r[0]) + "</td><td>" + esc(r[1]) + "</td><td class=\"plan-price\">" + esc(r[2]) + "</td></tr>";
+        var detail = r[3] ? '<span class="plan-detail">' + esc(r[3]) + "</span>" : "";
+        return "<tr><td>" + esc(r[0]) + "</td><td>" + esc(r[1]) + detail + "</td><td class=\"plan-price\">" + esc(r[2]) + "</td></tr>";
       }).join("");
       return (
         '<article class="plan-card reveal in">' +
@@ -457,6 +458,135 @@
     render();
   }
 
+  /* =========================================================
+   * 五、预算适配器（#budget）：输入预算 → 自动匹配方案
+   * ========================================================= */
+  function initBudgetTool() {
+    var input = document.getElementById("budgetInput");
+    var chips = document.getElementById("budgetChips");
+    var useRow = document.getElementById("budgetUse");
+    var result = document.getElementById("budgetResult");
+    if (!input || !chips || !useRow || !result) return;
+
+    var state = { budget: 6000, use: "all" };
+    var presets = [3000, 4500, 6000, 8500, 12000, 20000];
+
+    function renderChips() {
+      chips.innerHTML = presets.map(function (b) {
+        var active = state.budget === b ? " active" : "";
+        return '<button class="chip' + active + '" data-b="' + b + '">¥' + b + "</button>";
+      }).join("");
+      chips.querySelectorAll(".chip").forEach(function (b) {
+        b.addEventListener("click", function () {
+          state.budget = parseInt(b.getAttribute("data-b"), 10);
+          input.value = state.budget;
+          renderChips();
+          renderResult();
+        });
+      });
+
+      useRow.innerHTML = [{ id: "all", label: "全部用途" }, { id: "office", label: "💼 办公学习" }, { id: "game", label: "🎮 游戏" }, { id: "create", label: "🎬 创作" }, { id: "portable", label: "💻 便携" }].map(function (u) {
+        var active = state.use === u.id ? " active" : "";
+        return '<button class="chip' + active + '" data-u="' + u.id + '">' + u.label + "</button>";
+      }).join("");
+      useRow.querySelectorAll(".chip").forEach(function (b) {
+        b.addEventListener("click", function () {
+          state.use = b.getAttribute("data-u");
+          renderChips();
+          renderResult();
+        });
+      });
+    }
+
+    input.addEventListener("input", function () {
+      var v = parseInt(input.value, 10);
+      if (!isNaN(v) && v >= 1000) {
+        state.budget = v;
+        renderChips();
+        renderResult();
+      }
+    });
+
+    function matchPlan(budget) {
+      var pool = D.plans.filter(function (pl) {
+        if (pl.id === "mobile") return false; // 台式整机预算，不含便携补强包
+        if (state.use !== "all" && pl.uses.indexOf(state.use) === -1) return false;
+        return true;
+      });
+      if (!pool.length) pool = D.plans.filter(function (pl) { return pl.id !== "mobile"; });
+
+      // 预算区间包含该预算 → 直接命中；否则取中值最接近的档位
+      var hit = pool.filter(function (pl) { return budget >= pl.price[0] * 0.85 && budget <= pl.price[1] * 1.15; });
+      if (hit.length) {
+        return hit.reduce(function (best, pl) {
+          var dBest = Math.abs((best.price[0] + best.price[1]) / 2 - budget);
+          var dPl = Math.abs((pl.price[0] + pl.price[1]) / 2 - budget);
+          return dPl < dBest ? pl : best;
+        });
+      }
+      return pool.reduce(function (best, pl) {
+        var dBest = Math.abs((best.price[0] + best.price[1]) / 2 - budget);
+        var dPl = Math.abs((pl.price[0] + pl.price[1]) / 2 - budget);
+        return dPl < dBest ? pl : best;
+      });
+    }
+
+    function renderResult() {
+      var b = state.budget;
+      var plan = matchPlan(b);
+      if (!plan) { result.innerHTML = '<div class="empty-box">暂无匹配方案。</div>'; return; }
+
+      var rows = plan.parts.map(function (r) {
+        var detail = r[3] ? '<span class="plan-detail">' + esc(r[3]) + "</span>" : "";
+        return "<tr><td>" + esc(r[0]) + "</td><td>" + esc(r[1]) + detail + "</td><td class=\"plan-price\">" + esc(r[2]) + "</td></tr>";
+      }).join("");
+
+      var low = plan.price[0], high = plan.price[1];
+      var mid = (low + high) / 2;
+      var diffLow = b - low, diffHigh = b - high;
+      var tipHtml;
+      if (b < low * 0.85) {
+        tipHtml = '<div class="budget-tip warn">⚠️ 预算（¥' + b + "）低于「" + esc(plan.name) + '」参考下限，建议：先去掉显示器/键鼠（约 -¥600~1000），或参考更低档「' + esc(prevPlanName(plan)) + '」。</div>';
+      } else if (b >= low * 0.85 && b < low) {
+        tipHtml = '<div class="budget-tip">💡 预算略紧于该档参考价，可把显示器/键鼠先用入门款，其余配置不变。</div>';
+      } else if (b > high * 1.15) {
+        tipHtml = '<div class="budget-tip">🎉 预算充足于该档参考价，富余部分可：升级显示器到 4K 高刷 / 加 2TB 硬盘 / 升级键鼠。</div>';
+      } else {
+        tipHtml = '<div class="budget-tip">✅ 预算落在「' + esc(plan.name) + '」参考区间内，直接照单装机即可。</div>';
+      }
+
+      var personas = (plan.personas || []).map(function (pid) {
+        var p = D.personas.filter(function (x) { return x.id === pid; })[0];
+        return p ? '<span class="tag-pill">' + p.icon + " " + p.name + "</span>" : "";
+      }).join("");
+
+      result.innerHTML =
+        '<div class="budget-result reveal in">' +
+          '<div class="budget-head">' +
+            '<span class="plan-icon">' + plan.icon + "</span>" +
+            '<div><h3 class="plan-name">' + esc(plan.name) + '<span class="plan-tier">' + esc(plan.budgetLabel) + "</span></h3>" +
+            '<span class="plan-budget">参考预算 ' + fmtPrice(plan.price) + " ｜ 适合人群 " + personas + "</span></div>" +
+          "</div>" +
+          "<p class=\"plan-summary\">" + esc(plan.summary) + "</p>" +
+          '<table class="plan-table"><thead><tr><th>部件</th><th>推荐（含规格说明）</th><th>参考价</th></tr></thead><tbody>' + rows + "</tbody></table>" +
+          '<div class="res-total">你的预算 <b>¥' + b + '</b> ｜ 本档合计约 <b>' + fmtPrice([low, high]) + "</b></div>" +
+          tipHtml +
+          '<div class="res-note">' + esc(D.note) + "。适配为规则推荐，购机前请复核接口兼容性与电商实时价。</div>" +
+        "</div>";
+    }
+
+    function prevPlanName(plan) {
+      var idx = D.plans.indexOf(plan);
+      for (var i = idx - 1; i >= 0; i--) {
+        if (D.plans[i].id !== "mobile") return D.plans[i].name;
+      }
+      return "核显入门档";
+    }
+
+    renderChips();
+    renderResult();
+  }
+
   /* ---- 启动 ---- */
   function boot() {
     mergeModels();
@@ -464,6 +594,7 @@
     initPlans();
     initTopList();
     initQuiz();
+    initBudgetTool();
   }
 
   if (document.readyState === "loading") {
