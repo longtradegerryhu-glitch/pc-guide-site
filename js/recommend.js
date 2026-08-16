@@ -23,6 +23,19 @@
   var styleById = {};
   STYLES.forEach(function (s) { styleById[s.id] = s; });
   function lookOf(item) { return (item && LOOKS[item.id]) || null; }
+
+  /* 每个具体型号 → 跳转到真实产品图（百度图片 / 京东搜索该型号，不下载、不侵权） */
+  function productImageLink(item) {
+    if (!item || !item.name) return "";
+    var n = item.name;
+    var img = "https://image.baidu.com/search/index?tn=baiduimage&word=" + encodeURIComponent(n);
+    var shop = "https://search.jd.com/Search?keyword=" + encodeURIComponent(n);
+    return '<div class="prod-link">' +
+      '<a class="prod-img-btn" href="' + img + '" target="_blank" rel="noopener noreferrer">' +
+        '<span class="prod-ico">🔎</span>查看 ' + esc(n) + ' 真实产品图</a>' +
+      '<a class="prod-shop" href="' + shop + '" target="_blank" rel="noopener noreferrer">京东 ›</a>' +
+    '</div>';
+  }
   function styleOf(id) { return styleById[id] || null; }
   function countByStyle(sid) {
     var n = 0;
@@ -140,6 +153,7 @@
             '<div class="acc-specs">' + esc(it.specs) + "</div>" +
             '<div class="acc-tags">' + tags + "</div>" +
             '<div class="acc-compat">搭配：' + esc(it.compat) + "</div>" +
+            productImageLink(it) +
           "</article>"
         );
       }).join("");
@@ -249,18 +263,14 @@
     }
 
     function cardHtml(o, rankLabel) {
-      var img = TOP_IMG[o.cat.id];
-      var thumb = img
-        ? '<div class="top-thumb"><img src="' + img + '" alt="' + esc(o.cat.name) + ' 实物图" loading="lazy" /></div>'
-        : "";
       return (
         '<article class="top-card reveal in">' +
-          thumb +
           '<span class="top-rank">' + rankLabel + "</span>" +
           '<div class="top-main">' +
             '<span class="top-cat">' + esc(o.cat.name) + "</span>" +
             '<h4 class="top-name">' + esc(o.item.name) + "</h4>" +
             '<p class="top-reason">' + esc(o.entry.reason) + "</p>" +
+            productImageLink(o.item) +
           "</div>" +
           '<div class="top-side">' +
             '<span class="grade grade-' + o.entry.grade + '">' + o.entry.grade + "</span>" +
@@ -451,7 +461,9 @@
           '<div class="pick-item">' +
             '<span class="pick-icon">' + cat.icon + "</span>" +
             '<div class="pick-main"><span class="pick-name">' + esc(item.name) + "</span>" +
-            '<span class="pick-why">' + esc(p.why) + "</span></div>" +
+            '<span class="pick-why">' + esc(p.why) + "</span>" +
+            productImageLink(item) +
+            "</div>" +
             '<span class="pick-price">' + fmtPrice(item.price) + "</span>" +
           "</div>"
         );
