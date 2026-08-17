@@ -84,6 +84,27 @@ window.PC_MODELS = {
     { id: "p5", brand: "海韵",      model: "FOCUS GX-1000",         name: "海韵 FOCUS GX-1000", style: "电源", price: [1080, 1240],  rating: 5, valueGrade: "B", valueNote: "十年质保旗舰，为未来升级留足冗余。",                  use: ["create", "game"], audience: ["creator", "gamer"], tags: ["旗舰", "长质保"], specs: "1000W;ATX3.1;白金级用料;十年质保", compat: "RTX 5080/5090 与长期高负载" },
     { id: "p6", brand: "先马",      model: "平头哥 M2",              name: "先马 平头哥 M2", style: "机箱", price: [109, 230],   rating: 4, valueGrade: "S", valueNote: "百元级走线友好的中塔，装机新手友好。",                use: ["game", "office"], audience: ["student", "gamer"], tags: ["高性价比", "走线"], specs: "中塔 ATX;支持 240/360 冷排;侧透可选", compat: "首台台式机通用之选" },
     { id: "p7", brand: "爱国者",    model: "星璨岚",                name: "爱国者 星璨 岚", style: "机箱", price: [199, 350],   rating: 4, valueGrade: "A", valueNote: "入门海景房，颜值与风道兼顾。",                        use: ["game", "create"], audience: ["gamer", "creator"], tags: ["RGB", "颜值"], specs: "全景侧透;支持 360 冷排;ATX", compat: "灯效爱好者与海景房主题装机" }
+  ],
+  /* ---------- CPU（2026-08 核验行情） ---------- */
+  cpu: [
+    { id: "u1", brand: "AMD",       model: "Ryzen 5 5500",          name: "AMD Ryzen 5 5500", style: "入门6核", price: [540, 600],    rating: 4, valueGrade: "S", valueNote: "AM4 清库存甜点，板U套装极致性价比。",                use: ["office", "game"], audience: ["student", "office"], tags: ["高性价比"], specs: "6核12线程;Zen3;65W;AM4", compat: "配 A520/B550，预算敏感整机首选" },
+    { id: "u2", brand: "AMD",       model: "Ryzen 5 8500G",          name: "AMD Ryzen 5 8500G", style: "核显6核", price: [900, 1350],   rating: 5, valueGrade: "S", valueNote: "核显最强入门，办公/轻度网游免独显。",                 use: ["office", "portable"], audience: ["student", "office"], tags: ["核显", "高性价比"], specs: "6核12线程;RDNA3 核显740M;65W;AM5", compat: "配 A620/B650，核显机首选，日后可加独显" },
+    { id: "u3", brand: "Intel",     model: "Core i3-14100F",         name: "Intel i3-14100F", style: "入门4核", price: [700, 1050],   rating: 4, valueGrade: "A", valueNote: "4 核 8 线程入门，网游办公够用。",                     use: ["office", "game"], audience: ["student", "office"], tags: ["入门", "低功耗"], specs: "4核8线程;Raptor Lake;58W;LGA1700", compat: "配 H610M，性价比入门板U" },
+    { id: "u4", brand: "AMD",       model: "Ryzen 5 9600X",          name: "AMD Ryzen 5 9600X", style: "游戏6核", price: [1200, 1350],  rating: 5, valueGrade: "S", valueNote: "游戏单核性能强，主流游戏机甜点。",                  use: ["game", "office"], audience: ["gamer", "student"], tags: ["游戏", "高性价比"], specs: "6核12线程;Zen5;65W;AM5", compat: "配 B650M，主流游戏机首选" },
+    { id: "u5", brand: "Intel",     model: "Core i5-14600KF",        name: "Intel i5-14600KF", style: "全能14核", price: [1450, 1700],  rating: 4, valueGrade: "A", valueNote: "14 核全能，游戏多开轻创作通吃。",                   use: ["game", "create"], audience: ["gamer", "creator"], tags: ["全能"], specs: "14核20线程;Raptor Lake;125W;LGA1700", compat: "配 B760M，散热选双塔或 240 水冷" },
+    { id: "u6", brand: "AMD",       model: "Ryzen 7 9700X",          name: "AMD Ryzen 7 9700X", style: "均衡8核", price: [1500, 1750],  rating: 4, valueGrade: "A", valueNote: "8 核 Zen5，创作与游戏均衡。",                       use: ["create", "game"], audience: ["creator", "gamer"], tags: ["均衡"], specs: "8核16线程;Zen5;65W;AM5", compat: "配 B650，剪辑渲染+游戏双修" },
+    { id: "u7", brand: "AMD",       model: "Ryzen 7 9800X3D",        name: "AMD Ryzen 7 9800X3D", style: "游戏旗舰", price: [2900, 3200],  rating: 5, valueGrade: "S", valueNote: "3D 缓存游戏王，FPS 神U。",                          use: ["game", "create"], audience: ["gamer", "creator"], tags: ["游戏旗舰", "3D缓存"], specs: "8核16线程;Zen5 3D V-Cache;AM5", compat: "配 B650/X670，电竞旗舰首选" },
+    { id: "u8", brand: "Intel",     model: "Core Ultra 9 285K",      name: "Intel Ultra 9 285K", style: "旗舰24核", price: [4400, 4800],  rating: 4, valueGrade: "A", valueNote: "24 核旗舰，生产力天花板。",                        use: ["create"], audience: ["creator"], tags: ["旗舰", "生产力"], specs: "24核24线程;Arrow Lake;125W;LGA1851", compat: "配 Z890 旗舰板，创作工作站级" }
+  ],
+  /* ---------- 显卡（2026-08 核验行情） ---------- */
+  gpu: [
+    { id: "g1", brand: "AMD",       model: "RX 7600 8G",             name: "AMD RX 7600 8G", style: "1080P 入门", price: [1600, 1900],  rating: 4, valueGrade: "A", valueNote: "1080P 高画质网游，入门独显。",                     use: ["game", "office"], audience: ["student", "gamer"], tags: ["高性价比"], specs: "8GB GDDR6;1080P 高画质;130W", compat: "配 450W 电源，1080P 入门首选" },
+    { id: "g2", brand: "NVIDIA",    model: "RTX 5060 8G",            name: "NVIDIA RTX 5060 8G", style: "2K 入门", price: [2300, 2600],  rating: 5, valueGrade: "S", valueNote: "2K 入门甜点，DLSS4 加持。",                         use: ["game", "create"], audience: ["gamer", "student"], tags: ["DLSS", "高性价比"], specs: "8GB GDDR7;2K 中高画质;DLSS4", compat: "配 550-650W 电源，主流游戏机首选" },
+    { id: "g3", brand: "AMD",       model: "RX 9060 XT 16G",         name: "AMD RX 9060 XT 16G", style: "2K 游戏", price: [2600, 3600],  rating: 4, valueGrade: "A", valueNote: "16G 显存战未来，A 卡性价比。",                      use: ["game", "create"], audience: ["gamer", "creator"], tags: ["大显存"], specs: "16GB GDDR6;2K 高画质;FSR4", compat: "配 650W 电源，A 卡性价比之选" },
+    { id: "g4", brand: "NVIDIA",    model: "RTX 5070 12G",           name: "NVIDIA RTX 5070 12G", style: "2K 高刷", price: [4300, 5400],  rating: 5, valueGrade: "A", valueNote: "2K 全特效，DLSS4 帧生成。",                        use: ["game", "create"], audience: ["gamer", "creator"], tags: ["DLSS4", "电竞"], specs: "12GB GDDR7;2K 全特效;DLSS4 帧生成", compat: "配 650-750W 电源，高帧电竞" },
+    { id: "g5", brand: "AMD",       model: "RX 9070 XT 16G",         name: "AMD RX 9070 XT 16G", style: "2K 高刷", price: [5300, 5900],  rating: 4, valueGrade: "A", valueNote: "对标 5070，FSR4 性价比 A 卡旗舰。",                use: ["game", "create"], audience: ["gamer", "creator"], tags: ["旗舰", "A卡"], specs: "16GB GDDR6;2K 全特效;FSR4", compat: "配 750W 电源" },
+    { id: "g6", brand: "NVIDIA",    model: "RTX 5070 Ti 16G",        name: "NVIDIA RTX 5070 Ti 16G", style: "创作旗舰", price: [7500, 8500],  rating: 5, valueGrade: "S", valueNote: "16G 显存，创作与游戏双旗舰。",                    use: ["create", "game"], audience: ["creator", "gamer"], tags: ["创作", "旗舰"], specs: "16GB GDDR7;4K 入门;NVENC 加速", compat: "配 750-850W 电源，创作旗舰" },
+    { id: "g7", brand: "NVIDIA",    model: "RTX 5080 16G",           name: "NVIDIA RTX 5080 16G", style: "4K 旗舰", price: [8200, 10300], rating: 5, valueGrade: "A", valueNote: "4K 高刷顶配，AI 渲染利器。",                       use: ["create", "game"], audience: ["creator"], tags: ["旗舰", "4K"], specs: "16GB GDDR7;4K 高刷;DLSS4", compat: "配 850-1000W 电源，顶配机" }
   ]
 };
 
@@ -113,7 +134,13 @@ window.PC_DATA.topList = [
   { catId: "dock",    itemId: "d3", grade: "A", reason: "双 HDMI+千兆+读卡，桌面一步到位。" },
   { catId: "psu",     itemId: "p3", grade: "S", reason: "750W ATX3.1 全日系电容，十年质保热销王。" },
   { catId: "psu",     itemId: "p1", grade: "S", reason: "650W 金牌高性价比，入门游戏机标配。" },
-  { catId: "psu",     itemId: "p6", grade: "S", reason: "百元级走线友好的中塔，装机新手友好。" }
+  { catId: "psu",     itemId: "p6", grade: "S", reason: "百元级走线友好的中塔，装机新手友好。" },
+  { catId: "cpu",     itemId: "u7", grade: "S", reason: "3D 缓存游戏王，FPS 神U。" },
+  { catId: "cpu",     itemId: "u4", grade: "S", reason: "游戏单核性能强，主流游戏机甜点。" },
+  { catId: "cpu",     itemId: "u2", grade: "S", reason: "核显最强入门，办公轻度网游免独显。" },
+  { catId: "gpu",     itemId: "g2", grade: "S", reason: "2K 入门甜点，DLSS4 加持。" },
+  { catId: "gpu",     itemId: "g6", grade: "S", reason: "16G 显存创作游戏双旗舰。" },
+  { catId: "gpu",     itemId: "g1", grade: "A", reason: "1080P 高画质网游，入门独显。" }
 ];
 
 /* ===========================================================

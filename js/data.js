@@ -251,7 +251,9 @@ window.PC_DATA = {
     { id: "audio",   name: "音频设备", icon: "🎧", items: [] },
     { id: "network", name: "网络设备", icon: "📡", items: [] },
     { id: "dock",    name: "拓展坞",   icon: "🔌", items: [] },
-    { id: "psu",     name: "电源与机箱", icon: "🔋", items: [] }
+    { id: "psu",     name: "电源与机箱", icon: "🔋", items: [] },
+    { id: "cpu",     name: "CPU",       icon: "🧠", items: [] },
+    { id: "gpu",     name: "显卡",      icon: "🎮", items: [] }
   ],
 
   /* ---------- 个性化测评问题（预算 6 档，与 plans.budget 对齐） ---------- */

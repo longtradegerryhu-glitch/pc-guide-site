@@ -141,6 +141,7 @@
     "toplist.html": "性价比榜单",
     "plans.html": "搭配计划",
     "looks.html": "颜值外观",
+    "smart.html": "智能推荐",
     "quiz.html": "个性推荐",
     "faq.html": "常见问题"
   };
