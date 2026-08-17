@@ -62,9 +62,21 @@
             <span class="filter-label">预算</span>
             <div class="filter-chips" id="accBudget"></div>
           </div>
+          <div class="filter-group">
+            <span class="filter-label">人群</span>
+            <div class="filter-chips" id="accAudience"></div>
+          </div>
         </div>
 
-        <p class="acc-count" id="accCount"></p>
+        <div class="acc-toolbar">
+          <p class="acc-count" id="accCount"></p>
+          <select class="acc-sort" id="accSort" aria-label="排序方式">
+            <option value="default">默认排序</option>
+            <option value="priceAsc">价格从低到高</option>
+            <option value="priceDesc">价格从高到低</option>
+            <option value="ratingDesc">评分从高到低</option>
+          </select>
+        </div>
         <div class="acc-grid" id="accWrap"></div>
       </div>
     </section>

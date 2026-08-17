@@ -10,6 +10,8 @@
 
   var useLabels = { office: "办公学习", game: "游戏电竞", create: "内容创作", portable: "移动便携" };
   var useIcons = { office: "💼", game: "🎮", create: "🎬", portable: "💻" };
+  var audLabels = { student: "学生党", office: "办公族", gamer: "游戏党", creator: "创作者", mobile: "移动办公" };
+  var audIcons = { student: "🎓", office: "💼", gamer: "🎮", creator: "🎬", mobile: "💻" };
   var gradeOrder = { S: 4, A: 3, B: 1, C: -1 };
   var budgetOrder = { b3000: 3000, b4500: 4500, b6000: 6000, b8500: 8500, b12000: 12000, b20000: 20000 };
 
@@ -72,7 +74,7 @@
     var countEl = document.getElementById("accCount");
     if (!wrap || !catRow || !sceneRow || !budgetRow) return;
 
-    var state = { cat: "all", scene: "all", look: "all", budget: "all" };
+    var state = { cat: "all", scene: "all", look: "all", budget: "all", audience: "all", sort: "default" };
 
     // 跨页跳转：从颜值/测评页带 ?look=xxx 进来时，自动按该风格预筛选
     try {
@@ -112,9 +114,20 @@
           if (state.scene !== "all" && item.use.indexOf(state.scene) === -1) return;
           if (state.look !== "all" && lookOf(item) !== state.look) return;
           if (!matchesBudget(item, state.budget)) return;
+          var aud = item.audience || [];
+          if (state.audience !== "all" && aud.length && aud.indexOf(state.audience) === -1) return;
           list.push({ cat: cat, item: item });
         });
       });
+
+      // 排序：默认按品类顺序；可选 价格升/降、评分降
+      if (state.sort === "priceAsc") {
+        list.sort(function (a, b) { return (a.item.price[0] + a.item.price[1]) - (b.item.price[0] + b.item.price[1]); });
+      } else if (state.sort === "priceDesc") {
+        list.sort(function (a, b) { return (b.item.price[0] + b.item.price[1]) - (a.item.price[0] + a.item.price[1]); });
+      } else if (state.sort === "ratingDesc") {
+        list.sort(function (a, b) { return b.item.rating - a.item.rating; });
+      }
 
       countEl.textContent = "共 " + list.length + " 款（" + D.updated + " 行情）";
 
@@ -193,6 +206,26 @@
           return { id: s.id, label: s.icon + " " + s.name };
         })),
         "look");
+    }
+
+    // 人群筛选
+    var audienceRow = document.getElementById("accAudience");
+    if (audienceRow) {
+      renderChips(audienceRow,
+        [{ id: "all", label: "全部人群" }].concat(Object.keys(audLabels).map(function (k) {
+          return { id: k, label: audIcons[k] + " " + audLabels[k] };
+        })),
+        "audience");
+    }
+
+    // 排序
+    var sortSel = document.getElementById("accSort");
+    if (sortSel) {
+      sortSel.value = state.sort;
+      sortSel.addEventListener("change", function () {
+        state.sort = sortSel.value;
+        renderCards();
+      });
     }
 
     renderCards();
@@ -709,10 +742,12 @@
       state.plan = plan;
       state.rows = plan.parts.map(function (part) {
         var opt = defaultOpt(part);
+        var cat = catalogOf(part[0]);
         var price = opt >= 0
-          ? catalogOf(part[0]).options[opt].p
+          ? cat.options[opt].p
           : (parseInt(String(part[2]).replace(/[^0-9]/g, ""), 10) || 0);
-        return { part: part, opt: opt, price: price };
+        var name = opt >= 0 ? cat.options[opt].n : part[1];
+        return { part: part, opt: opt, price: price, name: name };
       });
     }
 
@@ -776,6 +811,7 @@
             '<span class="plan-icon">' + plan.icon + "</span>" +
             '<div><h3 class="plan-name">' + esc(plan.name) + '<span class="plan-tier">' + esc(plan.budgetLabel) + "</span></h3>" +
             '<span class="plan-budget">适合人群 ' + personas + " ｜ 每个部件都可换型号、改价格</span></div>" +
+            '<button type="button" class="budget-copy" title="复制当前配置单为文本">📋 复制配置单</button>' +
           "</div>" +
           '<table class="plan-table part-table"><thead><tr><th>部件</th><th>型号 / 档位（下拉可换）＋ 价格（可改）</th><th>小计</th></tr></thead><tbody>' + trs + "</tbody></table>" +
           '<div class="res-total">当前配置合计：<b>¥' + state.total + '</b> ｜ 你的预算 <b>¥' + b + '</b> ｜ ' +
@@ -790,8 +826,10 @@
         sel.addEventListener("change", function () {
           var i = parseInt(sel.getAttribute("data-i"), 10);
           var opt = parseInt(sel.value, 10);
+          var o = catalogOf(state.rows[i].part[0]).options[opt];
           state.rows[i].opt = opt;
-          state.rows[i].price = catalogOf(state.rows[i].part[0]).options[opt].p;
+          state.rows[i].price = o.p;
+          state.rows[i].name = o.n;
           updateTotal();
           renderTable(plan, b);
         });
@@ -813,6 +851,45 @@
           if (tipEl) tipEl.className = "budget-tip" + (d < 0 ? " warn" : "");
         });
       });
+      // 绑定交互：复制配置单
+      var copyBtn = result.querySelector(".budget-copy");
+      if (copyBtn) copyBtn.addEventListener("click", copyPlan);
+    }
+
+    function copyPlan() {
+      var plan = state.plan;
+      if (!plan || !state.rows.length) return;
+      var lines = [];
+      lines.push("【" + plan.icon + " " + plan.name + "】 " + plan.budgetLabel);
+      lines.push("预算：¥" + state.budget + " ｜ 当前配置合计：¥" + state.total);
+      lines.push(new Array(30).join("—"));
+      state.rows.forEach(function (r) {
+        lines.push("· " + r.part[0] + "：" + r.name + "（¥" + r.price + "）");
+        if (r.part[3]) lines.push("　  " + r.part[3]);
+      });
+      lines.push(new Array(30).join("—"));
+      lines.push(D.note);
+      var text = lines.join("\n");
+      function flash() {
+        var btn = result.querySelector(".budget-copy");
+        if (!btn) return;
+        var old = btn.textContent;
+        btn.textContent = "✅ 已复制";
+        setTimeout(function () { btn.textContent = old; }, 1600);
+      }
+      function fallback() {
+        var ta = document.createElement("textarea");
+        ta.value = text;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand("copy"); } catch (e) {}
+        document.body.removeChild(ta);
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(flash, function () { fallback(); flash(); });
+      } else { fallback(); flash(); }
     }
 
     renderChips();

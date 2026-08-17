@@ -132,4 +132,29 @@
       window.scrollTo({ top: 0, behavior: "smooth" });
     });
   }
+
+  /* ---- 面包屑导航（多页站，JS 按当前页面生成，免 9 页重复维护） ---- */
+  var crumbPages = {
+    "guide.html": "使用指南",
+    "hardware.html": "硬件总结",
+    "accessories.html": "配件价格",
+    "toplist.html": "性价比榜单",
+    "plans.html": "搭配计划",
+    "looks.html": "颜值外观",
+    "quiz.html": "个性推荐",
+    "faq.html": "常见问题"
+  };
+  var curPage = (window.location.pathname.split("/").pop() || "index.html").toLowerCase();
+  var curLabel = crumbPages[curPage];
+  var mainEl = document.querySelector("main");
+  if (curLabel && mainEl) {
+    var crumb = document.createElement("nav");
+    crumb.className = "breadcrumb";
+    crumb.setAttribute("aria-label", "面包屑");
+    crumb.innerHTML =
+      '<a href="index.html">首页</a>' +
+      '<span class="crumb-sep" aria-hidden="true">›</span>' +
+      '<span class="crumb-cur" aria-current="page">' + curLabel + "</span>";
+    mainEl.parentNode.insertBefore(crumb, mainEl);
+  }
 })();
