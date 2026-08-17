@@ -976,5 +976,6 @@ a.entry-card .card-title { margin-top: 0; }
 .smart-plan-link { display: inline-block; text-decoration: none; }
 .smart-note { font-size: 12.5px; color: var(--color-soft); margin-top: 12px; line-height: 1.6; }
 .smart-grid { margin-top: 4px; }
+.smart-why { font-size: 12.5px; color: var(--color-primary); font-weight: 600; line-height: 1.5; }
 
 

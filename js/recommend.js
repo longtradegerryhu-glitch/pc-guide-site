@@ -1017,11 +1017,13 @@
     var qBudget = document.getElementById("smartBudget");
     var qUse = document.getElementById("smartUse");
     var qForm = document.getElementById("smartForm");
+    var qIntensity = document.getElementById("smartIntensity");
+    var qMonitor = document.getElementById("smartMonitor");
     var qLook = document.getElementById("smartLook");
     var btn = document.getElementById("smartGo");
     if (!wrap || !qBudget || !qUse || !qForm || !btn) return;
 
-    var state = { budget: null, use: null, form: null, look: null };
+    var state = { budget: null, use: null, form: null, look: null, intensity: "mid", monitor: "need" };
     var budgetOpts = [
       { id: "3000", label: "≤3000 元" },
       { id: "4500", label: "3000-4500 元" },
@@ -1041,6 +1043,15 @@
       { id: "laptop", label: "💻 笔记本 + 外设" },
       { id: "both", label: "🖥️ 两台都有" }
     ];
+    var intensityOpts = [
+      { id: "light", label: "🪶 轻量够用" },
+      { id: "mid", label: "⚖️ 主流均衡" },
+      { id: "heavy", label: "💪 性能拉满" }
+    ];
+    var monitorOpts = [
+      { id: "need", label: "🖥️ 需要一起配" },
+      { id: "have", label: "✅ 已有显示器" }
+    ];
 
     function renderRow(row, items, key) {
       row.innerHTML = items.map(function (it) {
@@ -1059,6 +1070,8 @@
     renderRow(qBudget, budgetOpts, "budget");
     renderRow(qUse, useOpts, "use");
     renderRow(qForm, formOpts, "form");
+    if (qIntensity) renderRow(qIntensity, intensityOpts, "intensity");
+    if (qMonitor) renderRow(qMonitor, monitorOpts, "monitor");
     if (qLook) {
       renderRow(qLook, [{ id: "all", label: "不限定" }].concat(STYLES.map(function (s) {
         return { id: s.id, label: s.icon + " " + s.name };
@@ -1086,10 +1099,24 @@
       });
     }
 
-    function recommendItems(plan, use) {
-      var cats = ["cpu", "gpu", "cooler", "monitor", "input", "audio", "psu"];
+    // 推荐理由：基于用途与强度
+    function pickWhy(item, use, intensity) {
+      var parts = [];
+      if (use && item.use.indexOf(use) !== -1) parts.push("适配" + (useLabels[use] || use) + "场景");
+      if (intensity === "heavy" && (item.valueGrade === "S" || item.valueGrade === "A")) parts.push("高强度下性价比高");
+      if (intensity === "light" && (item.valueGrade === "S" || item.valueGrade === "A")) parts.push("预算内最优解");
+      return parts.length ? "推荐理由：" + parts.join("、") : "";
+    }
+
+    function recommendItems(plan, use, intensity, needMonitor) {
+      var cats = needMonitor
+        ? ["cpu", "gpu", "cooler", "monitor", "input", "audio", "psu"]
+        : ["cpu", "gpu", "cooler", "input", "audio", "psu"];
       var out = [];
-      var cap = plan.price[1] * 1.05;
+      var capBase = plan.price[1];
+      var cap = intensity === "light" ? capBase * 0.72
+              : intensity === "heavy" ? capBase * 1.08
+              : capBase * 0.92;
       cats.forEach(function (cid) {
         var cat = null;
         D.categories.forEach(function (c) { if (c.id === cid) cat = c; });
@@ -1100,13 +1127,19 @@
         });
         if (!items.length) items = cat.items.slice();
         var inBudget = items.filter(function (it) { return mid(it.price) <= cap; });
-        var pool2 = inBudget.length ? inBudget : items;
-        pool2.sort(function (a, b) {
-          var d = (gradeOrder[b.valueGrade] || 0) - (gradeOrder[a.valueGrade] || 0);
-          return d !== 0 ? d : b.rating - a.rating;
-        });
+        var pool2;
+        if (inBudget.length) {
+          pool2 = inBudget.slice().sort(function (a, b) {
+            var d = (gradeOrder[b.valueGrade] || 0) - (gradeOrder[a.valueGrade] || 0);
+            return d !== 0 ? d : b.rating - a.rating;
+          });
+        } else {
+          pool2 = items.slice().sort(function (a, b) {
+            return Math.abs(mid(a.price) - cap) - Math.abs(mid(b.price) - cap);
+          });
+        }
         var pick = pool2[0];
-        if (pick) out.push({ cat: cat, item: pick });
+        if (pick) out.push({ cat: cat, item: pick, why: pickWhy(pick, use, intensity) });
       });
       return out;
     }
@@ -1118,7 +1151,9 @@
       }
       var plan = matchPlan();
       var use = state.use === "portable" ? null : state.use;
-      var picks = recommendItems(plan, use);
+      var intensity = state.intensity || "mid";
+      var needMonitor = state.monitor !== "have";
+      var picks = recommendItems(plan, use, intensity, needMonitor);
       var personas = (plan.personas || []).map(function (pid) {
         var p = D.personas.filter(function (x) { return x.id === pid; })[0];
         return p ? '<span class="tag-pill">' + p.icon + " " + p.name + "</span>" : "";
@@ -1144,6 +1179,7 @@
             '<span class="acc-price">' + fmtPrice(it.price) + "</span></div>" +
             '<div class="acc-meta"><span class="acc-style">' + esc(it.style) + "</span>" +
             '<span class="acc-rating">' + "★★★★★".slice(0, it.rating) + "</span>" + grade + "</div>" +
+            (o.why ? '<div class="smart-why">🎯 ' + esc(o.why) + "</div>" : "") +
             (it.valueNote ? '<div class="acc-note">' + esc(it.valueNote) + "</div>" : "") +
             productImageLink(it) +
           "</article>"
@@ -1153,7 +1189,7 @@
         '<div class="smart-res-head reveal in">为你匹配的方案与核心配件</div>' +
         planHtml +
         '<div class="acc-grid smart-grid">' + itemsHtml + "</div>" +
-        '<p class="smart-note">' + esc(D.note) + "。配件按「预算上限内评分最高」挑选，可到配件价格库按品类细筛。</p>";
+        '<p class="smart-note">' + esc(D.note) + "。配件按「预算 × 性能强度上限内评分最高」挑选；选「已有显示器」则不再推荐显示器。</p>";
       wrap.scrollIntoView({ behavior: "smooth", block: "start" });
     });
   }
