@@ -21,16 +21,12 @@
       <button class="nav-toggle" id="navToggle" aria-label="打开菜单" aria-expanded="false">
         <span></span><span></span><span></span>
       </button>
-      <nav class="nav-links" id="navLinks">
+            <nav class="nav-links" id="navLinks">
         <a href="index.html" class="nav-link">首页</a>
         <a href="guide.html" class="nav-link">使用指南</a>
-        <a href="hardware.html" class="nav-link">硬件总结</a>
-        <a href="accessories.html" class="nav-link">配件价格</a>
-        <a href="toplist.html" class="nav-link">性价比榜单</a>
+        <a href="accessories.html" class="nav-link">配件与榜单</a>
         <a href="plans.html" class="nav-link">搭配计划</a>
-        <a href="looks.html" class="nav-link">颜值外观</a>
         <a href="smart.html" class="nav-link active">智能推荐</a>
-        <a href="quiz.html" class="nav-link">个性推荐</a>
         <a href="faq.html" class="nav-link">常见问题</a>
       </nav>
     </div>
@@ -46,6 +42,12 @@
           <p class="section-desc">回答 5 个关键问题（可加选颜值风格），快速匹配最合适的整机方案与核心配件。想全面问卷，去「个性推荐」。</p>
         </div>
 
+                <div class="filter-chips top-tabs" id="smartTabs">
+          <button type="button" class="chip active" data-view="quick">快速推荐（6 题）</button>
+          <button type="button" class="chip" data-view="deep">深度测评（9 题）</button>
+        </div>
+
+        <div id="viewQuick">
         <div class="quiz-panel smart-panel reveal">
           <div class="smart-step">
             <span class="q-step">1</span>
@@ -81,6 +83,13 @@
         </div>
 
         <div id="smartResult"></div>
+        </div><!-- /viewQuick -->
+
+        <div id="viewDeep" style="display:none">
+          <div class="quiz-panel reveal" id="quizBox">
+          <p class="empty-box">正在加载测评…</p>
+        </div>
+        </div>
       </div>
     </section>
   </main>
@@ -102,5 +111,26 @@
   <script src="js/models.js"></script>
   <script src="js/recommend.js"></script>
   <script src="js/main.js"></script>
+  <script>
+  (function () {
+    function bindTabs(barId, map) {
+      var bar = document.getElementById(barId);
+      if (!bar) return;
+      bar.addEventListener("click", function (e) {
+        var btn = e.target.closest("button[data-view]");
+        if (!btn) return;
+        bar.querySelectorAll("button").forEach(function (b) { b.classList.remove("active"); });
+        btn.classList.add("active");
+        var v = btn.getAttribute("data-view");
+        Object.keys(map).forEach(function (k) {
+          var el = document.getElementById(map[k]);
+          if (el) el.style.display = (k === v) ? "" : "none";
+        });
+      });
+    }
+    bindTabs("accTopTabs", { all: "viewAll", top: "viewTop" });
+    bindTabs("smartTabs", { quick: "viewQuick", deep: "viewDeep" });
+  })();
+  </script>
 </body>
 </html>

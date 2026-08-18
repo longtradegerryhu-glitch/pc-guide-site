@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="配件与价格库：散热器、支架、显示器、键鼠、音频、网络、拓展坞、电源机箱等 45+ 真实型号，按品类/场景/颜值/预算筛选，含性价比等级（S/A/B/C）。" />
-  <title>配件与价格 · 电脑使用指南与配套硬件总结</title>
+  <title>配件与榜单 · 电脑使用指南与配套硬件总结</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232563eb'/%3E%3Crect x='7' y='8' width='18' height='12' rx='2' fill='white'/%3E%3Crect x='13' y='21' width='6' height='3' fill='white'/%3E%3Crect x='10' y='25' width='12' height='2' rx='1' fill='white'/%3E%3C/svg%3E" />
   <link rel="stylesheet" href="css/styles.css" />
 </head>
@@ -21,16 +21,12 @@
       <button class="nav-toggle" id="navToggle" aria-label="打开菜单" aria-expanded="false">
         <span></span><span></span><span></span>
       </button>
-      <nav class="nav-links" id="navLinks">
+            <nav class="nav-links" id="navLinks">
         <a href="index.html" class="nav-link">首页</a>
         <a href="guide.html" class="nav-link">使用指南</a>
-        <a href="hardware.html" class="nav-link">硬件总结</a>
-        <a href="accessories.html" class="nav-link active">配件价格</a>
-        <a href="toplist.html" class="nav-link">性价比榜单</a>
+        <a href="accessories.html" class="nav-link active">配件与榜单</a>
         <a href="plans.html" class="nav-link">搭配计划</a>
-        <a href="looks.html" class="nav-link">颜值外观</a>
         <a href="smart.html" class="nav-link">智能推荐</a>
-        <a href="quiz.html" class="nav-link">个性推荐</a>
         <a href="faq.html" class="nav-link">常见问题</a>
       </nav>
     </div>
@@ -42,10 +38,16 @@
       <div class="container">
         <div class="section-head reveal">
           <span class="section-kicker">ACCESSORIES</span>
-          <h2 class="section-title">配件与价格</h2>
+          <h2 class="section-title">配件与榜单</h2>
           <p class="section-desc">散热器、支架、显示器、键鼠、音频、网络、拓展坞、电源机箱 —— 45 款真实产品型号，按品类/场景/预算筛选，含性价比等级（S/A/B/C），价格区间为 2026-08 参考行情，以电商实时价为准。</p>
         </div>
 
+                <div class="filter-chips top-tabs" id="accTopTabs">
+          <button type="button" class="chip active" data-view="all">全部配件</button>
+          <button type="button" class="chip" data-view="top">性价比 TOP 榜</button>
+        </div>
+
+        <div id="viewAll">
         <div class="filter-panel reveal">
           <div class="filter-group">
             <span class="filter-label">品类</span>
@@ -79,6 +81,22 @@
           </select>
         </div>
         <div class="acc-grid" id="accWrap"></div>
+        </div><!-- /viewAll -->
+
+        <div id="viewTop" style="display:none">
+
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="section-kicker">TOP PICKS</span>
+          <h2 class="section-title">性价比 TOP 榜单</h2>
+          <p class="section-desc">按 8 大配件品类分别排行（每类 2-3 款），含性价比等级与上榜理由；也可切换到全站总榜。</p>
+        </div>
+
+        <div class="filter-chips top-tabs reveal" id="topTabs"></div>
+        <div class="top-grid" id="topWrap"></div>
+      </div>
+    
+        </div>
       </div>
     </section>
   </main>
@@ -100,5 +118,26 @@
   <script src="js/models.js"></script>
   <script src="js/recommend.js"></script>
   <script src="js/main.js"></script>
+  <script>
+  (function () {
+    function bindTabs(barId, map) {
+      var bar = document.getElementById(barId);
+      if (!bar) return;
+      bar.addEventListener("click", function (e) {
+        var btn = e.target.closest("button[data-view]");
+        if (!btn) return;
+        bar.querySelectorAll("button").forEach(function (b) { b.classList.remove("active"); });
+        btn.classList.add("active");
+        var v = btn.getAttribute("data-view");
+        Object.keys(map).forEach(function (k) {
+          var el = document.getElementById(map[k]);
+          if (el) el.style.display = (k === v) ? "" : "none";
+        });
+      });
+    }
+    bindTabs("accTopTabs", { all: "viewAll", top: "viewTop" });
+    bindTabs("smartTabs", { quick: "viewQuick", deep: "viewDeep" });
+  })();
+  </script>
 </body>
 </html>

@@ -136,13 +136,10 @@
   /* ---- 面包屑导航（多页站，JS 按当前页面生成，免 9 页重复维护） ---- */
   var crumbPages = {
     "guide.html": "使用指南",
-    "hardware.html": "硬件总结",
-    "accessories.html": "配件价格",
-    "toplist.html": "性价比榜单",
+    "accessories.html": "配件与榜单",
     "plans.html": "搭配计划",
     "looks.html": "颜值外观",
     "smart.html": "智能推荐",
-    "quiz.html": "个性推荐",
     "faq.html": "常见问题"
   };
   var curPage = (window.location.pathname.split("/").pop() || "index.html").toLowerCase();
