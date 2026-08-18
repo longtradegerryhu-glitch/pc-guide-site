@@ -26,16 +26,21 @@
   STYLES.forEach(function (s) { styleById[s.id] = s; });
   function lookOf(item) { return (item && LOOKS[item.id]) || null; }
 
-  /* 每个具体型号 → 跳转到真实产品图（百度图片 / 京东搜索该型号，不下载、不侵权） */
+  /* 型号 → 官方渠道：查真实产品图 + 查实时价（淘宝/京东搜索，纯前端跳转，无后端抓取） */
   function productImageLink(item) {
     if (!item || !item.name) return "";
     var n = item.name;
     var img = "https://image.baidu.com/search/index?tn=baiduimage&word=" + encodeURIComponent(n);
-    var shop = "https://search.jd.com/Search?keyword=" + encodeURIComponent(n);
+    var tb = "https://s.taobao.com/search?q=" + encodeURIComponent(n);
+    var jd = "https://search.jd.com/Search?keyword=" + encodeURIComponent(n);
     return '<div class="prod-link">' +
       '<a class="prod-img-btn" href="' + img + '" target="_blank" rel="noopener noreferrer">' +
         '<span class="prod-ico">🔎</span>查看 ' + esc(n) + ' 真实产品图</a>' +
-      '<a class="prod-shop" href="' + shop + '" target="_blank" rel="noopener noreferrer">京东 ›</a>' +
+      '<span class="prod-hint">页面价为参考行情，点下方按钮查官方实时价：</span>' +
+      '<span class="prod-price-links">' +
+        '<a class="prod-shop prod-tb" href="' + tb + '" target="_blank" rel="noopener noreferrer">淘宝查价</a>' +
+        '<a class="prod-shop prod-jd" href="' + jd + '" target="_blank" rel="noopener noreferrer">京东查价</a>' +
+      '</span>' +
     '</div>';
   }
   function styleOf(id) { return styleById[id] || null; }
