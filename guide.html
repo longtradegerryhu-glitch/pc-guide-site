@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="电脑使用指南：系统优化、文件管理、软件推荐、安全备份，以及办公 / 游戏 / 创作 / 便携等使用场景的硬件取舍。" />
+  <meta name="description" content="电脑使用指南（小白版）：用大白话讲清系统优化、文件备份、常用软件，以及 CPU / 显卡 / 内存等硬件到底是干啥的，看不懂参数也能看懂。" />
   <title>使用指南与硬件总结 · 电脑使用指南与配套硬件总结</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232563eb'/%3E%3Crect x='7' y='8' width='18' height='12' rx='2' fill='white'/%3E%3Crect x='13' y='21' width='6' height='3' fill='white'/%3E%3Crect x='10' y='25' width='12' height='2' rx='1' fill='white'/%3E%3C/svg%3E" />
   <link rel="stylesheet" href="css/styles.css" />
@@ -38,54 +38,61 @@
       <div class="container">
         <div class="section-head reveal">
           <span class="section-kicker">GUIDE</span>
-          <h2 class="section-title">电脑使用指南</h2>
-          <p class="section-desc">日常使用电脑的核心技巧，按主题分小节，方便按需查阅。</p>
+          <h2 class="section-title">电脑使用指南（小白版）</h2>
+          <p class="section-desc">看不懂术语别慌，这一页专门用大白话讲——照着做，电脑更好用、也不容易坏。</p>
+        </div>
+
+        <div class="guide-lead reveal">
+          <p><strong>🙋 小白先记住这 3 句话：</strong></p>
+          <p>1. 电脑卡，多半是「开机自启太多」或「内存不够 / 硬盘太老」，<strong>不是机器真坏了</strong>。</p>
+          <p>2. 文件别只放一处，<strong>云盘 + U 盘/移动硬盘各留一份</strong>，电脑坏了也不慌。</p>
+          <p>3. 装软件去官网，别点「高速下载 / 一键安装」里偷偷勾的小选项，最容易中招。</p>
         </div>
 
         <div class="card-grid">
           <article class="card reveal">
             <div class="card-icon">⚙️</div>
-            <h3 class="card-title">系统设置与优化</h3>
+            <h3 class="card-title">让电脑跑得更快（系统优化）</h3>
             <p class="card-text">
-              · 启动项：任务管理器→“启动”，禁用不必要的自启程序，开机更快。<br />
-              · 电源计划：笔记本插电用“高性能”，外出用“平衡/省电”。<br />
-              · 系统更新：保持安全更新；大版本升级前先备份。<br />
-              · 老机提速：关闭透明特效与动画，释放更多资源。<br />
-              · 磁盘：SSD 无需碎片整理（靠 TRIM），机械硬盘才需整理。
+              · <strong>开机慢？</strong>管「自启」：按 Ctrl+Shift+Esc 打开任务管理器 → 点「启动」→ 把不常用的右键「禁用」，开机能从1分钟变20秒。<br />
+              · <strong>笔记本</strong>：插电时用「高性能」更顺畅，出门用「省电」续航更久。<br />
+              · <strong>系统更新</strong>别关，安全补丁很重要；大升级前先备份。<br />
+              · <strong>老电脑提速</strong>：把透明特效、动画关一关，能腾出一点性能。<br />
+              · <strong>硬盘</strong>：装系统要用 SSD（固态硬盘），它不用「碎片整理」——那是老式机械硬盘的事。
             </p>
           </article>
 
           <article class="card reveal">
             <div class="card-icon">🗂️</div>
-            <h3 class="card-title">文件与数据管理</h3>
+            <h3 class="card-title">文件别乱丢（文件管理）</h3>
             <p class="card-text">
-              · 目录规范：按“项目 / 年份 / 类型”分层，桌面只放临时文件。<br />
-              · 备份原则（3-2-1）：3 份副本、2 种介质、1 份离线/异地。<br />
-              · 云同步 + 本地备份结合，重要文件双重保护。<br />
-              · 清理：用“存储感知”与大文件排查清理空间，卸载冗余软件。
+              · <strong>桌面只放临时文件</strong>，长期用的按「项目 / 年份」建文件夹分层放。<br />
+              · <strong>备份记住「3-2-1」</strong>：3 份、2 种介质（比如电脑 + 移动硬盘）、1 份放别处（云盘）。<br />
+              · <strong>双保险</strong>：重要文件云盘同步 + 移动硬盘各留一份。<br />
+              · <strong>空间不够</strong>：用系统「存储感知」清垃圾、卸掉不用的软件。
             </p>
           </article>
 
           <article class="card reveal">
             <div class="card-icon">🧩</div>
-            <h3 class="card-title">常用软件推荐</h3>
+            <h3 class="card-title">这些软件真的好用（避坑版）</h3>
             <p class="card-text">
-              · 办公：Office / WPS、浏览器。<br />
-              · 效率：Everything（秒搜文件）、Snipaste（截图贴图）、Listary。<br />
-              · 解压：7-Zip / Bandizip。<br />
-              · 影音：VLC / PotPlayer。<br />
-              · 清理：Dism++、系统自带工具（慎用“全家桶”）。
+              · <strong>办公</strong>：Office 或 WPS、浏览器（Edge / Chrome）。<br />
+              · <strong>找文件快</strong>：Everything（输名字秒出结果）。<br />
+              · <strong>截图贴图</strong>：Snipaste；<strong>解压</strong>：7-Zip / Bandizip（别装某压，广告多）。<br />
+              · <strong>看片</strong>：VLC / PotPlayer，啥格式都吃得下。<br />
+              · <strong>清理</strong>：Dism++ 或系统自带，<strong>别装「电脑管家全家桶」，越管越卡</strong>。
             </p>
           </article>
 
           <article class="card reveal">
             <div class="card-icon">🛡️</div>
-            <h3 class="card-title">安全、备份与维护</h3>
+            <h3 class="card-title">防病毒 + 定期保养</h3>
             <p class="card-text">
-              · 杀毒：Windows Defender 已足够，谨慎安装第三方“全家桶”。<br />
-              · 密码：用密码管理器 + 开启双重验证（2FA）。<br />
-              · 还原：定期建系统还原点，重要机做镜像备份。<br />
-              · 维护清单：每月清灰、查更新、验证备份是否可用。
+              · <strong>杀毒</strong>：Win10/11 自带的 Defender 就够，不用再装第三方「全家桶」。<br />
+              · <strong>密码</strong>：用密码管理器记，重要账号开「两步验证」（2FA）。<br />
+              · <strong>每月 5 分钟</strong>：清灰、查更新、确认备份还能用。<br />
+              · <strong>重要电脑</strong>做个「系统镜像」，万一崩了能整盘还原。
             </p>
           </article>
         </div>
@@ -97,8 +104,8 @@
       <div class="container">
         <div class="section-head reveal">
           <span class="section-kicker">SCENARIOS</span>
-          <h2 class="section-title">使用场景</h2>
-          <p class="section-desc">不同场景下硬件与配件的关注重点，便于按需取舍。</p>
+          <h2 class="section-title">先想清楚：你主要拿来干嘛？</h2>
+          <p class="section-desc">用途不同，钱该花的地方也不同。对号入座，别跟风乱买。</p>
         </div>
 
         <div class="card-grid">
@@ -106,93 +113,102 @@
             <div class="card-icon">📚</div>
             <h3 class="card-title">办公 / 学习</h3>
             <p class="card-text">
-              关注静音、稳定与人体工学：笔记本支架抬高视线、静音风冷不打扰、
-              显示器支架或双屏提升效率，备份防丢资料。
+              重点就俩字：<strong>安静、不累</strong>。笔记本垫高、用静音风扇；
+              显示器抬高或接双屏，效率更高；资料勤备份，丢不了。
             </p>
           </article>
           <article class="card reveal">
             <div class="card-icon">🎮</div>
             <h3 class="card-title">游戏 / 电竞</h3>
             <p class="card-text">
-              关注散热与高刷：强力风冷或水冷压住热量、高刷显示器减少拖影、
-              笔记本可配散热底座保障长时间稳定运行。
+              重点：<strong>散热 + 画面流畅</strong>。散热要够（风冷 / 水冷），
+              显示器选高刷（144Hz 以上）少拖影；笔记本配散热底座，长时间不降频。
             </p>
           </article>
           <article class="card reveal">
             <div class="card-icon">🎬</div>
             <h3 class="card-title">内容创作</h3>
             <p class="card-text">
-              关注多核性能与色彩：大显存显卡加速渲染、专业广色域显示器、
-              良好风道与散热让长时间导出更稳。
+              重点：<strong>快 + 颜色准</strong>。显卡显存大（渲染快）、
+              显示器色域广（颜色不偏）、散热好（导出不卡）。
             </p>
           </article>
           <article class="card reveal">
             <div class="card-icon">🎒</div>
             <h3 class="card-title">移动 / 便携</h3>
             <p class="card-text">
-              关注轻便与续航：笔记本散热支架辅助散热、便携拓展坞扩展接口、
-              轻量键鼠外设随行，云同步随时取用文件。
+              重点：<strong>轻 + 续航</strong>。带散热支架、拓展坞补接口、轻量键鼠随行；
+              文件丢云盘，随时取用。
             </p>
           </article>
         </div>
       </div>
     </section>
-<section class="section" id="hardware">
+
+    <section class="section" id="hardware">
       <div class="container">
         <div class="section-head reveal">
           <span class="section-kicker">HARDWARE</span>
-          <h2 class="section-title">配套硬件总结</h2>
-          <p class="section-desc">从核心部件到外设与散热支架，梳理关键参数与选购逻辑。</p>
+          <h2 class="section-title">配套硬件总结（大白话版）</h2>
+          <p class="section-desc">买电脑 / 配件前，先看懂这几样是干啥的。记不住参数没关系，记住「它像什么」就行。</p>
+        </div>
+
+        <div class="guide-lead reveal">
+          <p><strong>🧠 一句话类比，先建立感觉：</strong></p>
+          <p>· <strong>CPU</strong> = 大脑（干活快慢）　· <strong>GPU 显卡</strong> = 画师（画面 / 游戏 / 剪辑）</p>
+          <p>· <strong>内存</strong> = 桌面面积（能同时摊开多少东西）　· <strong>硬盘</strong> = 柜子（能存多少东西）</p>
+          <p>· <strong>主板</strong> = 骨架（把大家连一起）　· <strong>电源</strong> = 心脏（供电稳不稳）</p>
         </div>
 
         <h3 class="block-title reveal">核心部件</h3>
         <div class="card-grid">
           <article class="card reveal">
             <div class="card-icon">🔲</div>
-            <h3 class="card-title">CPU 处理器</h3>
+            <h3 class="card-title">CPU 处理器（大脑）</h3>
             <p class="card-text">
-              看核心/线程数（办公 4–6 核、游戏 6–8 核、创作 8–16 核+）、频率与缓存；
-              注意与主板插座匹配（Intel LGA / AMD AM）。多核利于剪辑渲染，高主频利于游戏响应。
+              管电脑「干活的快慢」。<strong>核数多</strong> = 能同时干多件事（剪辑、多开网页）；
+              <strong>主频高</strong> = 单件事反应快（打游戏更跟手）。<br />
+              买前注意：它和主板插口要对上，<strong>Intel 和 AMD 不通用</strong>。
             </p>
           </article>
           <article class="card reveal">
             <div class="card-icon">🎮</div>
-            <h3 class="card-title">GPU 显卡</h3>
+            <h3 class="card-title">GPU 显卡（画师）</h3>
             <p class="card-text">
-              游戏看帧率与光追，创作看显存与编解码。显存建议 1080p 8G 起、2K/4K 12G+；
-              位宽与带宽越高越好。品牌含 NVIDIA / AMD / 核显，按用途取舍。
+              管「画面」：打游戏看帧率，做图 / 剪辑看显存（越大越能扛大工程）。
+              普通办公用 <strong>核显</strong>（CPU 自带）就够，还能省一笔钱。
             </p>
           </article>
           <article class="card reveal">
             <div class="card-icon">🧠</div>
-            <h3 class="card-title">内存</h3>
+            <h3 class="card-title">内存（桌面面积）</h3>
             <p class="card-text">
-              容量：办公 8–16G、游戏 16G、创作 32G+。频率与时序影响性能，
-              优先双通道（两根同规格）。注意平台是 DDR4 还是 DDR5。
+              8G 勉强、16G 舒服、32G 创作 / 多开不卡。<strong>两根组「双通道」更快</strong>。
+              老机加内存，是<strong>最划算的提速办法</strong>。
             </p>
           </article>
           <article class="card reveal">
             <div class="card-icon">💾</div>
-            <h3 class="card-title">存储</h3>
+            <h3 class="card-title">存储（柜子）</h3>
             <p class="card-text">
-              系统盘用 NVMe SSD（512G–1T），仓储用 SATA SSD / 机械盘。
-              看接口（M.2 PCIe 4.0）与 4K 随机读写（比顺序速度更影响日常流畅度）。
+              <strong>系统盘必须 SSD（固态）</strong>，开机几秒、打开软件快。
+              机械硬盘只当仓库存电影照片。看速度别只看容量——日常卡不卡，看「4K 随机读写」。
             </p>
           </article>
           <article class="card reveal">
             <div class="card-icon">🔌</div>
-            <h3 class="card-title">主板</h3>
+            <h3 class="card-title">主板（骨架）</h3>
             <p class="card-text">
-              芯片组决定扩展与超频能力；插座须匹配 CPU。看 M.2、USB、PCIe 数量与版本，
-              以及供电与散热（高功耗平台更关键）。
+              决定能插多少硬件、能不能超频。<strong>插座要和 CPU 对上</strong>；
+              看 USB、M.2 接口数量够不够用。
             </p>
           </article>
           <article class="card reveal">
             <div class="card-icon">🔋</div>
-            <h3 class="card-title">电源</h3>
+            <h3 class="card-title">电源（心脏）</h3>
             <p class="card-text">
-              额定功率留约 30% 余量；选 80 PLUS 铜/金/白金认证；模组化便于理线。
-              电源是稳定与安全的基石，优先品牌与长质保。
+              功率留 30% 余量，认 80 PLUS 认证。<strong>别买杂牌——它一炸，全家遭殃</strong>。
+              优先选品牌、长质保。
             </p>
           </article>
         </div>
@@ -201,34 +217,34 @@
         <div class="card-grid">
           <article class="card reveal">
             <div class="card-icon">🖥️</div>
-            <h3 class="card-title">显示器</h3>
+            <h3 class="card-title">显示器（窗户）</h3>
             <p class="card-text">
-              尺寸/分辨率（24" 1080p、27" 2K、32" 4K）；刷新率（办公 60Hz、游戏 144Hz+）；
-              色域（sRGB / AdobeRGB / DCI-P3）；面板 IPS 色彩好、VA 对比高、TN 响应快。
+              尺寸分辨率：24寸1080p / 27寸2K / 32寸4K；打游戏看<strong>刷新率 144Hz+</strong>；
+              做图看<strong>色域广不广</strong>；IPS 面板颜色正、看着舒服。
             </p>
           </article>
           <article class="card reveal">
             <div class="card-icon">⌨️</div>
             <h3 class="card-title">键鼠</h3>
             <p class="card-text">
-              机械键盘轴体：红轴线性、茶轴段落、静音轴安静；鼠标看传感器与 DPI。
-              按手型选人体工学，长时间使用更舒适。
+              键盘红轴顺滑、茶轴有段落感、静音轴不吵；鼠标看「准星稳不稳」（传感器 / DPI）。
+              <strong>手大选手掌贴合的，久用不累</strong>。
             </p>
           </article>
           <article class="card reveal">
             <div class="card-icon">🎧</div>
             <h3 class="card-title">音频设备</h3>
             <p class="card-text">
-              耳机分封闭（隔音）与开放（声场）；会议/直播看麦克风；
-              追求音质可加 USB 声卡/耳放。按需而非堆参数。
+              耳机封闭款隔音（宿舍 / 图书馆），开放款声场大（在家听歌）；
+              开会 / 直播看麦克风。<strong>别为参数堆设备，够用就好</strong>。
             </p>
           </article>
           <article class="card reveal">
             <div class="card-icon">📶</div>
             <h3 class="card-title">网络设备</h3>
             <p class="card-text">
-              路由器看 Wi-Fi 6 / 6E / 7 与带机量；大户型用 Mesh 组网；
-              网线 Cat5e 起步、Cat6 更稳；台式机优先有线网卡低延迟。
+              路由器认 <strong>Wi-Fi 6 以上</strong>；房子大用 Mesh 多台组网；
+              网线 Cat5e 起步；台式机<strong>插网线比 Wi-Fi 稳</strong>。
             </p>
           </article>
         </div>
@@ -239,22 +255,24 @@
             <div class="card-icon">❄️</div>
             <h3 class="card-title">散热器</h3>
             <p class="card-text">
-              风冷：塔式/下压，便宜可靠，单塔压中端、双塔压高端。
-              水冷：一体式 AIO（240/360），压旗舰、颜值高，注意泵噪与漏液风险。
-              笔记本可配散热底座辅助进风。保持前进后出/下进上出的风道，定期清灰、必要时换硅脂。
+              风冷 = 便宜耐用（中端够用）；水冷 = 压旗舰、好看，但贵且有漏液风险。
+              笔记本加<strong>散热底座能降几度</strong>。记住：清灰 + 换硅脂，老机回春。
             </p>
           </article>
           <article class="card reveal">
             <div class="card-icon">🪧</div>
             <h3 class="card-title">支架</h3>
             <p class="card-text">
-              显示器升降支架（VESA 100×100）可旋转升降、省桌面、护颈；
-              笔记本支架抬高视线、底部进风辅助散热。配合理线让桌面清爽、散热更好。
+              显示器支架能升降旋转，<strong>脖子不酸</strong>；
+              笔记本支架抬高视线 + 底部进风。理好线，桌面清爽也利于散热。
             </p>
           </article>
         </div>
 
-        <h3 class="block-title reveal">硬件参数速查表</h3>
+        <h3 class="block-title reveal">硬件参数速查表（看不懂数字就看颜色）</h3>
+        <div class="guide-lead reveal" style="margin-top:0;">
+          <p>下面这张表给想深究的同学。新手记住一句：<strong>同一行里，数字越大通常越强，但也要看预算——够用就好，别盲目追高。</strong></p>
+        </div>
         <div class="table-wrap reveal">
           <table class="data-table">
             <thead>
@@ -266,11 +284,11 @@
               </tr>
             </thead>
             <tbody>
-              <tr><td>CPU</td><td>核数 / 频率 / 插座</td><td>4–6 核，基础 3GHz+</td><td>8 核+，高睿频 / 大缓存</td></tr>
+              <tr><td>CPU</td><td>核数 / 频率 / 插口</td><td>4–6 核，3GHz 以上</td><td>8 核+，高主频 / 大缓存</td></tr>
               <tr><td>GPU</td><td>显存 / 位宽 / 光追</td><td>8G 核显或入门独显</td><td>12G+，光追，高带宽</td></tr>
-              <tr><td>内存</td><td>容量 / 频率 / 双通道</td><td>16G DDR4 3200</td><td>32G DDR5 6000 双通道</td></tr>
-              <tr><td>存储</td><td>类型 / 容量 / 接口</td><td>512G NVMe 系统盘</td><td>1T+ PCIe 4.0 + 仓储盘</td></tr>
-              <tr><td>显示器</td><td>尺寸 / 分辨率 / 刷新</td><td>24" 1080p 60Hz</td><td>27" 2K 144Hz IPS</td></tr>
+              <tr><td>内存</td><td>容量 / 频率 / 双通道</td><td>16G</td><td>32G 双通道</td></tr>
+              <tr><td>存储</td><td>类型 / 容量 / 接口</td><td>512G 固态系统盘</td><td>1T+ 高速固态 + 仓储盘</td></tr>
+              <tr><td>显示器</td><td>尺寸 / 分辨率 / 刷新</td><td>24" 1080p 60Hz</td><td>27" 2K 144Hz</td></tr>
             </tbody>
           </table>
         </div>
