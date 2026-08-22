@@ -424,6 +424,30 @@
       return answers[qid] || [];
     }
 
+    function pitfallsHTML(uses) {
+      var map = (window.PC_DATA && window.PC_DATA.pitfalls) || {};
+      var keys = [];
+      if (Array.isArray(uses)) {
+        uses.forEach(function (u) { if (u && u !== "all") keys.push(u); });
+        keys.push("common");
+      } else if (typeof uses === "string" && uses && uses !== "all") {
+        keys.push(uses); keys.push("common");
+      } else {
+        keys.push("common");
+      }
+      var seen = {}, items = [];
+      keys.forEach(function (k) {
+        (map[k] || []).forEach(function (t) {
+          if (t && !seen[t]) { seen[t] = 1; items.push(t); }
+        });
+      });
+      if (!items.length) return "";
+      return '<div class="res-section"><span class="res-label">⚠️ 小白避坑：这几处最容易翻车</span>' +
+        '<div class="look-pitfalls">' +
+        items.map(function (t) { return '<div class="pitfall">' + esc(t) + "</div>"; }).join("") +
+        "</div></div>";
+    }
+
     function generate() {
       var use = answerOf("use");
       var budget = answerOf("budget")[0] || "b6000";
@@ -553,6 +577,7 @@
           "</div>" +
           '<div class="res-total">整体投入参考：<b>' + fmtPrice([totalLow, totalHigh]) + "</b>（整机 + 所选配件）</div>" +
           '<div class="res-note">' + esc(D.note) + "。方案为规则推荐，购机前请复核接口兼容性与电商实时价。</div>" +
+          pitfallsHTML(use) +
           '<button class="btn btn-ghost q-reset">重新测评</button>' +
         "</div>";
 
@@ -825,6 +850,7 @@
           "</div>" +
           tipHtml +
           '<div class="res-note">' + esc(D.note) + "。改动价格仅用于预算试算，购机请以电商实时价为准。</div>" +
+          pitfallsHTML(state.use) +
         "</div>";
 
       // 绑定交互：换型号
