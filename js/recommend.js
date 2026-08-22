@@ -42,8 +42,65 @@
         '<a class="prod-shop prod-tb" href="' + tb + '" target="_blank" rel="noopener noreferrer">淘宝查价</a>' +
         '<a class="prod-shop prod-jd" href="' + jd + '" target="_blank" rel="noopener noreferrer">京东查价</a>' +
       '</span>' +
+      jdLiveCard(n) +
     '</div>';
   }
+
+  // 站内「京东实时价」小卡片：默认折叠，点击才请求 /price（避免一进页面就打接口）
+  function jdLiveCard(q) {
+    var qEsc = esc(q);
+    return '<div class="jd-live" data-q="' + qEsc + '">' +
+      '<button type="button" class="jd-live-btn" aria-expanded="false" onclick="return window.__jdFetch(this)">📡 站内直出京东实时价</button>' +
+      '<div class="jd-live-box" hidden></div>' +
+    '</div>';
+  }
+
+  // 全局点击处理器：调用 /price 渲染京东实时价；缺密钥或无结果均优雅降级
+  window.__jdFetch = function (btn) {
+    var wrap = btn.closest ? btn.closest('.jd-live') : null;
+    if (!wrap) return false;
+    var q = wrap.getAttribute('data-q') || '';
+    var box = wrap.querySelector('.jd-live-box');
+    if (!box) return false;
+    // 已加载过：仅切换显隐，不再打接口
+    if (box.dataset.loaded === '1') {
+      box.hidden = !box.hidden;
+      btn.setAttribute('aria-expanded', box.hidden ? 'false' : 'true');
+      return false;
+    }
+    box.hidden = false;
+    btn.setAttribute('aria-expanded', 'true');
+    box.innerHTML = '<div class="jd-loading">查询中…</div>';
+    fetch('/price?q=' + encodeURIComponent(q))
+      .then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then(function (d) {
+        box.dataset.loaded = '1';
+        if (!d || d.ok === false) {
+          box.innerHTML = '<div class="jd-note">站内实时价暂未启用（需在 Cloudflare 配置京东联盟密钥）。<br>可改用上方「京东查价」按钮查官方实时价。</div>';
+          return;
+        }
+        var items = (d.items || []).slice(0, 5);
+        if (!items.length) {
+          box.innerHTML = '<div class="jd-note">京东暂未匹配到「' + esc(q) + '」相关在售商品。</div>';
+          return;
+        }
+        var rows = items.map(function (it) {
+          var price = (it.price != null && it.price !== '') ? '<span class="jd-price">¥' + esc(String(it.price)) + '</span>' : '';
+          var href = it.url || ('https://search.jd.com/Search?keyword=' + encodeURIComponent(q));
+          return '<a class="jd-item" href="' + esc(href) + '" target="_blank" rel="noopener noreferrer">' +
+            '<span class="jd-name">' + esc(it.name || q) + '</span>' + price +
+          '</a>';
+        }).join('');
+        box.innerHTML = rows + '<div class="jd-foot">数据来自京东联盟接口，以实际下单页为准</div>';
+      })
+      .catch(function (e) {
+        box.innerHTML = '<div class="jd-note">查询失败：' + esc(String(e && e.message ? e.message : e)) + '<br>可改用上方「京东查价」按钮。</div>';
+      });
+    return false;
+  };
   function styleOf(id) { return styleById[id] || null; }
   function countByStyle(sid) {
     var n = 0;

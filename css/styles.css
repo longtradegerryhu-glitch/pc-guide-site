@@ -665,6 +665,29 @@ button:focus-visible,
 .price-note { margin: 14px 0 4px; padding: 11px 16px; border-radius: 10px; background: rgba(255, 179, 25, .14); border: 1px solid rgba(255, 179, 25, .4); color: var(--color-text); font-size: 13.5px; line-height: 1.6; }
 .price-note strong { color: var(--color-primary); }
 
+/* ---- 站内京东实时价小卡片（/price 调用） ---- */
+.jd-live { flex-basis: 100%; margin-top: 6px; }
+.jd-live-btn {
+  display: inline-block; font-size: 12.5px; line-height: 1.4; padding: 6px 12px;
+  border: none; border-radius: 8px; cursor: pointer; color: #fff; font-weight: 600;
+  background: linear-gradient(135deg, #e1251b, #ff6a00);
+}
+.jd-live-btn:hover { filter: brightness(1.07); }
+.jd-live-btn:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.jd-live-box { margin-top: 8px; display: flex; flex-direction: column; gap: 6px; }
+.jd-live-box[hidden] { display: none; }
+.jd-item {
+  display: flex; justify-content: space-between; align-items: center; gap: 10px;
+  padding: 7px 10px; border-radius: 8px; text-decoration: none; font-size: 13px;
+  background: var(--color-card); border: 1px solid var(--color-border); color: var(--color-text);
+}
+.jd-item:hover { border-color: #e1251b; }
+.jd-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.jd-price { color: #e1251b; font-weight: 700; white-space: nowrap; }
+.jd-note { font-size: 12.5px; color: var(--color-text-soft); line-height: 1.5; padding: 2px; }
+.jd-loading { font-size: 12.5px; color: var(--color-text-soft); padding: 2px; }
+.jd-foot { font-size: 11.5px; color: var(--color-text-soft); padding-top: 2px; }
+
 /* ---- 按品类分组榜单 ---- */
 .top-group { margin-bottom: 26px; }
 .top-group-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
