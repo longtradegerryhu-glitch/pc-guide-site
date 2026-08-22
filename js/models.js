@@ -16,6 +16,9 @@ window.PC_MODELS = {
     { id: "c4",  brand: "九州风神",  model: "大霜塔 V5",           name: "九州风神 大霜塔 V5", searchName: "九州风神 大霜塔 V5", style: "风冷双塔", price: [135, 199],   rating: 4, valueGrade: "A", valueNote: "6 热管双塔，静音调校好，价格略高于 PA120。",      use: ["game", "create"],     audience: ["gamer", "creator"], tags: ["静音"],      specs: "6×6mm 热管;解热 200W;159mm 高", compat: "静音党优先，大机箱更从容" },
     { id: "c5",  brand: "瓦尔基里",  model: "B360-GT",             name: "瓦尔基里 B360-GT", searchName: "瓦尔基里 B360-GT", style: "360水冷", price: [499, 590],   rating: 5, valueGrade: "A", valueNote: "中端 360 水冷性能王者，五年质保。",              use: ["create", "game"],     audience: ["creator", "gamer"], tags: ["RGB", "静音"], specs: "360mm 冷排;解热 280W;五年质保", compat: "需机箱支持 360 冷排位，旗舰 CPU 推荐" },
     { id: "c6",  brand: "Arctic",    model: "LF III 360",          name: "Arctic 液冷 LF III 360", searchName: "Arctic LF III 360", style: "360水冷", price: [599, 720], rating: 5, valueGrade: "S", valueNote: "S 级水冷，300W+ 顶级解热，满载噪音反而更低。",      use: ["create"],             audience: ["creator"], tags: ["静音", "长质保"], specs: "38mm 厚排;解热 330W;六年质保", compat: "Ultra9/R9 级旗舰与长期高负载渲染首选" }
+,
+    { id: "c7",  brand: "利民",      model: "AXP90-X53",        name: "利民 AXP90-X53", searchName: "利民 AXP90-X53", style: "下压式ITX", price: [99, 139],   rating: 4, valueGrade: "A", valueNote: "53mm 下压，ITX 与小机箱散热神器。",           use: ["portable"],       audience: ["mobile", "student"], tags: ["小机箱"],   specs: "下压式;53mm 高;解热 130W;ITX 专用", compat: "ITX/小机箱限高 ≤55mm，注意风道" },
+    { id: "c8",  brand: "九州风神",  model: "AK620",             name: "九州风神 AK620", searchName: "九州风神 AK620", style: "风冷双塔", price: [199, 259],  rating: 5, valueGrade: "S", valueNote: "双塔 6 热管，压 i7/R7 稳如老狗。",             use: ["game", "create"], audience: ["gamer", "creator"], tags: ["静音"],     specs: "双塔;6×6mm 热管;解热 260W", compat: "大机箱优先，注意内存避让" },
   ],
 
   /* ---------- 支架 ---------- */
@@ -26,6 +29,8 @@ window.PC_MODELS = {
     { id: "s4", brand: "乐歌",      model: "DLB502-D",            name: "乐歌 DLB502-D", searchName: "乐歌 DLB502-D", style: "单臂支架", price: [298, 399],   rating: 4, valueGrade: "A", valueNote: "自由悬停升降顺滑，外观硬朗有辨识度。",              use: ["office", "create"], audience: ["office", "creator"], tags: ["人体工学"], specs: "承重 2-9kg;395mm 悬停升降;17-30 英寸", compat: "对支架质感有要求的中高端办公场景" },
     { id: "s5", brand: "AOC",       model: "AM400PLUS",           name: "AOC AM400PLUS", searchName: "AOC AM400PLUS", style: "一体升降", price: [299, 399],   rating: 4, valueGrade: "B", valueNote: "一体式设计不沉头，适合懒人快装。",                  use: ["office"],             audience: ["office", "student"], tags: ["省事"], specs: "一体式桌面升降;承重 6kg;22-32 英寸", compat: "免 VESA 改造？仍需确认显示器带孔" },
     { id: "s6", brand: "NB",        model: "H180",                name: "NB H180 双臂", searchName: "NB H180", style: "双臂支架", price: [299, 499],   rating: 4, valueGrade: "A", valueNote: "双屏办公利器，理线槽设计到位。",                    use: ["office", "create"], audience: ["office", "creator"], tags: ["多屏", "理线"], specs: "承重 12kg;22-32 英寸;550mm 拉伸/615mm 升降", compat: "双 27 英寸内各一支，注意桌面厚度" }
+,
+    { id: "s7",  brand: "北弧",      model: "E360 双臂",         name: "北弧 E360 双臂", searchName: "北弧 E360 双臂", style: "双臂支架", price: [299, 399],  rating: 4, valueGrade: "A", valueNote: "双臂气弹簧，双屏/带鱼屏一托搞定。",          use: ["office", "create"], audience: ["office", "creator"], tags: ["多屏"],     specs: "承重 18kg;双 13-32 英寸;气弹簧", compat: "双屏或超宽屏用户，注意桌面厚度" },
   ],
 
   /* ---------- 显示器 ---------- */
@@ -36,6 +41,8 @@ window.PC_MODELS = {
     { id: "m4", brand: "雷鸟",      model: "Q6",                   name: "雷鸟 Q6", searchName: "雷鸟 Q6", style: "27英寸 2K 高刷", price: [1190, 1399],  rating: 5, valueGrade: "S", valueNote: "高刷+广色域双修，游戏设计兼顾。",                  use: ["game", "create"], audience: ["gamer", "creator"], tags: ["电竞", "高色域"], specs: "27\";2K 170Hz;DCI-P3 95%+", compat: "游戏党升级首选，兼顾轻度修图" },
     { id: "m5", brand: "雷鸟",      model: "U6",                   name: "雷鸟 U6", searchName: "雷鸟 U6", style: "27英寸 4K", price: [1249, 1399],  rating: 5, valueGrade: "S", valueNote: "4K 性价比之王，办公修图闭眼入。",                    use: ["office", "create"], audience: ["office", "creator"], tags: ["高性价比", "清晰"], specs: "27\";4K 60Hz;IPS;Type-C 90W 反向充电", compat: "笔记本外接首选，Type-C 一线连" },
     { id: "m6", brand: "泰坦军团",  model: "P275MV MAX",           name: "泰坦军团 P275MV MAX", searchName: "泰坦军团 P275MV MAX", style: "27英寸 4K 高刷", price: [1990, 2499], rating: 4, valueGrade: "A", valueNote: "MiniLED 4K 高刷，同价位画质天花板。",               use: ["game", "create"], audience: ["creator", "gamer"], tags: ["旗舰", "MiniLED"], specs: "27\";4K 160Hz;MiniLED;HDR1000", compat: "需 RTX 5070 Ti 级显卡跑 4K 高刷" }
+,
+    { id: "m7",  brand: "AOC",       model: "24G4",              name: "AOC 24G4", searchName: "AOC 24G4", style: "24英寸 1080P 高刷", price: [599, 699], rating: 4, valueGrade: "A", valueNote: "24 寸小屏高帧，FPS 玩家性价比之选。",        use: ["game"],           audience: ["gamer", "student"], tags: ["电竞"],     specs: "24\";1080P 180Hz;Fast IPS;1ms", compat: "FPS 玩家小屏高帧，显卡压力低" },
   ],
 
   /* ---------- 键鼠外设 ---------- */
@@ -46,6 +53,8 @@ window.PC_MODELS = {
     { id: "k4", brand: "VGN",       model: "蜻蜓 R1",              name: "VGN 蜻蜓 R1", searchName: "VGN 蜻蜓 R1", style: "无线鼠标", price: [69, 99],    rating: 5, valueGrade: "S", valueNote: "百元内 3395 传感器卷王，轻至 48g。",                  use: ["game", "portable"], audience: ["student", "gamer"], tags: ["高性价比", "轻量化"], specs: "PAW3395SE;48g;三模;2K 回报率", compat: "小手抓握/指握玩家首选" },
     { id: "k5", brand: "迈从",      model: "A5",                   name: "迈从 A5", searchName: "迈从 A5", style: "无线鼠标", price: [170, 240],   rating: 5, valueGrade: "S", valueNote: "4K 回报率类 GPW 模具，旗舰体验平民价。",             use: ["game"],               audience: ["gamer"], tags: ["电竞", "高回报率"], specs: "PAW3395;56g;4K 回报率;类 GPW 模具", compat: "FPS/MOBA 玩家，中大手抓握" },
     { id: "k6", brand: "雷蛇",      model: "毒蝰 V3 极速版",        name: "雷蛇 毒蝰V3极速版", searchName: "雷蛇 毒蝰 V3 极速版", style: "无线鼠标", price: [269, 340],  rating: 4, valueGrade: "A", valueNote: "一线大厂轻量化甜点，Faker 同款。",                  use: ["game"],               audience: ["gamer"], tags: ["电竞", "大品牌"], specs: "80-99g;≥1000mAh;光学微动", compat: "品牌控与长时间游戏用户" }
+,
+    { id: "k7",  brand: "黑爵",      model: "AKKO 4084",         name: "黑爵 AKKO 4084", searchName: "黑爵 AKKO 4084", style: "机械键盘", price: [199, 259],  rating: 4, valueGrade: "A", valueNote: "84 配列矮轴，桌面紧张也能摆下。",           use: ["office", "game"], audience: ["office", "student"], tags: ["矮轴", "便携"], specs: "84 键;矮轴;三模;热插拔", compat: "桌面空间紧张/通勤携带用户" },
   ],
 
   /* ---------- 音频设备 ---------- */
@@ -55,6 +64,8 @@ window.PC_MODELS = {
     { id: "a3", brand: "漫步者",    model: "R1080BT",              name: "漫步者 R1080BT", searchName: "漫步者 R1080BT", style: "桌面音箱", price: [230, 419],   rating: 4, valueGrade: "A", valueNote: "入门木质箱体标杆，小空间 HiFi 启蒙。",               use: ["office", "create"], audience: ["office", "creator"], tags: ["音质", "木质箱体"], specs: "4 英寸中低音+丝绢高音;蓝牙/AUX/LINE", compat: "桌面近场听音首选，预算友好" },
     { id: "a4", brand: "惠威",      model: "D1100",                name: "惠威 D1100", searchName: "惠威 D1100", style: "桌面音箱", price: [659, 799],   rating: 5, valueGrade: "A", valueNote: "进阶 HiFi 甜点，猫眼号角高音通透。",                use: ["create", "office"], audience: ["creator", "office"], tags: ["音质", "HiFi"], specs: "20mm 球顶高音+4 英寸中低音;同轴/光纤输入", compat: "对音质有要求的创作者与听音党" },
     { id: "a5", brand: "漫步者",    model: "S1000MKII",            name: "漫步者 S1000MKII", searchName: "漫步者 S1000MKII", style: "桌面音箱", price: [898, 1299], rating: 5, valueGrade: "B", valueNote: "HiFi 级 2.0，120W 大功率，客厅电视也够用。",         use: ["create"],             audience: ["creator"], tags: ["HiFi", "大功率"], specs: "钛顶高音+5.5 英寸中低音;120W;APTX 蓝牙", compat: "预算充足的影音发烧友" }
+,
+    { id: "a6",  brand: "惠威",      model: "M200MKIII+",        name: "惠威 M200MKIII+", searchName: "惠威 M200MKIII+", style: "桌面音箱", price: [999, 1299], rating: 5, valueGrade: "A", valueNote: "经典 5.25 寸木质 2.0，近场监听味。",        use: ["create", "office"], audience: ["creator", "office"], tags: ["HiFi", "木质"], specs: "5.25 英寸;木质箱体;2.0 声道", compat: "桌面近场与客厅电视两用" },
   ],
 
   /* ---------- 网络设备 ---------- */
@@ -64,6 +75,8 @@ window.PC_MODELS = {
     { id: "n3", brand: "红米",      model: "AX5400",               name: "红米 AX5400", searchName: "红米 AX5400", style: "WiFi6 路由", price: [319, 399],   rating: 4, valueGrade: "A", valueNote: "家用爆款，带机量大发热控制好。",                    use: ["game", "office"], audience: ["office", "gamer"], tags: ["带机强", "稳定"], specs: "WiFi6;AX5400;大内存", compat: "100-130㎡ 家用主力" },
     { id: "n4", brand: "小米",      model: "BE6500",               name: "小米 BE6500", searchName: "小米 BE6500", style: "WiFi7 路由", price: [279, 420],   rating: 5, valueGrade: "S", valueNote: "最便宜的全 2.5G 口 WiFi7，300 元档王者。",            use: ["game", "create"], audience: ["gamer", "creator"], tags: ["WiFi7", "全2.5G口"], specs: "WiFi7;全 2.5G 网口;512MB 内存;IPQ5322", compat: "千兆宽带/大户型/多设备家庭首选" },
     { id: "n5", brand: "中兴",      model: "BE7200 Pro+",           name: "中兴 BE7200 Pro+", searchName: "中兴 BE7200 Pro+", style: "WiFi7 路由", price: [459, 539],   rating: 5, valueGrade: "A", valueNote: "游戏低延迟抗干扰，大户型优选。",                    use: ["game", "create"], audience: ["gamer"], tags: ["电竞", "强信号"], specs: "WiFi7;双 2.5G;MLO 多链路聚合;8 天线", compat: "电竞玩家与大平层覆盖" }
+,
+    { id: "n6",  brand: "华硕",      model: "TUF BE3600",        name: "华硕 TUF BE3600", searchName: "华硕 TUF BE3600", style: "WiFi7 路由", price: [299, 399], rating: 4, valueGrade: "A", valueNote: "军规散热+游戏加速，电竞稳定之选。",          use: ["game"],           audience: ["gamer"], tags: ["电竞", "稳定"], specs: "WiFi7;2.5G 口;游戏加速引擎", compat: "电竞玩家，大户型可组 Mesh" },
   ],
 
   /* ---------- 拓展坞 ---------- */
@@ -73,6 +86,8 @@ window.PC_MODELS = {
     { id: "d3", brand: "绿联",      model: "10合1 桌面坞",           name: "绿联 10合1 桌面坞", searchName: "绿联 10合1 桌面坞", style: "桌面拓展坞", price: [185, 299],   rating: 4, valueGrade: "A", valueNote: "双 HDMI+千兆+读卡，桌面一步到位。",                  use: ["office", "create"], audience: ["office", "creator"], tags: ["多接口"], specs: "双 HDMI 4K;千兆网口;SD/TF 读卡;PD", compat: "外接双屏+有线网络首选" },
     { id: "d4", brand: "联想",      model: "Type-C 商务坞",          name: "联想 Type-C 商务坞", searchName: "联想 Type-C 商务坞", style: "桌面拓展坞", price: [120, 299],   rating: 4, valueGrade: "B", valueNote: "商务稳定之选，接口齐全。",                          use: ["office"],               audience: ["office"], tags: ["稳定"], specs: "HDMI+VGA+USB×3+千兆;商用定位", compat: "企业办公与会议场景" },
     { id: "d5", brand: "绿联",      model: "雷电 4 拓展坞",          name: "绿联 雷电4 拓展坞", searchName: "绿联 雷电 4 拓展坞", style: "旗舰拓展坞", price: [199, 999],  rating: 4, valueGrade: "B", valueNote: "40Gbps 带宽，创作者高性能外设一步到位。",             use: ["create", "portable"], audience: ["creator", "mobile"], tags: ["旗舰", "高速"], specs: "雷电 4;40Gbps;8K 输出;高速存储", compat: "MacBook Pro/高性能笔记本创作用户" }
+,
+    { id: "d6",  brand: "惠普",      model: "USB-C 商务坞",      name: "惠普 USB-C 商务坞", searchName: "惠普 USB-C 商务坞", style: "桌面拓展坞", price: [199, 299], rating: 4, valueGrade: "B", valueNote: "HDMI+DP+多 USB，会议一线解决。",          use: ["office"],          audience: ["office"], tags: ["稳定"],     specs: "HDMI+DP+USB×4+千兆;商用定位", compat: "企业办公与会议场景" },
   ],
 
   /* ---------- 电源与机箱 ---------- */
@@ -84,6 +99,9 @@ window.PC_MODELS = {
     { id: "p5", brand: "海韵",      model: "FOCUS GX-1000",         name: "海韵 FOCUS GX-1000", searchName: "海韵 FOCUS GX-1000", style: "电源", price: [1080, 1240],  rating: 5, valueGrade: "B", valueNote: "十年质保旗舰，为未来升级留足冗余。",                  use: ["create", "game"], audience: ["creator", "gamer"], tags: ["旗舰", "长质保"], specs: "1000W;ATX3.1;白金级用料;十年质保", compat: "RTX 5080/5090 与长期高负载" },
     { id: "p6", brand: "先马",      model: "平头哥 M2",              name: "先马 平头哥 M2", searchName: "先马 平头哥 M2", style: "机箱", price: [109, 230],   rating: 4, valueGrade: "S", valueNote: "百元级走线友好的中塔，装机新手友好。",                use: ["game", "office"], audience: ["student", "gamer"], tags: ["高性价比", "走线"], specs: "中塔 ATX;支持 240/360 冷排;侧透可选", compat: "首台台式机通用之选" },
     { id: "p7", brand: "爱国者",    model: "星璨岚",                name: "爱国者 星璨 岚", searchName: "爱国者 星璨岚", style: "机箱", price: [199, 350],   rating: 4, valueGrade: "A", valueNote: "入门海景房，颜值与风道兼顾。",                        use: ["game", "create"], audience: ["gamer", "creator"], tags: ["RGB", "颜值"], specs: "全景侧透;支持 360 冷排;ATX", compat: "灯效爱好者与海景房主题装机" }
+,
+    { id: "p8",  brand: "微星",      model: "MAG A850GL",        name: "微星 MAG A850GL", searchName: "微星 MAG A850GL", style: "电源", price: [549, 699],  rating: 5, valueGrade: "S", valueNote: "850W ATX3.1 原生 12V-2x6，性价比高。",       use: ["game", "create"], audience: ["gamer", "creator"], tags: ["ATX3.1", "金牌"], specs: "850W;ATX3.1;原生 12V-2x6;全模组", compat: "RTX 5070 Ti 级平台推荐" },
+    { id: "p9",  brand: "乔思伯",    model: "D31 STANDARD",      name: "乔思伯 D31 STANDARD", searchName: "乔思伯 D31 STANDARD", style: "机箱", price: [299, 399], rating: 4, valueGrade: "A", valueNote: "MATX 海景房，数显屏可选，理线友好。",       use: ["game"],           audience: ["gamer"], tags: ["海景房", "MATX"], specs: "MATX 海景房;支持 360 冷排;数显屏可选", compat: "MATX 海景房主题装机" },
   ],
   /* ---------- CPU（2026-08 核验行情） ---------- */
   cpu: [
@@ -95,6 +113,9 @@ window.PC_MODELS = {
     { id: "u6", brand: "AMD",       model: "Ryzen 7 9700X",          name: "AMD Ryzen 7 9700X", searchName: "AMD Ryzen 7 9700X", style: "均衡8核", price: [1500, 1750],  rating: 4, valueGrade: "A", valueNote: "8 核 Zen5，创作与游戏均衡。",                       use: ["create", "game"], audience: ["creator", "gamer"], tags: ["均衡"], specs: "8核16线程;Zen5;65W;AM5", compat: "配 B650，剪辑渲染+游戏双修" },
     { id: "u7", brand: "AMD",       model: "Ryzen 7 9800X3D",        name: "AMD Ryzen 7 9800X3D", searchName: "AMD Ryzen 7 9800X3D", style: "游戏旗舰", price: [2900, 3200],  rating: 5, valueGrade: "S", valueNote: "3D 缓存游戏王，FPS 神U。",                          use: ["game", "create"], audience: ["gamer", "creator"], tags: ["游戏旗舰", "3D缓存"], specs: "8核16线程;Zen5 3D V-Cache;AM5", compat: "配 B650/X670，电竞旗舰首选" },
     { id: "u8", brand: "Intel",     model: "Core Ultra 9 285K",      name: "Intel Ultra 9 285K", searchName: "Intel Core Ultra 9 285K", style: "旗舰24核", price: [4400, 4800],  rating: 4, valueGrade: "A", valueNote: "24 核旗舰，生产力天花板。",                        use: ["create"], audience: ["creator"], tags: ["旗舰", "生产力"], specs: "24核24线程;Arrow Lake;125W;LGA1851", compat: "配 Z890 旗舰板，创作工作站级" }
+,
+    { id: "u9",  brand: "AMD",       model: "Ryzen 5 7500F",      name: "AMD Ryzen 5 7500F", searchName: "AMD Ryzen 5 7500F", style: "游戏6核", price: [900, 1000], rating: 5, valueGrade: "S", valueNote: "无核显游戏甜点，板U套装极致性价比。",      use: ["game"],           audience: ["gamer", "student"], tags: ["高性价比"], specs: "6核12线程;Zen4;65W;AM5", compat: "配 A620/B650，游戏入门首选" },
+    { id: "u10", brand: "Intel",     model: "Core i5-14400F",     name: "Intel i5-14400F", searchName: "Intel Core i5-14400F", style: "全能10核", price: [1100, 1300], rating: 4, valueGrade: "A", valueNote: "10 核办公游戏通吃，性价比均衡。",          use: ["office", "game"], audience: ["office", "gamer"], tags: ["全能"],     specs: "10核16线程;Raptor Lake;65W;LGA1700", compat: "配 B760M，办公游戏通吃" },
   ],
   /* ---------- 显卡（2026-08 核验行情） ---------- */
   gpu: [
@@ -105,6 +126,9 @@ window.PC_MODELS = {
     { id: "g5", brand: "AMD",       model: "RX 9070 XT 16G",         name: "AMD RX 9070 XT 16G", searchName: "AMD RX 9070 XT", style: "2K 高刷", price: [5300, 5900],  rating: 4, valueGrade: "A", valueNote: "对标 5070，FSR4 性价比 A 卡旗舰。",                use: ["game", "create"], audience: ["gamer", "creator"], tags: ["旗舰", "A卡"], specs: "16GB GDDR6;2K 全特效;FSR4", compat: "配 750W 电源" },
     { id: "g6", brand: "NVIDIA",    model: "RTX 5070 Ti 16G",        name: "NVIDIA RTX 5070 Ti 16G", searchName: "NVIDIA RTX 5070 Ti", style: "创作旗舰", price: [7500, 8500],  rating: 5, valueGrade: "S", valueNote: "16G 显存，创作与游戏双旗舰。",                    use: ["create", "game"], audience: ["creator", "gamer"], tags: ["创作", "旗舰"], specs: "16GB GDDR7;4K 入门;NVENC 加速", compat: "配 750-850W 电源，创作旗舰" },
     { id: "g7", brand: "NVIDIA",    model: "RTX 5080 16G",           name: "NVIDIA RTX 5080 16G", searchName: "NVIDIA RTX 5080", style: "4K 旗舰", price: [8200, 10300], rating: 5, valueGrade: "A", valueNote: "4K 高刷顶配，AI 渲染利器。",                       use: ["create", "game"], audience: ["creator"], tags: ["旗舰", "4K"], specs: "16GB GDDR7;4K 高刷;DLSS4", compat: "配 850-1000W 电源，顶配机" }
+,
+    { id: "g8",  brand: "AMD",       model: "RX 7800 XT 16G",     name: "AMD RX 7800 XT 16G", searchName: "AMD RX 7800 XT", style: "2K 高刷", price: [3800, 4400], rating: 4, valueGrade: "A", valueNote: "16G 大显存，2K 全特效 A 卡主力。",         use: ["game", "create"], audience: ["gamer", "creator"], tags: ["大显存", "A卡"], specs: "16GB GDDR6;2K 全特效;FSR", compat: "配 700W 电源，A 卡性价比之选" },
+    { id: "g9",  brand: "NVIDIA",    model: "RTX 5060 Ti 16G",    name: "NVIDIA RTX 5060 Ti 16G", searchName: "NVIDIA RTX 5060 Ti", style: "2K 甜点", price: [3300, 3800], rating: 5, valueGrade: "S", valueNote: "16G 显存甜点，DLSS4 战未来。",         use: ["game", "create"], audience: ["gamer", "student"], tags: ["DLSS", "大显存"], specs: "16GB GDDR7;2K 高画质;DLSS4", compat: "配 650W 电源，主流游戏创作" },
   ]
 };
 
@@ -258,12 +282,14 @@ window.PC_TOP_IMG = {
 
 /* 产品 → 颜值风格 映射（id 对应 PC_STYLES.id） */
 window.PC_LOOKS = {
-  c1: "white", c2: "white", c3: "white", c4: "business", c5: "rgb", c6: "business",
-  s1: "white", s2: "white", s3: "business", s4: "business", s5: "white", s6: "business",
-  m1: "white", m2: "rgb", m3: "rgb", m4: "rgb", m5: "white", m6: "rgb",
-  k1: "white", k2: "white", k3: "business", k4: "white", k5: "rgb", k6: "rgb",
-  a1: "white", a2: "business", a3: "wood", a4: "wood", a5: "wood",
-  n1: "white", n2: "business", n3: "business", n4: "white", n5: "rgb",
-  d1: "portable", d2: "portable", d3: "business", d4: "business", d5: "business",
-  p1: "white", p2: "white", p3: "white", p4: "white", p5: "business", p6: "white", p7: "seaview"
+  c1: "white", c2: "white", c3: "white", c4: "business", c5: "rgb", c6: "business", c7: "white", c8: "white",
+  s1: "white", s2: "white", s3: "business", s4: "business", s5: "white", s6: "business", s7: "business",
+  m1: "white", m2: "rgb", m3: "rgb", m4: "rgb", m5: "white", m6: "rgb", m7: "rgb",
+  k1: "white", k2: "white", k3: "business", k4: "white", k5: "rgb", k6: "rgb", k7: "white",
+  a1: "white", a2: "business", a3: "wood", a4: "wood", a5: "wood", a6: "wood",
+  n1: "white", n2: "business", n3: "business", n4: "white", n5: "rgb", n6: "rgb",
+  d1: "portable", d2: "portable", d3: "business", d4: "business", d5: "business", d6: "business",
+  p1: "white", p2: "white", p3: "white", p4: "white", p5: "business", p6: "white", p7: "seaview", p8: "white", p9: "seaview",
+  u1: "white", u2: "white", u3: "business", u4: "white", u5: "business", u6: "white", u7: "business", u8: "business", u9: "white", u10: "business",
+  g1: "white", g2: "rgb", g3: "rgb", g4: "rgb", g5: "rgb", g6: "rgb", g7: "rgb", g8: "rgb", g9: "rgb"
 };
