@@ -279,7 +279,7 @@ window.PC_DATA = {
       ]
     },
     {
-      id: "form", title: "设备形态？", multi: false,
+      id: "form", title: "想要台式还是笔记本？", multi: false,
       options: [
         { id: "desktop", label: "🖥️ 台式机", desc: "性能优先" },
         { id: "laptop",  label: "💻 笔记本", desc: "便携优先" },
@@ -291,7 +291,7 @@ window.PC_DATA = {
       options: [
         { id: "value", label: "💎 性价比", desc: "花小钱办大事" },
         { id: "quiet", label: "🤫 静音散热", desc: "低噪音强散热" },
-        { id: "rgb",   label: "✨ 颜值灯效", desc: "RGB 拉满" },
+        { id: "rgb",   label: "✨ 颜值灯效", desc: "灯光酷炫好看" },
         { id: "ergo",  label: "🧍 人体工学", desc: "久坐舒适健康" }
       ]
     },
@@ -300,7 +300,7 @@ window.PC_DATA = {
       options: [
         { id: "any",     label: "🙂 不在意", desc: "性能优先" },
         { id: "white",   label: "🤍 白色简约", desc: "干净通透" },
-        { id: "seaview", label: "🪟 海景房", desc: "硬件展示柜" },
+        { id: "seaview", label: "🪟 海景房", desc: "四面透明、把硬件秀出来的机箱" },
         { id: "rgb",     label: "🌈 RGB 电竞", desc: "氛围灯效" },
         { id: "business",label: "⚫ 商务黑", desc: "沉稳专业" },
         { id: "wood",    label: "🪵 复古木质", desc: "温润质感" },
@@ -324,7 +324,7 @@ window.PC_DATA = {
       ]
     },
     {
-      id: "exp", title: "你的装机/折腾经验？", multi: false,
+      id: "exp", title: "你以前装过或折腾过电脑吗？", multi: false,
       options: [
         { id: "new",  label: "🍼 纯新手", desc: "希望省心、少折腾" },
         { id: "some", label: "🔧 会折腾", desc: "能自己装机排错" },
@@ -349,7 +349,7 @@ window.PC_DATA = {
         { id: "monitor",  label: "🖥️ 显示器", desc: "屏幕素质" },
         { id: "input",    label: "⌨️ 键鼠", desc: "输入手感" },
         { id: "stand",    label: "🛠️ 支架", desc: "桌面人体工学" },
-        { id: "dock",     label: "🔌 拓展坞", desc: "接口扩展" },
+        { id: "dock",     label: "🔌 拓展坞", desc: "给笔记本扩接口的小盒子" },
         { id: "audio",    label: "🎧 音频", desc: "听感与拾音" }
       ]
     }
