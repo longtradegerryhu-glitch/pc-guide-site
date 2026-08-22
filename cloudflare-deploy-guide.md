@@ -4,6 +4,11 @@
 > 结构：`index.html` + `css/styles.css` + `js/*.js`，**无需构建**，任何部署方式都适用。
 > 更新日期：2026-08-16
 
+> ⚠️ **2026-08-22 实况更新**：当前部署为 **Cloudflare Worker（Workers Builds）项目 `pc-guide`**，真实地址
+> **`https://pc-guide.longtrade-gerryhu.workers.dev/`**（**不是** `pc-guide-site.pages.dev`，该域名不存在；`pc-guide.pages.dev` 是他人同名项目）。
+> 仓库根已新增 `wrangler.toml`（`main=src/index.js` + `[assets]`）与 `src/index.js`（`/price` 京东实时价接口），
+> `.assetsignore` 排除 wr-*.md 等内部文件。下方"方式 1/2/3"保留作历史参考；当前走方式 3 的 Git 联动自动构建。
+
 ---
 
 ## 0. 前置准备
