@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
+  <a class="skip-link" href="#main">跳到主内容</a>
   <!-- 滚动进度条 -->
   <div class="scroll-progress" id="scrollProgress"></div>
 
@@ -29,8 +30,8 @@
         <span></span><span></span><span></span>
       </button>
 
-            <nav class="nav-links" id="navLinks">
-        <a href="index.html" class="nav-link active">首页</a>
+            <nav class="nav-links" id="navLinks" aria-label="主导航">
+        <a href="index.html" class="nav-link active" aria-current="page">首页</a>
         <a href="guide.html" class="nav-link">使用指南</a>
         <a href="accessories.html" class="nav-link">配件与榜单</a>
         <a href="plans.html" class="nav-link">搭配计划</a>
@@ -97,7 +98,7 @@
       </div>
     </section>
 
-  <main>
+  <main id="main">
     <!-- ===== 分类入口 ===== -->
     <section class="section section-alt" id="channels">
       <div class="container">

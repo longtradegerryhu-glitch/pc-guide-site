@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
+  <a class="skip-link" href="#main">跳到主内容</a>
   <div class="scroll-progress" id="scrollProgress"></div>
 
   <header class="site-header" id="top">
@@ -21,18 +22,18 @@
       <button class="nav-toggle" id="navToggle" aria-label="打开菜单" aria-expanded="false">
         <span></span><span></span><span></span>
       </button>
-            <nav class="nav-links" id="navLinks">
+            <nav class="nav-links" id="navLinks" aria-label="主导航">
         <a href="index.html" class="nav-link">首页</a>
         <a href="guide.html" class="nav-link">使用指南</a>
         <a href="accessories.html" class="nav-link">配件与榜单</a>
         <a href="plans.html" class="nav-link">搭配计划</a>
         <a href="smart.html" class="nav-link">智能推荐</a>
-        <a href="faq.html" class="nav-link active">常见问题</a>
+        <a href="faq.html" class="nav-link active" aria-current="page">常见问题</a>
       </nav>
     </div>
   </header>
 
-  <main>
+  <main id="main">
     <!-- ===== 常见问题 ===== -->
     <section class="section" id="faq">
       <div class="container">
