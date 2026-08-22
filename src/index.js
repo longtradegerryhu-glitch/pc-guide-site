@@ -1,10 +1,8 @@
-// Cloudflare Pages Function — 京东联盟「站内实时比价」接口（可选增强）
-// 路由：/price?q=搜索词
+// pc-guide Worker 入口：静态站点 + /price 京东联盟实时价接口
+// - 静态资源：由 wrangler.toml [assets] 提供（env.ASSETS）
+// - 动态路由：/price 由本脚本处理（未命中静态文件时 Worker 会被调用）
 //
-// 设计原则：纯静态站点优先「跳转淘宝/京东查官方实时价」。本 Function 为可选增强——
-// 配齐京东联盟密钥后，可在站内直接拉取京东商品实时价。未配密钥时明确提示、不崩站。
-//
-// 京东联盟开放接口（jd.union.open.goods.query）需要用 app_key/app_secret 做 MD5 签名，
+// 京东联盟开放接口（jd.union.open.goods.query）需 app_key/app_secret 做 MD5 签名，
 // 而 Cloudflare Workers 运行时没有内置 MD5，故内含一份经 Node crypto 对照验证的纯 JS MD5。
 
 // ---------- 纯 JS MD5（Joseph Myers 经典实现，已验证） ----------
@@ -93,10 +91,8 @@ function json(body, status = 200, cache = '') {
   return new Response(JSON.stringify(body), { status, headers });
 }
 
-// ---------- 主入口 ----------
-export async function onRequestGet(context) {
-  const { request, env } = context;
-  const url = new URL(request.url);
+// ---------- /price 处理器 ----------
+async function handlePrice(url, env) {
   const q = (url.searchParams.get('q') || '').trim();
   if (!q) return json({ ok: false, error: '缺少查询参数 q' }, 400);
 
@@ -108,7 +104,7 @@ export async function onRequestGet(context) {
     return json({
       ok: false,
       error: '京东联盟密钥未配置（JD_APP_KEY / JD_APP_SECRET / JD_UNION_ID）',
-      hint: '在 Cloudflare Pages 项目 Settings → Environment variables 添加这三个变量后重新部署即可启用站内实时价。当前站点已用「跳转京东查官方实时价」作为降级方案。'
+      hint: '在 Cloudflare 该 Worker 的 Settings → Variables and Secrets 添加这三个变量后重新部署即可启用站内实时价。当前站点已用「跳转京东查官方实时价」作为降级方案。'
     });
   }
 
@@ -192,3 +188,15 @@ export async function onRequestGet(context) {
     return json({ ok: false, error: String(e && e.message ? e.message : e) }, 502);
   }
 }
+
+// ---------- Worker 入口 ----------
+export default {
+  async fetch(request, env) {
+    const url = new URL(request.url);
+    if (url.pathname === '/price' || url.pathname === '/price/') {
+      return handlePrice(url, env);
+    }
+    // 静态资源：命中文件直接服务；未命中由 ASSETS 兜底返回 404
+    return env.ASSETS.fetch(request);
+  }
+};

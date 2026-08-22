@@ -1,0 +1,9 @@
+name = "pc-guide"
+main = "src/index.js"
+compatibility_date = "2026-08-22"
+
+# 静态资源：整个仓库根目录（index.html 所在目录）
+# 路由语义：命中静态文件 → 直接服务；未命中（如 /price）→ 交给 src/index.js 处理
+[assets]
+directory = "./"
+binding = "ASSETS"

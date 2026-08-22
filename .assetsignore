@@ -1,0 +1,10 @@
+# 不随静态资源上传的文件（.gitignore 同格式）
+.git
+.gitignore
+node_modules
+functions/
+src/
+wrangler.toml
+.assetsignore
+wr-*.md
+cloudflare-deploy-guide.md
