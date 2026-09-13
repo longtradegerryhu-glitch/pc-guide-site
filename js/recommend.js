@@ -46,61 +46,16 @@
     '</div>';
   }
 
-  // 站内「京东实时价」小卡片：默认折叠，点击才请求 /price（避免一进页面就打接口）
+  // 站内「查实时价」小卡片：直接跳京东搜索页。
+  // 京东联盟 API 因 ICP 备案要求暂未启用（workers.dev 无备案）；此处改为官方搜索跳转，体验稳定。
   function jdLiveCard(q) {
-    var qEsc = esc(q);
-    return '<div class="jd-live" data-q="' + qEsc + '">' +
-      '<button type="button" class="jd-live-btn" aria-expanded="false" onclick="return window.__jdFetch(this)">📡 站内直出京东实时价</button>' +
-      '<div class="jd-live-box" hidden></div>' +
+    var url = 'https://search.jd.com/Search?keyword=' + encodeURIComponent(q);
+    return '<div class="jd-live jd-live-static">' +
+      '<a class="jd-live-btn" href="' + url + '" target="_blank" rel="noopener noreferrer">' +
+        '🔎 去京东搜「' + esc(q) + '」查实时价</a>' +
+      '<div class="jd-live-hint">站内实时价暂未上线（联盟 API 合规受限），点上面按钮看官方实时价</div>' +
     '</div>';
   }
-
-  // 全局点击处理器：调用 /price 渲染京东实时价；缺密钥或无结果均优雅降级
-  window.__jdFetch = function (btn) {
-    var wrap = btn.closest ? btn.closest('.jd-live') : null;
-    if (!wrap) return false;
-    var q = wrap.getAttribute('data-q') || '';
-    var box = wrap.querySelector('.jd-live-box');
-    if (!box) return false;
-    // 已加载过：仅切换显隐，不再打接口
-    if (box.dataset.loaded === '1') {
-      box.hidden = !box.hidden;
-      btn.setAttribute('aria-expanded', box.hidden ? 'false' : 'true');
-      return false;
-    }
-    box.hidden = false;
-    btn.setAttribute('aria-expanded', 'true');
-    box.innerHTML = '<div class="jd-loading">查询中…</div>';
-    fetch('/price?q=' + encodeURIComponent(q))
-      .then(function (r) {
-        if (!r.ok) throw new Error('HTTP ' + r.status);
-        return r.json();
-      })
-      .then(function (d) {
-        box.dataset.loaded = '1';
-        if (!d || d.ok === false) {
-          box.innerHTML = '<div class="jd-note">站内实时价暂未启用（需在 Cloudflare 配置京东联盟密钥）。<br>可改用上方「京东查价」按钮查官方实时价。</div>';
-          return;
-        }
-        var items = (d.items || []).slice(0, 5);
-        if (!items.length) {
-          box.innerHTML = '<div class="jd-note">京东暂未匹配到「' + esc(q) + '」相关在售商品。</div>';
-          return;
-        }
-        var rows = items.map(function (it) {
-          var price = (it.price != null && it.price !== '') ? '<span class="jd-price">¥' + esc(String(it.price)) + '</span>' : '';
-          var href = it.url || ('https://search.jd.com/Search?keyword=' + encodeURIComponent(q));
-          return '<a class="jd-item" href="' + esc(href) + '" target="_blank" rel="noopener noreferrer">' +
-            '<span class="jd-name">' + esc(it.name || q) + '</span>' + price +
-          '</a>';
-        }).join('');
-        box.innerHTML = rows + '<div class="jd-foot">数据来自京东联盟接口，以实际下单页为准</div>';
-      })
-      .catch(function (e) {
-        box.innerHTML = '<div class="jd-note">查询失败：' + esc(String(e && e.message ? e.message : e)) + '<br>可改用上方「京东查价」按钮。</div>';
-      });
-    return false;
-  };
   function styleOf(id) { return styleById[id] || null; }
   function countByStyle(sid) {
     var n = 0;
@@ -124,6 +79,69 @@
 
   function esc(s) {
     return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+
+  /* ---- 术语小白化：题干 / 选项里出现的生硬词自动套 .term 悬停解释 ---- */
+  var KNOWN_TERMS = {
+    "4K": "4K = 3840×2160 高清分辨率；剪辑 / 设计专用，普通桌面 1080p/2K 已够",
+    "144Hz": "144Hz = 显示器每秒刷新 144 张画面，FPS 玩家更跟手；办公 60Hz 就够",
+    "1ms": "1ms = 灰阶响应时间，FPS 玩家防拖影",
+    "IPS": "IPS 面板：颜色准、可视角度广，主流选择",
+    "OLED": "OLED 自发光：颜色最艳、对比度最高，但有烧屏风险（长期留同一画面会留痕）",
+    "Mini-LED": "Mini-LED：背光分区，亮处更亮、暗处更暗，价格偏贵",
+    "核显": "核显 = CPU 自带的显卡；办公 / 看视频够用，能省一笔独显钱",
+    "独显": "独显 = 独立显卡；打游戏 / 剪辑 / 3D 必备",
+    "3A": "3A = 高成本高画质单机大作，对显卡要求高",
+    "FPS": "FPS = 第一人称射击（CS / 瓦罗兰特 / 吃鸡），看重刷新率",
+    "MOBA": "MOBA = 多人在线竞技（LOL / Dota），对显卡要求低",
+    "DDR5": "DDR5 = 第 5 代内存，2026 年主力，比 DDR4 更快更贵",
+    "DDR4": "DDR4 = 第 4 代内存，便宜够用，老平台选",
+    "NVMe": "NVMe = 高速 SSD 接口（M.2），比传统 SATA SSD 快 5–10 倍",
+    "SSD": "SSD = 固态硬盘，比老机械硬盘快很多，开机 / 开软件飞快",
+    "PCIe": "PCIe = 主板上的高速插槽，显卡和 SSD 都插这里",
+    "Type-C": "Type-C：正反都能插的接口，传数据 / 充电 / 视频都能",
+    "HDMI": "HDMI：显示器 / 电视接口，家用最常见",
+    "DP": "DP（DisplayPort）：显示器主流接口，刷新率支持更好",
+    "Wi-Fi 6E": "Wi-Fi 6E：第 6 代 Wi-Fi 增强版，多设备不挤",
+    "Wi-Fi 6": "Wi-Fi 6：第 6 代 Wi-Fi，速度快、省电",
+    "80 PLUS": "80 PLUS = 电源转换效率认证（金牌 / 白金省电发热低）",
+    "RGB": "RGB = 可调灯效，纯颜值、不影响性能",
+    "海景房": "海景房 = 四面透明玻璃机箱，把硬件都秀出来",
+    "便携": "便携 = 能带着走的形态，笔记本 / 小主机为主",
+    "静音": "静音 = 低噪音强散热（贵但舒适）"
+  };
+
+  /* 把字符串里出现的已知术语包成 .term 悬停 span。
+   * 假设输入为纯文本（无 HTML）。按"从长到短、不重叠"原则一次性扫描所有术语位置，
+   * 再按位置重组字符串——避免循环替换时下轮扫描到上轮已生成的 span 内文本
+   * （例：「DDR5」的解释里出现「DDR4」字面量时被错误再套 span）。 */
+  function termify(text) {
+    var keys = Object.keys(KNOWN_TERMS).sort(function (a, b) { return b.length - a.length; });
+    var src = String(text);
+    var hits = [];
+    for (var k = 0; k < keys.length; k++) {
+      var term = keys[k];
+      var escRe = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      var re = new RegExp(escRe, "g");
+      var m;
+      while ((m = re.exec(src)) !== null) {
+        var conflict = false;
+        for (var j = 0; j < hits.length; j++) {
+          if (m.index < hits[j].end && m.index + term.length > hits[j].start) { conflict = true; break; }
+        }
+        if (!conflict) hits.push({ start: m.index, end: m.index + term.length, term: term });
+      }
+    }
+    hits.sort(function (a, b) { return a.start - b.start; });
+    var out = "";
+    var cursor = 0;
+    for (var i = 0; i < hits.length; i++) {
+      out += src.slice(cursor, hits[i].start);
+      out += '<span class="term" data-tip="' + KNOWN_TERMS[hits[i].term] + '" tabindex="0">' + hits[i].term + "</span>";
+      cursor = hits[i].end;
+    }
+    out += src.slice(cursor);
+    return out;
   }
 
   /* =========================================================
@@ -442,15 +460,15 @@
           var sel = answers[q.id] && answers[q.id].indexOf(o.id) > -1 ? " selected" : "";
           return (
             '<button class="q-opt' + sel + '" data-q="' + q.id + '" data-o="' + o.id + '">' +
-              '<span class="q-opt-label">' + o.label + "</span>" +
-              '<span class="q-opt-desc">' + esc(o.desc) + "</span>" +
+              '<span class="q-opt-label">' + termify(o.label) + "</span>" +
+              '<span class="q-opt-desc">' + termify(esc(o.desc)) + "</span>" +
             "</button>"
           );
         }).join("");
         var stepBadge = '<span class="q-step">' + (qi + 1) + "/" + steps.length + "</span>";
         return (
           '<div class="quiz-step" data-step="' + q.id + '">' +
-            '<div class="q-title">' + stepBadge + " " + esc(q.title) + "</div>" +
+            '<div class="q-title">' + stepBadge + " " + termify(q.title) + "</div>" +
             '<div class="q-opts" data-multi="' + (q.multi ? "1" : "0") + '">' + opts + "</div>" +
           "</div>"
         );
@@ -1145,7 +1163,7 @@
     function renderRow(row, items, key) {
       row.innerHTML = items.map(function (it) {
         var active = state[key] === it.id ? " active" : "";
-        return '<button type="button" class="chip' + active + '" data-v="' + it.id + '">' + it.label + "</button>";
+        return '<button type="button" class="chip' + active + '" data-v="' + it.id + '">' + termify(it.label) + "</button>";
       }).join("");
       row.querySelectorAll(".chip").forEach(function (b) {
         b.addEventListener("click", function () {
