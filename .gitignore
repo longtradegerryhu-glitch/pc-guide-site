@@ -1,0 +1,8 @@
+.DS_Store
+Thumbs.db
+_jd_probe/
+_smoke.py
+_smoke_out.txt
+*.tmp
+*.bak
+node_modules/
