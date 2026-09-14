@@ -52,7 +52,7 @@
     var url = 'https://search.jd.com/Search?keyword=' + encodeURIComponent(q);
     return '<div class="jd-live jd-live-static">' +
       '<a class="jd-live-btn" href="' + url + '" target="_blank" rel="noopener noreferrer">' +
-        '🔎 去京东搜「' + esc(q) + '」查实时价</a>' +
+        '去京东搜「' + esc(q) + '」查实时价</a>' +
       '<div class="jd-live-hint">站内实时价暂未上线（联盟 API 合规受限），点上面按钮看官方实时价</div>' +
     '</div>';
   }
@@ -284,7 +284,7 @@
     if (looksRow) {
       renderChips(looksRow,
         [{ id: "all", label: "全部风格" }].concat(STYLES.map(function (s) {
-          return { id: s.id, label: s.icon + " " + s.name };
+          return { id: s.id, label: s.name };
         })),
         "look");
     }
@@ -354,7 +354,7 @@
           "<p class=\"plan-summary\">" + esc(pl.summary) + "</p>" +
           '<div class="plan-personas">' + personas + "</div>" +
           '<table class="plan-table"><thead><tr><th>部件</th><th>推荐</th><th>参考价</th></tr></thead><tbody>' + rows + "</tbody></table>" +
-          '<p class="plan-tip">💡 ' + esc(pl.tip) + "</p>" +
+          '<p class="plan-tip">' + esc(pl.tip) + "</p>" +
         "</article>"
       );
     }).join("");
@@ -517,7 +517,7 @@
         });
       });
       if (!items.length) return "";
-      return '<div class="res-section"><span class="res-label">⚠️ 小白避坑：这几处最容易翻车</span>' +
+      return '<div class="res-section"><span class="res-label">小白避坑：这几处最容易翻车</span>' +
         '<div class="look-pitfalls">' +
         items.map(function (t) { return '<div class="pitfall">' + esc(t) + "</div>"; }).join("") +
         "</div></div>";
@@ -583,7 +583,7 @@
       }).join("");
 
       // 4) 需求画像（强度/年限/经验/已有外设）
-      var intLabel = { light: "☕ 轻度使用", mid: "🖥️ 中度使用", heavy: "🔥 重度使用" }[intensity] || "";
+      var intLabel = { light: "轻度使用", mid: "中度使用", heavy: "重度使用" }[intensity] || "";
       var lifeLabel = { y1: "短期过渡", y3: "主流 3 年", y5: "战未来 5 年+" }[lifespan] || "";
       var expLabel = { new: "纯新手", some: "会折腾", pro: "老玩家" }[exp] || "";
       var existLabels = { monitor: "🖥️", input: "⌨️", audio: "🎧", stand: "🛠️", cooler: "❄️" };
@@ -596,7 +596,7 @@
         '<span class="tag-pill">' + esc(expLabel) + "</span>" +
         '<span class="tag-pill">' + esc(existTxt) + "</span>";
       if (look && look !== "any" && styleOf(look)) {
-        profile += '<span class="tag-pill">' + esc(styleOf(look).icon + " " + styleOf(look).name) + "</span>";
+        profile += '<span class="tag-pill">' + esc(styleOf(look).name) + "</span>";
       }
 
       var picksHtml = picks.map(function (p) {
@@ -615,7 +615,7 @@
       }).join("");
 
       var planHtml = plan
-        ? '<div class="res-plan">' + plan.icon + " <b>" + esc(plan.name) + "</b> —— " + esc(plan.summary) +
+        ? '<div class="res-plan">' + plan.icon + " <b>" + esc(plan.name) + "</b>：" + esc(plan.summary) +
           ' <span class="res-budget">参考 ' + fmtPrice(plan.price) + "</span></div>"
         : '<div class="res-plan">未匹配到整机方案，请参考「搭配计划」板块。</div>';
 
@@ -630,10 +630,10 @@
             '<div class="res-look-card">' +
               '<img class="res-look-img" src="' + style.img + '" alt="' + esc(style.name) + '" loading="lazy" />' +
               '<div class="res-look-body">' +
-                '<div class="res-look-head">' + style.icon + " " + esc(style.name) +
+                '<div class="res-look-head">' + esc(style.name) +
                   '<span class="res-look-pal">' + sw + "</span></div>" +
                 '<p class="res-look-desc">' + esc(style.desc) + "</p>" +
-                '<p class="res-look-tip">💡 ' + esc((style.tips && style.tips[0]) || "") + "</p>" +
+                '<p class="res-look-tip">' + esc((style.tips && style.tips[0]) || "") + "</p>" +
                 '<button class="btn btn-ghost res-look-jump" data-look="' + style.id + '">看这类风格配件 →</button>' +
               "</div>" +
             "</div>" +
@@ -642,7 +642,7 @@
 
       box.innerHTML =
         '<div class="result-box reveal in">' +
-          '<h3 class="result-title">🎯 你的个性化方案</h3>' +
+          '<h3 class="result-title">你的个性化方案</h3>' +
           '<div class="result-persona"><span class="res-label">需求画像</span>' + profile + "</div>" +
           '<div class="result-persona"><span class="res-label">适合人群</span>' + personas + "</div>" +
           lookHtml +
@@ -782,7 +782,7 @@
         });
       });
 
-      useRow.innerHTML = [{ id: "all", label: "全部用途" }, { id: "office", label: "💼 办公学习" }, { id: "game", label: "🎮 游戏" }, { id: "create", label: "🎬 创作" }, { id: "portable", label: "💻 便携" }].map(function (u) {
+      useRow.innerHTML = [{ id: "all", label: "全部用途" }, { id: "office", label: "办公学习" }, { id: "game", label: "游戏" }, { id: "create", label: "创作" }, { id: "portable", label: "便携" }].map(function (u) {
         var active = state.use === u.id ? " active" : "";
         return '<button class="chip' + active + '" data-u="' + u.id + '">' + u.label + "</button>";
       }).join("");
@@ -902,13 +902,13 @@
       var diff = b - state.total;
       var tipHtml;
       if (diff >= 0 && diff <= b * 0.05) {
-        tipHtml = '<div class="budget-tip">✅ 当前配置总价 <b>¥' + state.total + '</b>，预算 ¥' + b + '，<b>刚好达标</b>，可直接照单购买。</div>';
+        tipHtml = '<div class="budget-tip">当前配置总价 <b>¥' + state.total + '</b>，预算 ¥' + b + '，<b>刚好达标</b>，可直接照单购买。</div>';
       } else if (diff > b * 0.05) {
-        tipHtml = '<div class="budget-tip">🎉 当前配置总价 ¥' + state.total + '，比预算省 <b>¥' + diff + '</b>。富余可：升级显示器 4K / 加 2TB 硬盘 / 升键鼠。</div>';
+        tipHtml = '<div class="budget-tip">当前配置总价 ¥' + state.total + '，比预算省 <b>¥' + diff + '</b>。富余可：升级显示器 4K / 加 2TB 硬盘 / 升键鼠。</div>';
       } else if (diff >= -b * 0.1) {
-        tipHtml = '<div class="budget-tip warn">⚠️ 当前配置总价 ¥' + state.total + '，超预算 <b>¥' + (-diff) + '</b>（约 ' + Math.round(-diff / b * 100) + '%）。建议：最贵的部件降一档，或去掉可后补的外设。</div>';
+        tipHtml = '<div class="budget-tip warn">当前配置总价 ¥' + state.total + '，超预算 <b>¥' + (-diff) + '</b>（约 ' + Math.round(-diff / b * 100) + '%）。建议：最贵的部件降一档，或去掉可后补的外设。</div>';
       } else {
-        tipHtml = '<div class="budget-tip warn">🚨 超预算较多（¥' + (-diff) + '，' + Math.round(-diff / b * 100) + '%）。建议：切换更低档方案，或逐件下调——优先动显卡/显示器，体验影响最可控。</div>';
+        tipHtml = '<div class="budget-tip warn">超预算较多（¥' + (-diff) + '，' + Math.round(-diff / b * 100) + '%）。建议：切换更低档方案，或逐件下调，优先动显卡和显示器，体验影响最可控。</div>';
       }
 
       result.innerHTML =
@@ -917,7 +917,7 @@
             '<span class="plan-icon">' + plan.icon + "</span>" +
             '<div><h3 class="plan-name">' + esc(plan.name) + '<span class="plan-tier">' + esc(plan.budgetLabel) + "</span></h3>" +
             '<span class="plan-budget">适合人群 ' + personas + " ｜ 每个部件都可换型号、改价格</span></div>" +
-            '<button type="button" class="budget-copy" title="复制当前配置单为文本">📋 复制配置单</button>' +
+            '<button type="button" class="budget-copy" title="复制当前配置单为文本">复制配置单</button>' +
           "</div>" +
           '<table class="plan-table part-table"><thead><tr><th>部件</th><th>型号 / 档位（下拉可换）＋ 价格（可改）</th><th>小计</th></tr></thead><tbody>' + trs + "</tbody></table>" +
           '<div class="res-total">当前配置合计：<b>¥' + state.total + '</b> ｜ 你的预算 <b>¥' + b + '</b> ｜ ' +
@@ -981,7 +981,7 @@
         var btn = result.querySelector(".budget-copy");
         if (!btn) return;
         var old = btn.textContent;
-        btn.textContent = "✅ 已复制";
+        btn.textContent = "已复制";
         setTimeout(function () { btn.textContent = old; }, 1600);
       }
       function fallback() {
@@ -1019,10 +1019,10 @@
         '<article class="look-card reveal in">' +
           '<div class="look-cover">' +
             '<img src="' + s.img + '" alt="' + esc(s.name) + ' 风格参考图" loading="lazy" />' +
-            '<span class="look-badge">' + s.icon + " " + esc(s.name) + "</span>" +
+            '<span class="look-badge">' + esc(s.name) + "</span>" +
           "</div>" +
           '<div class="look-body">' +
-            "<h3 class=\"look-name\">" + s.icon + " " + esc(s.name) + "</h3>" +
+            "<h3 class=\"look-name\">" + esc(s.name) + "</h3>" +
             '<p class="look-desc">' + esc(s.desc) + "</p>" +
             '<div class="look-pal"><span class="look-pal-name">配色 · ' + esc(s.paletteName || "") + "</span>" +
               '<div class="look-swatches">' + sw + "</div></div>" +
@@ -1132,32 +1132,32 @@
 
     var state = { budget: null, use: null, form: null, look: null, intensity: "mid", monitor: "need" };
     var budgetOpts = [
-      { id: "3000", label: "≤3000 元" },
-      { id: "4500", label: "3000-4500 元" },
-      { id: "6000", label: "4500-6000 元" },
-      { id: "8500", label: "6000-8500 元" },
-      { id: "12000", label: "8500-12000 元" },
-      { id: "20000", label: "12000 元+" }
+      { id: "3000", label: "≤4500 元" },
+      { id: "4500", label: "4500-7000 元" },
+      { id: "6000", label: "7000-10500 元" },
+      { id: "8500", label: "10500-14500 元" },
+      { id: "12000", label: "14500-22000 元" },
+      { id: "20000", label: "22000 元+" }
     ];
     var useOpts = [
-      { id: "office", label: "💼 办公学习" },
-      { id: "game", label: "🎮 游戏电竞" },
-      { id: "create", label: "🎬 内容创作" },
-      { id: "portable", label: "💻 移动便携" }
+      { id: "office", label: "办公学习" },
+      { id: "game", label: "游戏电竞" },
+      { id: "create", label: "内容创作" },
+      { id: "portable", label: "移动便携" }
     ];
     var formOpts = [
-      { id: "desktop", label: "🖥️ 台式整机" },
-      { id: "laptop", label: "💻 笔记本 + 外设" },
-      { id: "both", label: "🖥️ 两台都有" }
+      { id: "desktop", label: "台式整机" },
+      { id: "laptop", label: "笔记本 + 外设" },
+      { id: "both", label: "两台都有" }
     ];
     var intensityOpts = [
-      { id: "light", label: "🪶 轻量够用" },
-      { id: "mid", label: "⚖️ 主流均衡" },
-      { id: "heavy", label: "💪 性能拉满" }
+      { id: "light", label: "轻量够用" },
+      { id: "mid", label: "主流均衡" },
+      { id: "heavy", label: "性能拉满" }
     ];
     var monitorOpts = [
-      { id: "need", label: "🖥️ 需要一起配" },
-      { id: "have", label: "✅ 已有显示器" }
+      { id: "need", label: "需要一起配" },
+      { id: "have", label: "已有显示器" }
     ];
 
     function renderRow(row, items, key) {
@@ -1170,8 +1170,26 @@
           var v = b.getAttribute("data-v");
           state[key] = state[key] === v ? null : v;
           renderRow(row, items, key);
+          updateHint();
         });
       });
+    }
+
+    // 进度提示：告诉用户还差哪几项必答（第 4-6 题可跳过，按默认值走）
+    var hintEl = document.getElementById("smartHint");
+    function updateHint() {
+      if (!hintEl) return;
+      var missing = [];
+      if (!state.budget) missing.push("预算");
+      if (!state.use) missing.push("用途");
+      if (!state.form) missing.push("设备形态");
+      if (missing.length) {
+        hintEl.className = "smart-hint";
+        hintEl.textContent = "还差 " + missing.join("、") + " 没选（共 3 项必答）。第 4-6 题可以跳过，不选就按主流默认给。";
+      } else {
+        hintEl.className = "smart-hint ready";
+        hintEl.textContent = "必答 3 项已选好，点「生成推荐」出方案。第 4-6 题可跳过。";
+      }
     }
 
     renderRow(qBudget, budgetOpts, "budget");
@@ -1181,9 +1199,10 @@
     if (qMonitor) renderRow(qMonitor, monitorOpts, "monitor");
     if (qLook) {
       renderRow(qLook, [{ id: "all", label: "不限定" }].concat(STYLES.map(function (s) {
-        return { id: s.id, label: s.icon + " " + s.name };
+        return { id: s.id, label: s.name };
       })), "look");
     }
+    updateHint();
 
     function mid(p) { return (p[0] + p[1]) / 2; }
 
@@ -1286,7 +1305,7 @@
             '<span class="acc-price">' + fmtPrice(it.price) + "</span></div>" +
             '<div class="acc-meta"><span class="acc-style">' + esc(it.style) + "</span>" +
             '<span class="acc-rating">' + "★★★★★".slice(0, it.rating) + "</span>" + grade + "</div>" +
-            (o.why ? '<div class="smart-why">🎯 ' + esc(o.why) + "</div>" : "") +
+            (o.why ? '<div class="smart-why">' + esc(o.why) + "</div>" : "") +
             (it.valueNote ? '<div class="acc-note">' + esc(it.valueNote) + "</div>" : "") +
             productImageLink(it) +
           "</article>"

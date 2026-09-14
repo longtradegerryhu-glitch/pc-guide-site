@@ -261,10 +261,10 @@ window.PC_DATA = {
     {
       id: "use", title: "你的主要用途是？（可多选）", multi: true,
       options: [
-        { id: "office",   label: "💼 办公学习", desc: "文档/表格/网课" },
-        { id: "game",     label: "🎮 游戏电竞", desc: "3A/FPS/MOBA" },
-        { id: "create",   label: "🎬 内容创作", desc: "剪辑/设计/AI" },
-        { id: "portable", label: "💻 移动便携", desc: "笔记本随行" }
+        { id: "office",   label: "办公学习", desc: "文档/表格/网课" },
+        { id: "game",     label: "游戏电竞", desc: "3A/FPS/MOBA" },
+        { id: "create",   label: "内容创作", desc: "剪辑/设计/AI" },
+        { id: "portable", label: "移动便携", desc: "笔记本随行" }
       ]
     },
     {
@@ -281,38 +281,38 @@ window.PC_DATA = {
     {
       id: "form", title: "想要台式还是笔记本？", multi: false,
       options: [
-        { id: "desktop", label: "🖥️ 台式机", desc: "性能优先" },
-        { id: "laptop",  label: "💻 笔记本", desc: "便携优先" },
+        { id: "desktop", label: "台式机", desc: "性能优先" },
+        { id: "laptop",  label: "笔记本", desc: "便携优先" },
         { id: "both",    label: "两台都有", desc: "互补使用" }
       ]
     },
     {
       id: "pref", title: "你最看重什么？", multi: false,
       options: [
-        { id: "value", label: "💎 性价比", desc: "花小钱办大事" },
-        { id: "quiet", label: "🤫 静音散热", desc: "低噪音强散热" },
-        { id: "rgb",   label: "✨ 颜值灯效", desc: "灯光酷炫好看" },
-        { id: "ergo",  label: "🧍 人体工学", desc: "久坐舒适健康" }
+        { id: "value", label: "性价比", desc: "花小钱办大事" },
+        { id: "quiet", label: "静音散热", desc: "低噪音强散热" },
+        { id: "rgb",   label: "颜值灯效", desc: "灯光酷炫好看" },
+        { id: "ergo",  label: "人体工学", desc: "久坐舒适健康" }
       ]
     },
     {
       id: "look", title: "你更偏爱哪种颜值风格？", multi: false,
       options: [
-        { id: "any",     label: "🙂 不在意", desc: "性能优先" },
-        { id: "white",   label: "🤍 白色简约", desc: "干净通透" },
-        { id: "seaview", label: "🪟 海景房", desc: "四面透明、把硬件秀出来的机箱" },
-        { id: "rgb",     label: "🌈 RGB 电竞", desc: "氛围灯效" },
-        { id: "business",label: "⚫ 商务黑", desc: "沉稳专业" },
-        { id: "wood",    label: "🪵 复古木质", desc: "温润质感" },
-        { id: "portable",label: "💻 便携简洁", desc: "清爽随行" }
+        { id: "any",     label: "不在意", desc: "性能优先" },
+        { id: "white",   label: "白色简约", desc: "干净通透" },
+        { id: "seaview", label: "海景房", desc: "四面透明、把硬件秀出来的机箱" },
+        { id: "rgb",     label: "RGB 电竞", desc: "氛围灯效" },
+        { id: "business",label: "商务黑", desc: "沉稳专业" },
+        { id: "wood",    label: "复古木质", desc: "温润质感" },
+        { id: "portable",label: "便携简洁", desc: "清爽随行" }
       ]
     },
     {
       id: "intensity", title: "每天使用强度大概？", multi: false,
       options: [
-        { id: "light", label: "☕ 轻度（<2 小时）", desc: "偶尔办公/轻娱乐" },
-        { id: "mid",   label: "🖥️ 中度（2-6 小时）", desc: "重度办公 + 日常游戏" },
-        { id: "heavy", label: "🔥 重度（6 小时+）", desc: "游戏/创作/长期渲染" }
+        { id: "light", label: "轻度（<2 小时）", desc: "偶尔办公/轻娱乐" },
+        { id: "mid",   label: "中度（2-6 小时）", desc: "重度办公 + 日常游戏" },
+        { id: "heavy", label: "重度（6 小时+）", desc: "游戏/创作/长期渲染" }
       ]
     },
     {
@@ -326,31 +326,31 @@ window.PC_DATA = {
     {
       id: "exp", title: "你以前装过或折腾过电脑吗？", multi: false,
       options: [
-        { id: "new",  label: "🍼 纯新手", desc: "希望省心、少折腾" },
-        { id: "some", label: "🔧 会折腾", desc: "能自己装机排错" },
-        { id: "pro",  label: "⚙️ 老玩家", desc: "追求极致与细节" }
+        { id: "new",  label: "纯新手", desc: "希望省心、少折腾" },
+        { id: "some", label: "会折腾", desc: "能自己装机排错" },
+        { id: "pro",  label: "老玩家", desc: "追求极致与细节" }
       ]
     },
     {
       id: "existing", title: "你已经有哪些外设？（可多选）", multi: true,
       options: [
-        { id: "monitor", label: "🖥️ 显示器", desc: "已有屏幕" },
+        { id: "monitor", label: "显示器", desc: "已有屏幕" },
         { id: "input",   label: "⌨️ 键鼠", desc: "已有键盘鼠标" },
-        { id: "audio",   label: "🎧 音频", desc: "已有耳机音箱" },
-        { id: "stand",   label: "🛠️ 支架", desc: "已有支架/升降桌" },
-        { id: "cooler",  label: "❄️ 散热器", desc: "已有散热方案" },
-        { id: "none",    label: "🚫 都没有", desc: "从零开始配" }
+        { id: "audio",   label: "音频", desc: "已有耳机音箱" },
+        { id: "stand",   label: "支架", desc: "已有支架/升降桌" },
+        { id: "cooler",  label: "散热器", desc: "已有散热方案" },
+        { id: "none",    label: "都没有", desc: "从零开始配" }
       ]
     },
     {
       id: "focus", title: "外设升级重点？（可多选，已拥有的会智能跳过）", multi: true,
       options: [
-        { id: "cooler",   label: "❄️ 散热器", desc: "CPU/笔记本散热" },
-        { id: "monitor",  label: "🖥️ 显示器", desc: "屏幕素质" },
+        { id: "cooler",   label: "散热器", desc: "CPU/笔记本散热" },
+        { id: "monitor",  label: "显示器", desc: "屏幕素质" },
         { id: "input",    label: "⌨️ 键鼠", desc: "输入手感" },
-        { id: "stand",    label: "🛠️ 支架", desc: "桌面人体工学" },
-        { id: "dock",     label: "🔌 拓展坞", desc: "给笔记本扩接口的小盒子" },
-        { id: "audio",    label: "🎧 音频", desc: "听感与拾音" }
+        { id: "stand",    label: "支架", desc: "桌面人体工学" },
+        { id: "dock",     label: "拓展坞", desc: "给笔记本扩接口的小盒子" },
+        { id: "audio",    label: "音频", desc: "听感与拾音" }
       ]
     }
   ],

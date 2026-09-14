@@ -1,5 +1,5 @@
 /* ===========================================================
- * models.js — 真实产品型号数据库（2026-08 参考行情）
+ * models.js — 真实产品型号数据库（2026-09 参考行情）
  * 价格区间为人民币参考价（京东自营/电商 2026 年 8 月联网核验行情），
  * 随促销、补贴波动，购机请以电商实时价为准。
  * 字段：
@@ -103,7 +103,7 @@ window.PC_MODELS = {
     { id: "p8",  brand: "微星",      model: "MAG A850GL",        name: "微星 MAG A850GL", searchName: "微星 MAG A850GL", style: "电源", price: [549, 699],  rating: 5, valueGrade: "S", valueNote: "850W ATX3.1 原生 12V-2x6，性价比高。",       use: ["game", "create"], audience: ["gamer", "creator"], tags: ["ATX3.1", "金牌"], specs: "850W;ATX3.1;原生 12V-2x6;全模组", compat: "RTX 5070 Ti 级平台推荐" },
     { id: "p9",  brand: "乔思伯",    model: "D31 STANDARD",      name: "乔思伯 D31 STANDARD", searchName: "乔思伯 D31 STANDARD", style: "机箱", price: [299, 399], rating: 4, valueGrade: "A", valueNote: "MATX 海景房，数显屏可选，理线友好。",       use: ["game"],           audience: ["gamer"], tags: ["海景房", "MATX"], specs: "MATX 海景房;支持 360 冷排;数显屏可选", compat: "MATX 海景房主题装机" },
   ],
-  /* ---------- CPU（2026-08 核验行情） ---------- */
+  /* ---------- CPU（2026-09 核验行情） ---------- */
   cpu: [
     { id: "u1", brand: "AMD",       model: "Ryzen 5 5500",          name: "AMD Ryzen 5 5500", searchName: "AMD Ryzen 5 5500", style: "入门6核", price: [540, 600],    rating: 4, valueGrade: "S", valueNote: "AM4 清库存甜点，板U套装极致性价比。",                use: ["office", "game"], audience: ["student", "office"], tags: ["高性价比"], specs: "6核12线程;Zen3;65W;AM4", compat: "配 A520/B550，预算敏感整机首选" },
     { id: "u2", brand: "AMD",       model: "Ryzen 5 8500G",          name: "AMD Ryzen 5 8500G", searchName: "AMD Ryzen 5 8500G", style: "核显6核", price: [900, 1350],   rating: 5, valueGrade: "S", valueNote: "核显最强入门，办公/轻度网游免独显。",                 use: ["office", "portable"], audience: ["student", "office"], tags: ["核显", "高性价比"], specs: "6核12线程;RDNA3 核显740M;65W;AM5", compat: "配 A620/B650，核显机首选，日后可加独显" },
@@ -117,7 +117,7 @@ window.PC_MODELS = {
     { id: "u9",  brand: "AMD",       model: "Ryzen 5 7500F",      name: "AMD Ryzen 5 7500F", searchName: "AMD Ryzen 5 7500F", style: "游戏6核", price: [900, 1000], rating: 5, valueGrade: "S", valueNote: "无核显游戏甜点，板U套装极致性价比。",      use: ["game"],           audience: ["gamer", "student"], tags: ["高性价比"], specs: "6核12线程;Zen4;65W;AM5", compat: "配 A620/B650，游戏入门首选" },
     { id: "u10", brand: "Intel",     model: "Core i5-14400F",     name: "Intel i5-14400F", searchName: "Intel Core i5-14400F", style: "全能10核", price: [1100, 1300], rating: 4, valueGrade: "A", valueNote: "10 核办公游戏通吃，性价比均衡。",          use: ["office", "game"], audience: ["office", "gamer"], tags: ["全能"],     specs: "10核16线程;Raptor Lake;65W;LGA1700", compat: "配 B760M，办公游戏通吃" },
   ],
-  /* ---------- 显卡（2026-08 核验行情） ---------- */
+  /* ---------- 显卡（2026-09 核验行情） ---------- */
   gpu: [
     { id: "g1", brand: "AMD",       model: "RX 7600 8G",             name: "AMD RX 7600 8G", searchName: "AMD RX 7600", style: "1080P 入门", price: [1600, 1900],  rating: 4, valueGrade: "A", valueNote: "1080P 高画质网游，入门独显。",                     use: ["game", "office"], audience: ["student", "gamer"], tags: ["高性价比"], specs: "8GB GDDR6;1080P 高画质;130W", compat: "配 450W 电源，1080P 入门首选" },
     { id: "g2", brand: "NVIDIA",    model: "RTX 5060 8G",            name: "NVIDIA RTX 5060 8G", searchName: "NVIDIA RTX 5060", style: "2K 入门", price: [2300, 2600],  rating: 5, valueGrade: "S", valueNote: "2K 入门甜点，DLSS4 加持。",                         use: ["game", "create"], audience: ["gamer", "student"], tags: ["DLSS", "高性价比"], specs: "8GB GDDR7;2K 中高画质;DLSS4", compat: "配 550-650W 电源，主流游戏机首选" },
@@ -193,7 +193,7 @@ window.PC_STYLES = [
     caseTip: "选双仓海景房，显卡竖装 + 反向风扇统一风道；内部理线是颜值的一半。",
     lighting: "风扇 / 内存 / 水冷头统一冰蓝或青色，立式水冷管走位要对称才出片。",
     accents: "透明或浅色桌垫、ARGB 风扇包、显卡支架（延长线也选白色/透明）。",
-    avoid: "海景房最怕露乱线——只买侧透不理线，比不透明机箱更尴尬。",
+    avoid: "海景房最怕露乱线。侧透机箱不理线，比不透明机箱更难看。",
     tips: ["双仓海景房机箱，无 A 柱遮挡视野", "反向风扇统一风道，理线规整", "风扇 / 灯效统一方向更出片"] },
   { id: "rgb",      name: "RGB 电竞",  icon: "🌈", img: "assets/looks/look-rgb.png",
     desc: "暗色机身 + 多彩灯效，氛围感拉满，游戏桌的灵魂。贵在「同步与克制」，而非灯越多越好。",
@@ -245,10 +245,10 @@ window.PC_STYLES = [
 window.PC_LOOK_PRINCIPLES = [
   { icon: "🎨", title: "配色三色法则", text: "整机配色控制在 3 个以内色相：1 主色 + 1 辅色 + 1 点缀。全白 / 全黑 / 木纹最稳，杂色一多立刻显乱。" },
   { icon: "🧵", title: "藏线即高级",   text: "背线、束线、隐藏供电，是「高级感」与「廉价感」的分水岭。理线花 30 分钟，观感提升一个档次。" },
-  { icon: "💡", title: "灯光讲统一",   text: "RGB 贵在「同步与统一」——用同一软件让主板/内存/风扇同色同呼吸，暗环境才出层次，而非灯越多越好。" },
+  { icon: "💡", title: "灯光讲统一",   text: "用同一软件让主板、内存、风扇同色同步，暗环境下才有层次。灯不是越多越好。" },
   { icon: "🪵", title: "材质要呼应",   text: "机箱、桌垫、支架、摆件材质一致（全白/全黑/木纹），整体氛围才闭环，单件再好看不搭也白费。" },
   { icon: "⚖️", title: "留白与呼吸",   text: "桌面留白，只留必需品，给视线一个落脚点。塞满的外设和摆件会压垮任何风格。" },
-  { icon: "🪟", title: "机箱即展柜",   text: "海景房 / 侧透把硬件当装饰，选它就要接受「内部也得上相」——理线、走位、对称都得更讲究。" }
+  { icon: "🪟", title: "机箱即展柜",   text: "海景房 / 侧透把硬件当装饰，选它就意味着内部也得经得起看：理线、走位、对称都得更讲究。" }
 ];
 
 /* 颜值避坑指南（用于「避坑指南」区块） */

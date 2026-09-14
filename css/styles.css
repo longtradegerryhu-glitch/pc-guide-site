@@ -1069,6 +1069,8 @@ a.entry-card .card-title { margin-top: 0; }
    =========================================================== */
 .smart-panel .smart-step { margin-bottom: 18px; }
 .smart-panel .q-title { margin-bottom: 10px; }
+.smart-hint { margin: 10px 0 2px; font-size: 13px; line-height: 1.6; color: var(--color-text-soft); }
+.smart-hint.ready { color: var(--color-primary); font-weight: 600; }
 .smart-res-head { font-size: 15px; font-weight: 800; margin: 24px 0 12px; }
 .smart-plan {
   background: var(--color-card);
