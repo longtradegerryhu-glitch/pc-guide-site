@@ -810,7 +810,8 @@ button:focus-visible,
 .res-total { font-size: 15px; margin: 6px 0 10px; }
 .res-total b { color: var(--color-primary); font-size: 18px; }
 .res-note { font-size: 12px; color: var(--color-soft); margin-bottom: 16px; }
-.q-reset { width: 100%; }
+.res-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; }
+.res-actions .btn { flex: 1 1 180px; }
 
 /* 测评结果：偏好的颜值风格卡片 */
 .res-look { margin-top: 4px; }

@@ -81,6 +81,33 @@
     return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
 
+  /* 复制到剪贴板：优先 async clipboard，失败或不可用则用临时 textarea 兜底；
+   * 成功后把按钮文字临时改成「已复制」再复原。 */
+  function copyToClipboard(text, btn) {
+    function flash() {
+      if (!btn || !btn.textContent) return;
+      var old = btn.textContent;
+      btn.textContent = "已复制";
+      setTimeout(function () { btn.textContent = old; }, 1600);
+    }
+    function fallback() {
+      var ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand("copy"); } catch (e) {}
+      document.body.removeChild(ta);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(flash, function () { fallback(); flash(); });
+    } else {
+      fallback();
+      flash();
+    }
+  }
+
   /* ---- 术语小白化：题干 / 选项里出现的生硬词自动套 .term 悬停解释 ---- */
   var KNOWN_TERMS = {
     "4K": "4K = 3840×2160 高清分辨率；剪辑 / 设计专用，普通桌面 1080p/2K 已够",
@@ -499,7 +526,8 @@
       return answers[qid] || [];
     }
 
-    function pitfallsHTML(uses) {
+    // 取避坑条目（HTML 渲染与文本导出共用）
+    function pitfallItems(uses) {
       var map = (window.PC_DATA && window.PC_DATA.pitfalls) || {};
       var keys = [];
       if (Array.isArray(uses)) {
@@ -516,6 +544,11 @@
           if (t && !seen[t]) { seen[t] = 1; items.push(t); }
         });
       });
+      return items;
+    }
+
+    function pitfallsHTML(uses) {
+      var items = pitfallItems(uses);
       if (!items.length) return "";
       return '<div class="res-section"><span class="res-label">小白避坑：这几处最容易翻车</span>' +
         '<div class="look-pitfalls">' +
@@ -653,7 +686,10 @@
           '<div class="res-total">整体投入参考：<b>' + fmtPrice([totalLow, totalHigh]) + "</b>（整机 + 所选配件）</div>" +
           '<div class="res-note">' + esc(D.note) + "。方案为规则推荐，购机前请复核接口兼容性与电商实时价。</div>" +
           pitfallsHTML(use) +
-          '<button class="btn btn-ghost q-reset">重新测评</button>' +
+          '<div class="res-actions">' +
+            '<button class="btn btn-ghost q-copy">复制方案文本</button>' +
+            '<button class="btn btn-ghost q-reset">重新测评</button>' +
+          "</div>" +
         "</div>";
 
       var reset = box.querySelector(".q-reset");
@@ -662,11 +698,65 @@
         render();
       });
 
+      var copyBtn = box.querySelector(".q-copy");
+      if (copyBtn) copyBtn.addEventListener("click", function () {
+        copyToClipboard(quizPlanText({
+          use: use,
+          profileParts: [intLabel, lifeLabel, expLabel, existTxt],
+          personas: personaIds.map(function (pid) {
+            var p = D.personas.filter(function (x) { return x.id === pid; })[0];
+            return p ? p.name : "";
+          }).filter(Boolean),
+          style: (look && look !== "any") ? styleOf(look) : null,
+          plan: plan,
+          picks: picks,
+          total: [totalLow, totalHigh]
+        }), copyBtn);
+      });
+
       var lookJump = box.querySelector(".res-look-jump");
       if (lookJump) lookJump.addEventListener("click", function () {
         var id = lookJump.getAttribute("data-look");
         window.location.href = "accessories.html?look=" + encodeURIComponent(id);
       });
+    }
+
+    /* 把测评方案导出成纯文本（方便贴给店家、发群里问或自己存档） */
+    function quizPlanText(ctx) {
+      var L = [];
+      var sep = "----------------------------------------";
+      L.push("【深度测评方案】" + ctx.use.map(function (u) { return useLabels[u] || u; }).join(" / "));
+      L.push("需求画像：" + ctx.profileParts.filter(Boolean).join(" · "));
+      if (ctx.personas.length) L.push("适合人群：" + ctx.personas.join("、"));
+      if (ctx.style) L.push("颜值风格：" + ctx.style.name + "（配色 " + ctx.style.paletteName + "）");
+      if (ctx.plan) {
+        L.push("整机方案：" + ctx.plan.name + "，参考 " + fmtPrice(ctx.plan.price) + "（" + ctx.plan.budgetLabel + "）");
+      } else {
+        L.push("整机方案：未匹配到，建议放宽预算或调整用途再看一次");
+      }
+      L.push(sep);
+      L.push("配件推荐：");
+      if (ctx.picks.length) {
+        ctx.picks.forEach(function (p) {
+          L.push("· " + p.cat.name + "：" + p.item.name + "（" + fmtPrice(p.item.price) + "）");
+        });
+      } else {
+        L.push("· 暂无匹配配件");
+      }
+      L.push(sep);
+      L.push("整体投入参考：" + fmtPrice(ctx.total) + "（整机 + 所选配件）");
+      var ps = pitfallItems(ctx.use);
+      if (ps.length) {
+        L.push("");
+        L.push("避坑提醒：");
+        ps.forEach(function (t) { L.push("· " + t); });
+      }
+      L.push("");
+      // 月份从 D.updated 动态取（形如 "2026-09（核验 2026-09-13）"），避免下次行情核验时漏改
+      var updatedTag = String(D.updated || "").split("（")[0] || "最新";
+      L.push("价格区间为 " + updatedTag + " 核验参考行情，购机请以电商实时价为准。");
+      L.push("本方案由规则生成，请自行复核接口兼容性。");
+      return L.join("\n");
     }
 
     function pickPlan(use, form, budgetCap, lifespan, intensity) {
@@ -966,37 +1056,18 @@
     function copyPlan() {
       var plan = state.plan;
       if (!plan || !state.rows.length) return;
+      var sep = "----------------------------------------";
       var lines = [];
-      lines.push("【" + plan.icon + " " + plan.name + "】 " + plan.budgetLabel);
+      lines.push("【" + plan.name + "】 " + plan.budgetLabel);
       lines.push("预算：¥" + state.budget + " ｜ 当前配置合计：¥" + state.total);
-      lines.push(new Array(30).join("—"));
+      lines.push(sep);
       state.rows.forEach(function (r) {
         lines.push("· " + r.part[0] + "：" + r.name + "（¥" + r.price + "）");
         if (r.part[3]) lines.push("　  " + r.part[3]);
       });
-      lines.push(new Array(30).join("—"));
+      lines.push(sep);
       lines.push(D.note);
-      var text = lines.join("\n");
-      function flash() {
-        var btn = result.querySelector(".budget-copy");
-        if (!btn) return;
-        var old = btn.textContent;
-        btn.textContent = "已复制";
-        setTimeout(function () { btn.textContent = old; }, 1600);
-      }
-      function fallback() {
-        var ta = document.createElement("textarea");
-        ta.value = text;
-        ta.style.position = "fixed";
-        ta.style.opacity = "0";
-        document.body.appendChild(ta);
-        ta.select();
-        try { document.execCommand("copy"); } catch (e) {}
-        document.body.removeChild(ta);
-      }
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(text).then(flash, function () { fallback(); flash(); });
-      } else { fallback(); flash(); }
+      copyToClipboard(lines.join("\n"), result.querySelector(".budget-copy"));
     }
 
     renderChips();
