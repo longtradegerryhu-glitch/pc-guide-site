@@ -21,7 +21,6 @@
   var PRINCIPLES = window.PC_LOOK_PRINCIPLES || [];
   var PITFALLS = window.PC_LOOK_PITFALLS || [];
   var DETAILS = window.PC_LOOK_DETAILS || [];
-  var TOP_IMG = window.PC_TOP_IMG || {};
   var styleById = {};
   STYLES.forEach(function (s) { styleById[s.id] = s; });
   function lookOf(item) { return (item && LOOKS[item.id]) || null; }
