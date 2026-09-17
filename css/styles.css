@@ -433,6 +433,13 @@ a { color: inherit; text-decoration: none; }
 /* ---- 资源卡 ---- */
 .resource-card { display: block; }
 .resource-card:hover .card-title { color: var(--color-primary); }
+/* 卡片内具体资源外链（无下划线默认样式继承自全局 a，此处显式标出可点） */
+.res-link { color: var(--color-primary); font-weight: 600; }
+.res-link:hover { text-decoration: underline; }
+
+/* 锚点跳转避开 sticky 头部（首页深链到方案卡 / 各页板块锚点） */
+.section[id],
+.plan-card[id] { scroll-margin-top: 90px; }
 
 /* ===========================================================
    页脚

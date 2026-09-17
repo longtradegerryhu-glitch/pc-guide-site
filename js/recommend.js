@@ -400,7 +400,7 @@
         return "<tr><td>" + esc(r[0]) + "</td><td>" + esc(r[1]) + detail + "</td><td class=\"plan-price\">" + esc(r[2]) + "</td></tr>";
       }).join("");
       return (
-        '<article class="plan-card reveal in">' +
+        '<article class="plan-card reveal in" id="plan-' + esc(pl.id) + '">' +
           '<div class="plan-head">' +
             '<span class="plan-icon">' + pl.icon + "</span>" +
             '<div><h3 class="plan-name">' + esc(pl.name) + "</h3>" +
