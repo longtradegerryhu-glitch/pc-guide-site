@@ -560,6 +560,24 @@ button:focus-visible,
    =========================================================== */
 .empty-box { padding: 28px; text-align: center; color: var(--color-soft); border: 1px dashed var(--color-border); border-radius: var(--radius); }
 
+/* ---- 关键词搜索 ---- */
+.acc-search { margin-bottom: 12px; }
+.acc-search-input {
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--color-text);
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.acc-search-input::placeholder { color: var(--color-soft); }
+.acc-search-input:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, .14); }
+.acc-search-hint { display: block; margin-top: 8px; font-size: 13px; color: var(--color-soft); }
+.acc-search-hint:empty { display: none; }
+
 /* ---- 筛选面板 ---- */
 .filter-panel {
   background: var(--color-card);
@@ -1088,3 +1106,28 @@ a.entry-card .card-title { margin-top: 0; }
 .smart-why { font-size: 12.5px; color: var(--color-primary); font-weight: 600; line-height: 1.5; }
 
 
+
+/* ===========================================================
+   打印样式：把配置单/方案干净地印出来（给店家看或存档）
+   =========================================================== */
+@media print {
+  .site-header, .site-footer, .back-to-top, .scroll-progress, .skip-link,
+  .filter-panel, .acc-search, .filter-chips, .top-tabs,
+  .nav-toggle, .theme-toggle, .btn, .q-submit, .res-actions, .budget-copy,
+  .prod-link, .jd-live, .res-look-jump, .price-note, .quiz-step { display: none !important; }
+
+  body { background: #fff !important; color: #000 !important; }
+  .container { max-width: 100% !important; padding: 0 !important; }
+
+  .card, .quiz-panel, .plan-card, .pick-item, .result-box, .smart-plan,
+  .filter-panel, .res-section, .look-pitfalls { box-shadow: none !important; }
+
+  .plan-table { width: 100% !important; border-collapse: collapse !important; }
+  .plan-table th, .plan-table td { border: 1px solid #999 !important; padding: 5px 7px !important; }
+
+  .res-total, .budget-tip, .res-look { border: 1px solid #999 !important; padding: 8px 10px !important; }
+
+  a { color: #000 !important; text-decoration: none !important; }
+  h1, h2, h3 { break-after: avoid; }
+  .card, .pick-item, .pitfall { break-inside: avoid; }
+}

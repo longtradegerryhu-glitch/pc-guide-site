@@ -179,9 +179,20 @@
     var sceneRow = document.getElementById("accScenes");
     var budgetRow = document.getElementById("accBudget");
     var countEl = document.getElementById("accCount");
+    var searchEl = document.getElementById("accSearch");
+    var searchHintEl = document.getElementById("accSearchHint");
     if (!wrap || !catRow || !sceneRow || !budgetRow) return;
 
-    var state = { cat: "all", scene: "all", look: "all", budget: "all", audience: "all", sort: "default" };
+    var state = { cat: "all", scene: "all", look: "all", budget: "all", audience: "all", sort: "default", q: "" };
+
+    // 关键词搜索：与筛选条件叠加生效；支持空格分隔多关键词（需全部命中）
+    function matchQuery(item, q) {
+      var hay = [item.name, item.brand, item.model, item.searchName, item.style, item.specs]
+        .concat(item.tags || []).filter(Boolean).join(" ").toLowerCase();
+      return q.toLowerCase().split(/\s+/).filter(Boolean).every(function (t) {
+        return hay.indexOf(t) > -1;
+      });
+    }
 
     // 跨页跳转：从颜值/测评页带 ?look=xxx 进来时，自动按该风格预筛选
     try {
@@ -221,6 +232,7 @@
           if (state.scene !== "all" && item.use.indexOf(state.scene) === -1) return;
           if (state.look !== "all" && lookOf(item) !== state.look) return;
           if (!matchesBudget(item, state.budget)) return;
+          if (state.q && !matchQuery(item, state.q)) return;
           var aud = item.audience || [];
           if (state.audience !== "all" && aud.length && aud.indexOf(state.audience) === -1) return;
           list.push({ cat: cat, item: item });
@@ -237,6 +249,13 @@
       }
 
       countEl.textContent = "共 " + list.length + " 款（" + D.updated + " 行情）";
+      if (searchHintEl) {
+        searchHintEl.textContent = state.q
+          ? (list.length
+              ? "「" + state.q + "」匹配到 " + list.length + " 款"
+              : "没有匹配「" + state.q + "」的型号。本页收录 10 类配件，内存 / 硬盘等见「搭配计划」")
+          : "";
+      }
 
       if (!list.length) {
         wrap.innerHTML = '<div class="empty-box">没有匹配项，换个筛选条件试试。</div>';
@@ -332,6 +351,18 @@
       sortSel.addEventListener("change", function () {
         state.sort = sortSel.value;
         renderCards();
+      });
+    }
+
+    // 关键词搜索（实时过滤，与上方筛选条件叠加）
+    if (searchEl) {
+      searchEl.addEventListener("input", function () {
+        state.q = searchEl.value.trim();
+        renderCards();
+      });
+      // ESC 清空
+      searchEl.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") { searchEl.value = ""; state.q = ""; renderCards(); }
       });
     }
 

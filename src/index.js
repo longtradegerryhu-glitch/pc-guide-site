@@ -196,7 +196,17 @@ export default {
     if (url.pathname === '/price' || url.pathname === '/price/') {
       return handlePrice(url, env);
     }
-    // 静态资源：命中文件直接服务；未命中由 ASSETS 兜底返回 404
-    return env.ASSETS.fetch(request);
+    // 静态资源：命中文件直接服务；未命中返回自定义 404 页
+    const res = await env.ASSETS.fetch(request);
+    if (res.status === 404) {
+      const page = await env.ASSETS.fetch(new URL('/404.html', url.origin));
+      if (page.ok) {
+        return new Response(page.body, {
+          status: 404,
+          headers: { 'content-type': 'text/html; charset=utf-8' },
+        });
+      }
+    }
+    return res;
   }
 };
