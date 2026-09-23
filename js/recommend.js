@@ -13,7 +13,9 @@
   var audLabels = { student: "学生党", office: "办公族", gamer: "游戏党", creator: "创作者", mobile: "移动办公" };
   var audIcons = { student: "🎓", office: "💼", gamer: "🎮", creator: "🎬", mobile: "💻" };
   var gradeOrder = { S: 4, A: 3, B: 1, C: -1 };
-  var budgetOrder = { b3000: 3000, b4500: 4500, b6000: 6000, b8500: 8500, b12000: 12000, b20000: 20000 };
+  // 档位 → 真实预算中值。2026-09 行情上行后，plans.price 实际区间已整体上移，
+  // 档位标识必须同步重标定，否则「选高档」会匹配到低一档甚至两档的方案。
+  var budgetOrder = { b3000: 4800, b4500: 7500, b6000: 11000, b8500: 16000, b12000: 24000, b20000: 37000 };
 
   /* ---- 颜值风格（Aesthetics） ---- */
   var STYLES = window.PC_STYLES || [];
@@ -68,6 +70,35 @@
     D.categories.forEach(function (cat) {
       cat.items = window.PC_MODELS[cat.id] || [];
     });
+  }
+
+  /* ---- 方案配置单 → 配件目标价位（快速推荐与深度测评共用） ---- */
+  /* 部件名 → 配件库类别 id，用于反读「这套方案的同类部件是什么档次」 */
+  var PART_CAT = {
+    "CPU": "cpu", "显卡": "gpu", "散热": "cooler", "显示器": "monitor",
+    "键鼠": "input", "电源": "psu", "机箱": "psu", "音频": "audio", "耳机/音箱": "audio"
+  };
+
+  /* 从方案自己的配置单提取各类部件的目标价位（取价格中值）。
+     只读既有数据、不引入新价格：方案说配 RTX 5080，配件推荐就不该给 RTX 5060。 */
+  /* 配置单里部分部件写的是组合价，折算到配件库的单件价位再用 */
+  var PART_SPLIT = { "键鼠": 0.75 };   // 「客制化键盘 + 旗舰鼠标」是两件，单件目标按 75% 计
+
+  function planPartTargets(plan) {
+    var t = {};
+    (plan.parts || []).forEach(function (row) {
+      var cid = PART_CAT[row[0]];
+      if (!cid) return;
+      var nums = String(row[2] || "").match(/\d+/g);
+      if (!nums || !nums.length) return;
+      var lo = parseInt(nums[0], 10);
+      var hi = nums.length > 1 ? parseInt(nums[1], 10) : lo;
+      var v = (lo + hi) / 2;
+      if (PART_SPLIT[row[0]]) v *= PART_SPLIT[row[0]];
+      // 电源与机箱共用 psu 类别，取较高者，避免机箱价把电源目标拉低
+      t[cid] = t[cid] ? Math.max(t[cid], v) : v;
+    });
+    return t;
   }
 
   function fmtPrice(p) {
@@ -797,28 +828,29 @@
         return hit;
       });
       if (!candidates.length) return null;
-      // 预算匹配优先（战未来放宽上浮）；其次取第一个
+      // 预算内可选的方案（战未来放宽 35% 上浮）
       var cap = (lifespan === "y5" ? budgetCap * 1.35 : budgetCap * 1.15);
       var exact = candidates.filter(function (pl) { return pl.price[1] <= cap; });
       var pool = exact.length ? exact : candidates;
       return pool.reduce(function (best, pl) {
         var score = pl.uses.filter(function (u) { return use.indexOf(u) > -1; }).length;
-        var bestScore = best ? best.uses.filter(function (u) { return use.indexOf(u) > -1; }).length : -1;
-        if (score === bestScore && lifespan === "y5" && intensity === "heavy") {
-          // 战未来 + 重度使用：同匹配度下优先配置更足的高一档
-          var m = (pl.price[0] + pl.price[1]) / 2;
-          var bm = (best.price[0] + best.price[1]) / 2;
-          if (m > bm) return pl;
-        }
-        return score > bestScore ? pl : best;
+        var bestScore = best.uses.filter(function (u) { return use.indexOf(u) > -1; }).length;
+        // 用途匹配度优先
+        if (score !== bestScore) return score > bestScore ? pl : best;
+        // 同匹配度下取价位更高的方案：预算充足却停在低档，是「最高档配置太素」的主因
+        var m = (pl.price[0] + pl.price[1]) / 2;
+        var bm = (best.price[0] + best.price[1]) / 2;
+        return m > bm ? pl : best;
       }, pool[0]);
     }
 
     function pickItems(catId, use, pref, budgetCap, plan, intensity, look) {
       var cat = D.categories.filter(function (c) { return c.id === catId; })[0];
       if (!cat) return null;
-      var allowance = catId === "monitor" ? budgetCap * 0.4 : budgetCap * 0.22;
-      if (catId === "cooler" && use.indexOf("portable") === -1) allowance = Math.max(allowance, 600);
+      // 目标价位优先取方案配置单里的同类部件价位（与快速推荐同口径），保证配件档次跟得上整机
+      var targets = planPartTargets(plan);
+      var allowance = targets[catId] || budgetCap * 0.2;
+      if (catId === "cooler" && use.indexOf("portable") === -1) allowance = Math.max(allowance, 150);
 
       var scored = cat.items.map(function (it) {
         var s = 0;
@@ -831,9 +863,13 @@
           });
           if (pids.indexOf(a) > -1) s += 2;
         });
-        // 预算匹配
+        // 预算匹配：越贴近目标价位且不超支越优。权重须高于性价比等级，
+        // 否则高预算会被 S 级甜点件（通常正是中端价位）一路压回低档。
         var mid = (it.price[0] + it.price[1]) / 2;
-        if (mid <= allowance) s += 2; else if (mid <= allowance * 1.8) s += 1; else s -= 1;
+        var ratio = allowance > 0 ? mid / allowance : 1;
+        if (ratio <= 1) s += 2 + 5 * ratio;
+        else if (ratio <= 1.5) s += 2;
+        else s -= 3;
         // 偏好加成
         if (pref === "quiet" && it.tags.indexOf("静音") > -1) s += 2;
         if (pref === "rgb" && it.tags.indexOf("RGB") > -1) s += 2;
@@ -856,7 +892,7 @@
       var hitUse = top.item.use.filter(function (u) { return use.indexOf(u) > -1; });
       if (hitUse.length) reasons.push("契合" + hitUse.map(function (u) { return useLabels[u]; }).join("/") + "场景");
       var mid = (top.item.price[0] + top.item.price[1]) / 2;
-      if (mid <= (catId === "monitor" ? budgetCap * 0.4 : budgetCap * 0.22)) reasons.push("在预算内");
+      if (mid <= allowance) reasons.push("在预算内");
       if (pref === "quiet" && top.item.tags.indexOf("静音") > -1) reasons.push("静音调校好");
       if (pref === "rgb" && top.item.tags.indexOf("RGB") > -1) reasons.push("RGB 灯效");
       if (pref === "ergo" && top.item.tags.indexOf("人体工学") > -1) reasons.push("符合人体工学");
@@ -886,7 +922,8 @@
     if (!input || !chips || !useRow || !result) return;
 
     var state = { budget: 6000, use: "all", plan: null, rows: [], total: 0 };
-    var presets = [3000, 4500, 6000, 8500, 12000, 20000];
+    // 预设档与 plans.price 实际区间对齐（原最高 20000 触不到 ¥32000+ 的旗舰档）
+    var presets = [5000, 8000, 12000, 17000, 25000, 37000];
 
     function renderChips() {
       chips.innerHTML = presets.map(function (b) {
@@ -1232,13 +1269,14 @@
     if (!wrap || !qBudget || !qUse || !qForm || !btn) return;
 
     var state = { budget: null, use: null, form: null, look: null, intensity: "mid", monitor: "need" };
+    // 档位 label 与 budget 值须与 plans.price 的实际区间对齐（2026-09 行情上行后重标定）
     var budgetOpts = [
-      { id: "3000", label: "≤4500 元" },
-      { id: "4500", label: "4500-7000 元" },
-      { id: "6000", label: "7000-10500 元" },
-      { id: "8500", label: "10500-14500 元" },
-      { id: "12000", label: "14500-22000 元" },
-      { id: "20000", label: "22000 元+" }
+      { id: "3000", label: "5500 元以内", budget: 4800 },
+      { id: "4500", label: "5500-8500 元", budget: 7500 },
+      { id: "6000", label: "8500-13000 元", budget: 11000 },
+      { id: "8500", label: "13000-18500 元", budget: 16000 },
+      { id: "12000", label: "18500-30000 元", budget: 24000 },
+      { id: "20000", label: "30000 元以上", budget: 37000 }
     ];
     var useOpts = [
       { id: "office", label: "办公学习" },
@@ -1308,7 +1346,10 @@
     function mid(p) { return (p[0] + p[1]) / 2; }
 
     function matchPlan() {
-      var b = parseInt(state.budget, 10) || 6000;
+      // state.budget 是档位 id，须换算成真实预算再比价：直接 parseInt 会拿到档位标识
+      // （如 20000），而旗舰档实际价已到 ¥32000-42000，永远够不到门槛。
+      var opt = budgetOpts.filter(function (o) { return o.id === state.budget; })[0];
+      var b = (opt && opt.budget) || 11000;
       var pool = D.plans.filter(function (pl) {
         if (pl.id === "mobile") return state.form === "laptop" || state.form === "both";
         if (state.use && pl.uses.indexOf(state.use) === -1) return false;
@@ -1344,7 +1385,12 @@
       var cap = intensity === "light" ? capBase * 0.72
               : intensity === "heavy" ? capBase * 1.08
               : capBase * 0.92;
+      var base = mid(plan.price);
+      var targets = planPartTargets(plan);
+      var hasGpu = !!(plan.parts || []).filter(function (r) { return r[0] === "显卡"; }).length;
       cats.forEach(function (cid) {
+        // 核显机（配置单无显卡行）不推独显，避免引导用户超预算加装
+        if (cid === "gpu" && !hasGpu) return;
         var cat = null;
         D.categories.forEach(function (c) { if (c.id === cid) cat = c; });
         if (!cat || !cat.items.length) return;
@@ -1353,19 +1399,29 @@
           return it.use.indexOf(use) !== -1 || it.use.indexOf("portable") !== -1;
         });
         if (!items.length) items = cat.items.slice();
-        var inBudget = items.filter(function (it) { return mid(it.price) <= cap; });
-        var pool2;
-        if (inBudget.length) {
-          pool2 = inBudget.slice().sort(function (a, b) {
-            var d = (gradeOrder[b.valueGrade] || 0) - (gradeOrder[a.valueGrade] || 0);
-            return d !== 0 ? d : b.rating - a.rating;
-          });
-        } else {
-          pool2 = items.slice().sort(function (a, b) {
-            return Math.abs(mid(a.price) - cap) - Math.abs(mid(b.price) - cap);
-          });
+        // 目标价位：优先取方案配置单里同类部件的价位；配置单未列的类别按整机中值 3% 兜底
+        var target = Math.min(targets[cid] || base * 0.03, cap);
+        // 只在目标价位附近一个窗口里挑：窗口跟随整机档次上移，
+        // 否则「性价比等级」会把高预算一路拉回中端件（S 级通常正是甜点价位）。
+        var win = items.filter(function (it) {
+          var m = mid(it.price);
+          return m >= target * 0.6 && m <= target * 1.5;
+        });
+        if (!win.length) {
+          // 窗口内无货（型号库该价位段缺失）→ 退化为最接近目标价位的 3 款
+          win = items.slice().sort(function (a, b) {
+            return Math.abs(mid(a.price) - target) - Math.abs(mid(b.price) - target);
+          }).slice(0, 3);
         }
-        var pick = pool2[0];
+        // 窗口内按「离配置单目标价位的距离」优先，等级只在价差相同时作加分：
+        // 否则 S 级甜点件（通常恰是中端价位）会一路压过方案本该配的高端件。
+        win.sort(function (a, b) {
+          var da = Math.abs(mid(a.price) - target), db = Math.abs(mid(b.price) - target);
+          if (da !== db) return da - db;
+          var d = (gradeOrder[b.valueGrade] || 0) - (gradeOrder[a.valueGrade] || 0);
+          return d !== 0 ? d : b.rating - a.rating;
+        });
+        var pick = win[0];
         if (pick) out.push({ cat: cat, item: pick, why: pickWhy(pick, use, intensity) });
       });
       return out;
@@ -1416,7 +1472,7 @@
         '<div class="smart-res-head reveal in">为你匹配的方案与核心配件</div>' +
         planHtml +
         '<div class="acc-grid smart-grid">' + itemsHtml + "</div>" +
-        '<p class="smart-note">' + esc(D.note) + "。配件按「预算 × 性能强度上限内评分最高」挑选；选「已有显示器」则不再推荐显示器。</p>";
+        '<p class="smart-note">' + esc(D.note) + "。配件按「与该套配置单同档次、且在预算内评分最高」挑选；选「已有显示器」则不再推荐显示器。</p>";
       wrap.scrollIntoView({ behavior: "smooth", block: "start" });
     });
   }
