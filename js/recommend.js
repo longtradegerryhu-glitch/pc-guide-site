@@ -851,8 +851,14 @@
       var targets = planPartTargets(plan);
       var allowance = targets[catId] || budgetCap * 0.2;
       if (catId === "cooler" && use.indexOf("portable") === -1) allowance = Math.max(allowance, 150);
+      // 电源与机箱同属 psu 类别；推荐「电源」位时排除机箱（与快速推荐同口径）
+      var pool = cat.items;
+      if (catId === "psu") {
+        var onlyPsu = pool.filter(function (it) { return (it.style || "").indexOf("电源") !== -1; });
+        if (onlyPsu.length) pool = onlyPsu;
+      }
 
-      var scored = cat.items.map(function (it) {
+      var scored = pool.map(function (it) {
         var s = 0;
         // 场景匹配
         it.use.forEach(function (u) { if (use.indexOf(u) > -1) s += 3; });
@@ -1399,6 +1405,11 @@
           return it.use.indexOf(use) !== -1 || it.use.indexOf("portable") !== -1;
         });
         if (!items.length) items = cat.items.slice();
+        // 电源与机箱同属 psu 类别；推荐「电源」位时必须排除机箱，否则可能把机箱当电源推
+        if (cid === "psu") {
+          var onlyPsu = items.filter(function (it) { return (it.style || "").indexOf("电源") !== -1; });
+          if (onlyPsu.length) items = onlyPsu;
+        }
         // 目标价位：优先取方案配置单里同类部件的价位；配置单未列的类别按整机中值 3% 兜底
         var target = Math.min(targets[cid] || base * 0.03, cap);
         // 只在目标价位附近一个窗口里挑：窗口跟随整机档次上移，
