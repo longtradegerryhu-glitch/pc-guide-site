@@ -74,8 +74,11 @@
   /* ---- 方案配置单 → 配件目标价位 ---- */
   /* 部件名 → 配件库类别 id，用于反读「这套方案的同类部件是什么档次」 */
   var PART_CAT = {
-    "CPU": "cpu", "显卡": "gpu", "散热": "cooler", "显示器": "monitor",
-    "键鼠": "input", "电源": "psu", "机箱": "psu", "音频": "audio", "耳机/音箱": "audio"
+    "CPU": "cpu", "显卡": "gpu", "主板": "mobo", "内存": "ram", "硬盘": "ssd",
+    "散热": "cooler", "显示器": "monitor", "键鼠": "input", "电源": "psu", "机箱": "case",
+    "音频": "audio", "耳机/音箱": "audio",
+    "笔记本支架": "stand", "笔记本散热": "laptop-cool", "拓展坞": "dock",
+    "外接显示器": "monitor", "便携键鼠": "input"
   };
 
   /* 从方案自己的配置单提取各类部件的目标价位（取价格中值）。
@@ -94,8 +97,7 @@
       var hi = nums.length > 1 ? parseInt(nums[1], 10) : lo;
       var v = (lo + hi) / 2;
       if (PART_SPLIT[row[0]]) v *= PART_SPLIT[row[0]];
-      // 电源与机箱共用 psu 类别，取较高者，避免机箱价把电源目标拉低
-      t[cid] = t[cid] ? Math.max(t[cid], v) : v;
+      t[cid] = Math.max(t[cid] || 0, v);
     });
     return t;
   }
@@ -126,6 +128,187 @@
         '<p class="smart-spec-tip">合计按各行参考价累加，所以比方案卡片预算略宽：每行都挑高配就超、都挑低配就省。照单买法：把每行配置复制到京东/淘宝搜索比价下单；不会装机可以约京东上门装机（约 100-200 元），或到「使用指南」照步骤自己装。</p>' +
       "</div>";
     return { html: html, parts: (plan.parts || []).length, total: [lo, hi] };
+  }
+
+  /* ---- 通用部件挑选：快速推荐与深度测评共用，保证两处口径一致 ---- */
+  function mid(p) { return (p[0] + p[1]) / 2; }
+
+  /* 配置单某类部件的型号行文本 */
+  function planRowOf(plan, names) {
+    var rows = (plan.parts || []).filter(function (r) { return names.indexOf(r[0]) !== -1; });
+    return rows.length ? String(rows[0][1] || "") : "";
+  }
+
+  /* 库内型号与配置单行文本双向匹配（压掉空白后比较），命中即「配置单同款」 */
+  function matchAnchors(items, rowText) {
+    if (!rowText) return [];
+    var sq = function (s) { return String(s).replace(/\s+/g, ""); };
+    var rowSq = sq(rowText);
+    var segs = rowText.split(/[\/+＋、（(]/).map(function (s) { return sq(s); })
+      .filter(function (s) { return s.length >= 4; });
+    return items.filter(function (it) {
+      var mSq = sq(it.model);
+      if (mSq.length >= 2 && rowSq.indexOf(mSq) !== -1) return true;
+      return segs.some(function (seg) {
+        return mSq.indexOf(seg) !== -1 || (mSq.length >= 3 && seg.indexOf(mSq) !== -1);
+      });
+    });
+  }
+
+  /* 挑 top1 + 2 备选：配置单同款置顶，其余按价位距离 + 等级排序 */
+  function pickOne(items, target, rowText) {
+    if (!items.length) return null;
+    var win = items.filter(function (it) {
+      var m = mid(it.price);
+      return m >= target * 0.6 && m <= target * 1.5;
+    });
+    var pool = win.length ? win : items;
+    var ranked = pool.slice().sort(function (a, b) {
+      var da = Math.abs(mid(a.price) - target), db = Math.abs(mid(b.price) - target);
+      if (da !== db) return da - db;
+      var d = (gradeOrder[b.valueGrade] || 0) - (gradeOrder[a.valueGrade] || 0);
+      return d !== 0 ? d : b.rating - a.rating;
+    });
+    var anchors = matchAnchors(items, rowText);
+    var top = null, isAnchor = false;
+    if (anchors.length) {
+      top = anchors.slice().sort(function (a, b) {
+        return Math.abs(mid(a.price) - target) - Math.abs(mid(b.price) - target);
+      })[0];
+      isAnchor = true;
+    } else {
+      top = ranked[0] || null;
+    }
+    if (!top) return null;
+    var alts = ranked.filter(function (it) { return it.id !== top.id; }).slice(0, 2);
+    return { item: top, anchor: isAnchor, alts: alts };
+  }
+
+  /* 无独立型号库的部件（主板/内存/硬盘/机箱/笔记本散热）→ 按配置单价位从 partCatalog 档位直选 */
+  var CATALOG_PARTS = {
+    "主板": "主板", "内存": "内存", "硬盘": "硬盘", "机箱": "机箱", "笔记本散热": "笔记本散热"
+  };
+
+  function catalogPick(partName, target) {
+    var key = CATALOG_PARTS[partName];
+    if (!key || !D.partCatalog) return null;
+    var group = null;
+    D.partCatalog.forEach(function (g) { if (g.key === key) group = g; });
+    if (!group || !group.options || !group.options.length) return null;
+    var opts = group.options.slice().sort(function (a, b) { return a.p - b.p; });
+    var top = opts.reduce(function (best, o) {
+      return Math.abs(o.p - target) < Math.abs(best.p - target) ? o : best;
+    }, opts[0]);
+    var alts = opts.filter(function (o) { return o !== top; })
+      .sort(function (a, b) { return Math.abs(a.p - target) - Math.abs(b.p - target); })
+      .slice(0, 2);
+    return { name: top.n, price: [top.p, top.p], alts: alts };
+  }
+
+  /* 全套部件逐项推荐：按配置单顺序输出，覆盖整机 + 外设的每一个部件。
+     有型号库的类目走型号匹配，没有的走 partCatalog 档位直选。 */
+  function fullPartRows(plan, opts) {
+    opts = opts || {};
+    var uses = opts.uses || [];
+    var targets = planPartTargets(plan);
+    var base = mid(plan.price || [0, 0]);
+    var out = [];
+
+    /* 用途只作软过滤：过滤后若覆盖不到配置单价位，就退回全库。
+       否则「办公」场景会把配置单里的 360 水冷降成百元风冷、5070 降成入门卡。 */
+    function narrow(items, target) {
+      if (!uses.length) return items;
+      var hit = items.filter(function (it) {
+        return (it.use || []).some(function (u) { return uses.indexOf(u) !== -1; });
+      });
+      if (!hit.length) return items;
+      var inBand = hit.filter(function (it) {
+        var m = mid(it.price);
+        return m >= target * 0.7 && m <= target * 1.3;
+      });
+      return inBand.length ? hit : items;
+    }
+
+    (plan.parts || []).forEach(function (r) {
+      var part = r[0], config = String(r[1] || ""), priceText = String(r[2] || "");
+      var cid = PART_CAT[part] || null;
+      var cat = null;
+      if (cid) D.categories.forEach(function (c) { if (c.id === cid) cat = c; });
+      var target = targets[cid] || base * 0.03;
+      if (PART_SPLIT[part]) target = target / PART_SPLIT[part];
+
+      // 键鼠是「键盘 + 鼠标」组合件，拆成两条，否则只出一件
+      if (part === "键鼠" && cat && cat.items && cat.items.length) {
+        var comboItem = cat.items;
+        if (uses.length) comboItem = narrow(comboItem, target);
+        var kbSet = comboItem.filter(function (it) { return (it.style || "").indexOf("键盘") !== -1; });
+        var msSet = comboItem.filter(function (it) { return (it.style || "").indexOf("鼠标") !== -1; });
+        var segs = config.split(/[+＋]/);
+        var kbPick = pickOne(kbSet.length ? kbSet : comboItem, target * 0.55, segs[0] || "");
+        var msPick = pickOne(msSet.length ? msSet : comboItem, target * 0.45, segs[1] || "");
+        if (kbPick) out.push({ part: "键盘", icon: "⌨️", config: config, priceText: priceText, cat: cat, pick: kbPick, textPick: null });
+        if (msPick) out.push({ part: "鼠标", icon: "🖱️", config: config, priceText: priceText, cat: cat, pick: msPick, textPick: null });
+        return;
+      }
+
+      var pick = null, textPick = null;
+      if (cat && cat.items && cat.items.length) {
+        var items = cat.items;
+        // psu 类别混装电源与机箱，电源位只取电源
+        if (cid === "psu") {
+          var onlyPsu = items.filter(function (it) { return (it.style || "").indexOf("电源") !== -1; });
+          if (onlyPsu.length) items = onlyPsu;
+        }
+        pick = pickOne(narrow(items, target), target, config);
+      } else {
+        textPick = catalogPick(part, target);
+      }
+      out.push({ part: part, config: config, priceText: priceText, cat: cat, pick: pick, textPick: textPick });
+    });
+    return out.filter(function (r) { return r.pick || r.textPick; });
+  }
+
+  /* 全套部件推荐渲染：每行 = 部件 + 推荐型号 + 参考价 + 说明 + 备选（点备选去搜同型号） */
+  function fullPartsHtml(plan, opts) {
+    if (!plan) return "";
+    opts = opts || {};
+    var pri = opts.priority || [];
+    var rows = fullPartRows(plan, opts);
+    if (!rows.length) return "";
+    rows.forEach(function (r) {
+      r.hot = pri.indexOf(r.cat ? r.cat.id : "") > -1 || pri.indexOf(r.part) > -1;
+    });
+    rows.sort(function (a, b) { return (b.hot ? 1 : 0) - (a.hot ? 1 : 0); });
+    var body = rows.map(function (r) {
+      var it = r.pick && r.pick.item;
+      var icon = r.icon || (r.cat ? r.cat.icon : "🔧");
+      // 有型号库的给具体型号；没有的（主板/内存/硬盘/机箱）直接展示配置单原选
+      var name = it ? it.name : r.config;
+      var priceTxt = it ? fmtPrice(it.price) : r.priceText;
+      var badges = r.hot ? '<span class="fp-badge">升级重点</span>' : "";
+      if (r.pick && r.pick.anchor) badges += '<span class="anchor-badge">配置单同款</span>';
+      if (!it && r.textPick) badges += '<span class="fp-badge fp-cat-badge">配置单原选</span>';
+      var why = it && it.valueNote
+        ? '<p class="fp-why">' + esc(it.valueNote) + "</p>"
+        : '<p class="fp-why">这一类没有独立的型号库，上面就是配置单的原选；同价位档位参考「' + esc(r.textPick.name) + '（¥' + r.textPick.price[0] + '）」。装机时以主板接口与机箱限高为准。</p>';
+      var cands = it
+        ? (r.pick.alts || []).map(function (a) { return { label: a.name, q: a.searchName || a.name, price: fmtPrice(a.price) }; })
+        : ((r.textPick && r.textPick.alts) || []).map(function (a) { return { label: a.n, q: a.n, price: "¥" + a.p }; });
+      var alts = cands.length
+        ? '<div class="fp-alts"><span class="fp-alts-label">备选</span>' + cands.map(function (c) {
+            return '<a class="fp-alt" href="https://search.jd.com/Search?keyword=' + encodeURIComponent(c.q) + '" target="_blank" rel="noopener noreferrer">' +
+              esc(c.label) + " " + c.price + "</a>";
+          }).join("") + "</div>"
+        : "";
+      return '<div class="fp-row' + (r.hot ? " fp-hot" : "") + '">' +
+        '<div class="fp-head"><span class="fp-cat">' + icon + " " + esc(r.part) + "</span>" + badges + "</div>" +
+        '<div class="fp-body"><span class="fp-name">' + esc(name) + "</span>" +
+        '<span class="fp-price">' + priceTxt + "</span></div>" +
+        why + alts +
+        (it ? productImageLink(it) : "") +
+      "</div>";
+    }).join("");
+    return '<div class="fp-list">' + body + "</div>";
   }
 
   /* 方案简述卡：名称 + 档位 + 参考预算 + 适合人群 + 一句话说明 */
@@ -190,6 +373,7 @@
   function fmtPrice(p) {
     if (!p) return "随行情";
     if (p[0] === 0 && p[1] === 0) return "随主板";
+    if (p[0] === p[1]) return "¥" + p[0];
     return "¥" + p[0] + " - " + p[1];
   }
 
@@ -732,6 +916,11 @@
       if (existing.indexOf("none") === -1 && existing.length) {
         focus = focus.filter(function (c) { return existing.indexOf(c) === -1; });
       }
+      // 「整机核心件」展开为具体类别，用于把对应部件排到推荐最前
+      var focusIds = focus.slice();
+      if (focusIds.indexOf("core") > -1) {
+        focusIds = focusIds.concat(["cpu", "gpu", "mobo", "ram", "ssd", "psu", "case", "cooler"]);
+      }
 
       var budgetCap = budgetOrder[budget];
 
@@ -766,7 +955,18 @@
         return [lo, hi];
       }
       var curPlan = plan;
-      var curPicks = picksOf(plan);
+      // 导出文本也用全套部件，避免导出结果只剩外设
+      function partRowsToPicks(pl) {
+        return fullPartRows(pl, { uses: use, priority: focusIds }).map(function (r) {
+          var it = r.pick && r.pick.item;
+          return {
+            cat: { name: r.part, icon: r.cat ? r.cat.icon : "🔧" },
+            item: it || { name: r.config, price: r.textPick ? r.textPick.price : [0, 0] },
+            why: it && it.valueNote ? it.valueNote : "配置单原选 " + r.config + "（" + r.priceText + "）"
+          };
+        });
+      }
+      var curPicks = partRowsToPicks(plan);
 
       // 4) 人群画像      // 3) 人群画像
       var personaIds = use.map(function (u) {
@@ -857,9 +1057,8 @@
       function renderQuizSet(si) {
         var s = sets[si];
         var p = s.plan;
-        var pk = picksOf(p);
         curPlan = p;
-        curPicks = pk;
+        curPicks = partRowsToPicks(p);
         if (!quizBody) return;
         var warn = (p && budgetCap < p.price[0] * 0.85)
           ? '<div class="smart-budget-warn reveal in">预算 ¥' + budgetCap + " 够不到「" + esc(p.name) + "」的典型整机价 " + fmtPrice(p.price) + "，这是最接近的一套；想压预算可切「省预算」档，或到「搭配计划」逐件调整。</div>"
@@ -868,10 +1067,10 @@
           warn +
           (p ? planBriefHtml(p) : '<div class="res-plan">未匹配到整机方案，请参考「搭配计划」板块。</div>') +
           (p ? specTableHtml(p).html : "") +
-          '<div class="res-section"><span class="res-label">外设与配件推荐（按你的升级重点）</span>' +
-            (picksHtmlOf(pk) || '<div class="empty-box">本次未勾选升级重点，此处不推荐外设；整机配置见上方配置单。</div>') +
+          '<div class="res-section"><span class="res-label">每个部件买什么型号（整机件 + 外设全覆盖，升级重点已置顶）</span>' +
+            (p ? (fullPartsHtml(p, { uses: use, priority: focusIds }) || '<div class="empty-box">未匹配到可推荐的部件型号，请参考上方配置单。</div>') : "") +
           "</div>" +
-          '<div class="res-total">整体投入参考：<b>' + fmtPrice(totalsOf(p, pk)) + "</b>（整机 + 所选配件）</div>" +
+          '<div class="res-total">整体投入参考：<b>' + fmtPrice(p ? specTableHtml(p).total : [0, 0]) + "</b>（按配置单各行参考价累加，不含优惠）</div>" +
           '<div class="res-note">' + esc(D.note) + "。方案为规则推荐，购机前请复核接口兼容性与电商实时价。</div>";
       }
       bindPlanSetTabs(box, renderQuizSet);
@@ -895,7 +1094,8 @@
           style: (look && look !== "any") ? styleOf(look) : null,
           plan: curPlan,
           picks: curPicks,
-          total: totalsOf(curPlan, curPicks)
+          // 配置单本身已含这些部件，整体投入直接取配置单合计，避免重复计价
+          total: curPlan ? specTableHtml(curPlan).total : [0, 0]
         }), copyBtn);
       });
 
@@ -924,7 +1124,7 @@
         L.push("整机方案：未匹配到，建议放宽预算或调整用途再看一次");
       }
       L.push(sep);
-      L.push("配件推荐：");
+      L.push("部件推荐（整机件 + 外设）：");
       if (ctx.picks.length) {
         ctx.picks.forEach(function (p) {
           L.push("· " + p.cat.name + "：" + p.item.name + "（" + fmtPrice(p.item.price) + "）");
@@ -933,7 +1133,7 @@
         L.push("· 暂无匹配配件");
       }
       L.push(sep);
-      L.push("整体投入参考：" + fmtPrice(ctx.total) + "（整机 + 所选配件）");
+      L.push("整体投入参考：" + fmtPrice(ctx.total) + "（按配置单各行参考价累加，不含优惠）");
       var ps = pitfallItems(ctx.use);
       if (ps.length) {
         L.push("");
@@ -1484,8 +1684,6 @@
     }
     updateHint();
 
-    function mid(p) { return (p[0] + p[1]) / 2; }
-
     function matchPlan() {
       // state.budget 是档位 id，先换算成真实预算
       var opt = budgetOpts.filter(function (o) { return o.id === state.budget; })[0];
@@ -1525,55 +1723,6 @@
       if (intensity === "heavy" && (item.valueGrade === "S" || item.valueGrade === "A")) parts.push("高强度下性价比高");
       if (intensity === "light" && (item.valueGrade === "S" || item.valueGrade === "A")) parts.push("预算内最优解");
       return parts.length ? "推荐理由：" + parts.join("、") : "";
-    }
-
-    /* 配置单某类部件的型号行文本 */
-    function planRowOf(plan, names) {
-      var rows = (plan.parts || []).filter(function (r) { return names.indexOf(r[0]) !== -1; });
-      return rows.length ? String(rows[0][1] || "") : "";
-    }
-    /* 库内型号与配置单行文本双向匹配（压掉空白后比较），命中即「配置单同款」 */
-    function matchAnchors(items, rowText) {
-      if (!rowText) return [];
-      var sq = function (s) { return String(s).replace(/\s+/g, ""); };
-      var rowSq = sq(rowText);
-      var segs = rowText.split(/[\/+＋、（(]/).map(function (s) { return sq(s); })
-        .filter(function (s) { return s.length >= 4; });
-      return items.filter(function (it) {
-        var mSq = sq(it.model);
-        if (mSq.length >= 2 && rowSq.indexOf(mSq) !== -1) return true;
-        return segs.some(function (seg) {
-          return mSq.indexOf(seg) !== -1 || (mSq.length >= 3 && seg.indexOf(mSq) !== -1);
-        });
-      });
-    }
-    /* 挑 top1 + 2 备选：配置单同款置顶，其余按价位距离+等级排序 */
-    function pickOne(items, target, rowText) {
-      if (!items.length) return null;
-      var win = items.filter(function (it) {
-        var m = mid(it.price);
-        return m >= target * 0.6 && m <= target * 1.5;
-      });
-      var pool = win.length ? win : items;
-      var ranked = pool.slice().sort(function (a, b) {
-        var da = Math.abs(mid(a.price) - target), db = Math.abs(mid(b.price) - target);
-        if (da !== db) return da - db;
-        var d = (gradeOrder[b.valueGrade] || 0) - (gradeOrder[a.valueGrade] || 0);
-        return d !== 0 ? d : b.rating - a.rating;
-      });
-      var anchors = matchAnchors(items, rowText);
-      var top = null, isAnchor = false;
-      if (anchors.length) {
-        top = anchors.slice().sort(function (a, b) {
-          return Math.abs(mid(a.price) - target) - Math.abs(mid(b.price) - target);
-        })[0];
-        isAnchor = true;
-      } else {
-        top = ranked[0] || null;
-      }
-      if (!top) return null;
-      var alts = ranked.filter(function (it) { return it.id !== top.id; }).slice(0, 2);
-      return { item: top, anchor: isAnchor, alts: alts };
     }
 
     function recommendItems(plan, use, intensity, needMonitor) {
@@ -1664,8 +1813,13 @@
       sets.push({ plan: m.plan, tag: "为你匹配", main: true });
       var mainSetIdx = sets.length - 1;
       if (mainIdx < sorted.length - 1) sets.push({ plan: sorted[mainIdx + 1], tag: "加预算" });
+      var over = m.fit === "nearest" && m.budget > mid(m.plan.price);
       var warnHtml = m.fit === "nearest"
-        ? '<div class="smart-budget-warn reveal in">你的预算（约 ¥' + m.budget + "）与「" + esc(m.plan.name) + "」的典型整机价 " + fmtPrice(m.plan.price) + " 有差距，已为你匹配最接近的方案；想压预算可到「搭配计划」逐件调整配置。</div>"
+        ? (over
+            ? '<div class="smart-budget-warn reveal in">你的预算（约 ¥' + m.budget + "）高于「" + esc(m.plan.name) + "」的典型整机价 " + fmtPrice(m.plan.price) + "。"
+              + (use === "office" ? "办公用途把预算堆得更高，流畅度几乎没有变化。" : "")
+              + "多出来的钱建议投在显示器素质、存储容量或静音上，比继续堆 CPU 更实在；也可以点「加预算」档看看更高一档的方案。</div>"
+            : '<div class="smart-budget-warn reveal in">你的预算（约 ¥' + m.budget + "）够不到「" + esc(m.plan.name) + "」的典型整机价 " + fmtPrice(m.plan.price) + "，这是最接近的一套；想压预算可到「搭配计划」逐件调整配置。</div>")
         : "";
       /* 结果页组装：配置单表格与方案卡用模块级函数 */
       /* 单张配件卡：cur = { item, anchor, alts } */
@@ -1711,19 +1865,16 @@
       }
       function renderSet(si) {
         var s = sets[si];
-        var picks = recommendItems(s.plan, use, intensity, needMonitor);
         var body = document.getElementById("smartSetBody");
         if (!body) return;
         body.innerHTML =
           (s.main ? warnHtml : "") +
           planBriefHtml(s.plan) +
           specTableHtml(s.plan).html +
-          '<h3 class="smart-sub-title reveal in">想换件？各类推荐与备选</h3>' +
-          '<div class="acc-grid smart-grid">' +
-          picks.map(function (o, i) { return '<div id="smartSlot-' + i + '"></div>'; }).join("") +
-          "</div>" +
-          '<p class="smart-note">' + esc(D.note) + "。带「配置单同款」标记的就是上表里的型号，其余为同档次备选，点备选可直接换。</p>";
-        picks.forEach(function (o, i) { renderSlot(picks, i, o.pick); });
+          '<h3 class="smart-sub-title reveal in">每个部件买什么型号</h3>' +
+          '<p class="smart-sub-title-note">按配置单顺序逐项给型号与备选，整机件和外设都在内。带「配置单同款」的就是上表里的型号，其余是同一档次的备选；主板、内存、硬盘、机箱没有独立型号库，按配置单档位直选。</p>' +
+          fullPartsHtml(s.plan, { uses: use ? [use] : [] }) +
+          '<p class="smart-note">' + esc(D.note) + "</p>";
       }
       wrap.innerHTML =
         '<div class="smart-res-head reveal in">' +

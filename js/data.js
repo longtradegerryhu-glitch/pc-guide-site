@@ -55,9 +55,9 @@ window.PC_DATA = {
       tip: "显卡优先于 CPU：先满足显卡，游戏帧率收益最大。建议选 DDR4 平台省内存钱，主板 + 内存省 800+。"
     },
     {
-      id: "t6000", name: "主流游戏档", icon: "🎮", budget: 6000, budgetLabel: "¥6000 档",
-      price: [10500, 13000], personas: ["gamer", "student"], uses: ["game"], form: ["desktop"],
-      summary: "RTX 5060 Ti + 2K 高刷，1080P 通吃、2K 畅玩主流 3A；2026-09 涨价后从「6000 档」抬到「10000 档」，建议重预算用户考虑。",
+      id: "t6000", name: "主流游戏 / 轻创作档", icon: "🎮", budget: 6000, budgetLabel: "¥6000 档",
+      price: [10500, 13000], personas: ["gamer", "student", "creator"], uses: ["game", "create"], form: ["desktop"],
+      summary: "RTX 5060 Ti 16G + 32G 内存 + 2K 高刷，1080P 通吃、2K 畅玩主流 3A，也能剪 1080P 视频与轻量渲染；2026-09 涨价后从「6000 档」抬到「10000 档」。",
       parts: [
         ["CPU", "Intel i5-14600KF / R5 9600X", "¥1200-1700", "14核20线程/6核12线程，游戏+多开+轻创作全能"],
         ["显卡", "RTX 5060 Ti 16G / RX 9060 XT 16G", "¥4400-5800", "2K 中高画质畅玩主流 3A，DLSS/FSR 加持；5060 Ti 16G 京东 5500+"],
@@ -73,9 +73,9 @@ window.PC_DATA = {
       tip: "这是 2026-09 涨价后的「真实甜点」：2K 高刷+5060 Ti 的组合两年内不落伍，但预算要按 10500 起算。"
     },
     {
-      id: "t8500", name: "高帧游戏档", icon: "⚡", budget: 8500, budgetLabel: "¥8500 档",
-      price: [14500, 18500], personas: ["gamer"], uses: ["game", "create"], form: ["desktop"],
-      summary: "RTX 5070 + 2K 高刷电竞屏，高帧电竞与 2K 全特效 3A 双满足；5070 已从年初 4500 涨到 6000–7500。",
+      id: "t8500", name: "高帧游戏 / 创作进阶档", icon: "⚡", budget: 8500, budgetLabel: "¥8500 档",
+      price: [14500, 18500], personas: ["gamer", "creator", "office"], uses: ["office", "game", "create"], form: ["desktop"],
+      summary: "RTX 5070 + 2K 高刷屏，高帧电竞与 2K 全特效 3A 双满足，也能带得动视频剪辑与多任务办公；5070 已从年初 4500 涨到 6000–7500。",
       parts: [
         ["CPU", "AMD R5 9600X / i5-14600KF", "¥1450-1700", "游戏单核性能强，吃鸡/瓦罗兰特高帧利器"],
         ["显卡", "RTX 5070 / RX 9070 XT", "¥5400-7500", "2K 全特效 3A + DLSS4 帧生成，4K 中画质可玩；5070 京东 7549、9070 XT 守 5400"],
@@ -347,8 +347,9 @@ window.PC_DATA = {
       ]
     },
     {
-      id: "focus", title: "外设升级重点？（可多选，已拥有的会智能跳过）", multi: true,
+      id: "focus", title: "重点想升级哪些部件？（可多选，勾选的会排到推荐最前；已拥有的外设会自动跳过）", multi: true,
       options: [
+        { id: "core",     label: "整机核心件", desc: "CPU/显卡/主板/内存/硬盘" },
         { id: "cooler",   label: "散热器", desc: "CPU/笔记本散热" },
         { id: "monitor",  label: "显示器", desc: "屏幕素质" },
         { id: "input",    label: "⌨️ 键鼠", desc: "输入手感" },
