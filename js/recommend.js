@@ -729,6 +729,10 @@
     var byCat = {};
     D.categories.forEach(function (c) { byCat[c.id] = c; });
 
+    var TIERS = ["入门", "甜点", "进阶", "旗舰"];
+    var TIER_CLS = { "入门": "t0", "甜点": "t1", "进阶": "t2", "旗舰": "t3" };
+    var state = { mode: "cat", tier: "all" };
+
     function lookup(entry) {
       var cat = byCat[entry.catId];
       if (!cat) return null;
@@ -736,34 +740,52 @@
       return item ? { cat: cat, item: item, entry: entry } : null;
     }
 
+    var ALL = D.topList.map(lookup).filter(Boolean);
+
     function rankSort(a, b) {
       return gradeOrder[b.entry.grade] - gradeOrder[a.entry.grade] ||
         (a.item.price[0] + a.item.price[1]) / 2 - (b.item.price[0] + b.item.price[1]) / 2;
     }
 
     function cardHtml(o, rankLabel) {
+      var e = o.entry;
       return (
         '<article class="top-card reveal in">' +
           '<span class="top-rank">' + rankLabel + "</span>" +
           '<div class="top-main">' +
-            '<span class="top-cat">' + esc(o.cat.name) + "</span>" +
+            '<span class="top-cat">' + esc(o.cat.name) + " · " + esc(o.item.style || "") + "</span>" +
             '<h4 class="top-name">' + esc(o.item.name) + "</h4>" +
-            '<p class="top-reason">' + esc(o.entry.reason) + "</p>" +
+            '<p class="top-reason">' + esc(e.reason) + "</p>" +
             productImageLink(o.item) +
           "</div>" +
           '<div class="top-side">' +
-            '<span class="grade grade-' + o.entry.grade + '">' + o.entry.grade + "</span>" +
+            '<span class="top-tier ' + (TIER_CLS[e.tier] || "") + '">' + esc(e.tier) + "</span>" +
+            '<span class="grade grade-' + e.grade + '">' + e.grade + "</span>" +
             '<span class="top-price">' + fmtPrice(o.item.price) + "</span>" +
           "</div>" +
         "</article>"
       );
     }
 
-    function render(mode) {
-      var rows = D.topList.map(lookup).filter(Boolean);
-      if (mode === "cat") {
-        // 按品类分组，组内按等级+价格排行
-        var html = D.categories.map(function (cat) {
+    function summaryHtml(n) {
+      var tiers = TIERS.map(function (t) {
+        return t + " " + ALL.filter(function (o) { return o.entry.tier === t; }).length;
+      }).join(" · ");
+      return '<p class="top-summary reveal in">当前显示 <b>' + n + "</b> 款，全部上榜 " + ALL.length +
+        " 款，覆盖 " + D.categories.length + " 个品类（" + tiers +
+        "）。档位按用途与价位划分；同一档位内先按性价比等级、再按参考均价排序。</p>";
+    }
+
+    function render() {
+      var rows = state.tier === "all" ? ALL.slice()
+        : ALL.filter(function (o) { return o.entry.tier === state.tier; });
+      var html = summaryHtml(rows.length);
+      if (!rows.length) {
+        wrap.innerHTML = html + '<div class="empty-box">该档位暂无上榜型号，切回「全部档位」查看。</div>';
+        return;
+      }
+      if (state.mode === "cat") {
+        html += D.categories.map(function (cat) {
           var group = rows.filter(function (o) { return o.cat.id === cat.id; }).sort(rankSort);
           if (!group.length) return "";
           var cards = group.map(function (o, i) {
@@ -772,34 +794,40 @@
           return (
             '<div class="top-group reveal in">' +
               '<div class="top-group-head"><span class="top-group-icon">' + cat.icon + "</span>" +
-              "<h3 class=\"top-group-name\">" + esc(cat.name) + "</h3>" +
+              '<h3 class="top-group-name">' + esc(cat.name) + "</h3>" +
               '<span class="top-group-count">' + group.length + " 款上榜</span></div>" +
               '<div class="top-group-grid">' + cards + "</div>" +
             "</div>"
           );
         }).join("");
-        wrap.innerHTML = html;
       } else {
-        // 全站总榜
         rows.sort(rankSort);
-        wrap.innerHTML = rows.map(function (o, i) {
-          return cardHtml(o, "#" + (i + 1));
-        }).join("");
+        html += rows.map(function (o, i) { return cardHtml(o, "#" + (i + 1)); }).join("");
       }
+      wrap.innerHTML = html;
     }
 
-    tabs.innerHTML = [
-      '<button class="chip active" data-mode="cat">按品类排行</button>',
-      '<button class="chip" data-mode="all">全站总榜</button>'
-    ].join("");
+    tabs.innerHTML =
+      '<button class="chip active" data-mode="cat">按品类排行</button>' +
+      '<button class="chip" data-mode="all">全站总榜</button>' +
+      '<span class="top-tabs-sep"></span>' +
+      '<button class="chip active" data-tier="all">全部档位</button>' +
+      TIERS.map(function (t) {
+        return '<button class="chip" data-tier="' + t + '">' + t + "</button>";
+      }).join("");
+
     tabs.querySelectorAll(".chip").forEach(function (b) {
       b.addEventListener("click", function () {
-        tabs.querySelectorAll(".chip").forEach(function (x) { x.classList.remove("active"); });
-        b.classList.add("active");
-        render(b.getAttribute("data-mode"));
+        var m = b.getAttribute("data-mode"), t = b.getAttribute("data-tier");
+        if (m) state.mode = m; else state.tier = t;
+        tabs.querySelectorAll(".chip").forEach(function (x) {
+          var sameGroup = m ? x.getAttribute("data-mode") : x.getAttribute("data-tier");
+          if (sameGroup) x.classList.toggle("active", x === b);
+        });
+        render();
       });
     });
-    render("cat");
+    render();
   }
 
   /* =========================================================
