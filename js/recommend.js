@@ -156,17 +156,22 @@
     });
     return items.filter(function (it) {
       var mSq = sq(it.model);
-      var hay = (mSq + sq(it.name || "")).toLowerCase();
+      /* 库内 model 不含品牌（如「B360-GT」），配置单却常写「瓦尔基里 B360」，
+         不带上品牌比对，这类行永远匹配不上同款，只能按价位瞎挑。 */
+      var full = sq((it.brand || "") + it.model);
+      var hay = (full + sq(it.name || "")).toLowerCase();
       if (mSq.length >= 2 && rowSq.indexOf(mSq) !== -1) return true;
+      if (rowSq.indexOf(full) !== -1) return true;
       if (segs.some(function (seg) {
-        return mSq.indexOf(seg) !== -1 || (mSq.length >= 3 && seg.indexOf(mSq) !== -1);
+        return full.indexOf(seg) !== -1 || mSq.indexOf(seg) !== -1 ||
+          (mSq.length >= 3 && seg.indexOf(mSq) !== -1);
       })) return true;
       return codes.some(function (c) { return hay.indexOf(c) > -1; });
     });
   }
 
   /* 挑 top1 + 2 备选：配置单同款置顶，其余按价位距离 + 等级排序 */
-  function pickOne(items, target, rowText) {
+  function pickOne(items, target, rowText, allItems) {
     if (!items.length) return null;
     var win = items.filter(function (it) {
       var m = mid(it.price);
@@ -179,7 +184,8 @@
       var d = (gradeOrder[b.valueGrade] || 0) - (gradeOrder[a.valueGrade] || 0);
       return d !== 0 ? d : b.rating - a.rating;
     });
-    var anchors = matchAnchors(items, rowText);
+    /* 同款要在「全量品类库」里找：候选池已被用途/价位过滤，可能把配置单点名的那件挤掉了 */
+    var anchors = matchAnchors(allItems && allItems.length ? allItems : items, rowText);
     var top = null, isAnchor = false;
     if (anchors.length) {
       top = anchors.slice().sort(function (a, b) {
@@ -192,6 +198,21 @@
     if (!top) return null;
     var alts = ranked.filter(function (it) { return it.id !== top.id; }).slice(0, 2);
     return { item: top, anchor: isAnchor, alts: alts };
+  }
+
+  /* 散热器形态由配置单决定（360 水冷 ≠ 下压风冷），用途标签对它没意义；
+     不加这道闸会出现「配置单写 360 水冷、推荐 37mm 矮散热」这类跨形态错配。 */
+  function coolerForm(items, rowText) {
+    var t = String(rowText || "");
+    var wantWater = /水冷|液冷|liquid|AIO/i.test(t) || /\b(240|360)\b/.test(t);
+    var wantAir = /风冷|双塔|单塔|下压|塔式|原装/.test(t);
+    if (!wantWater && !wantAir) return items;
+    var hit = items.filter(function (it) {
+      var s = (it.style || "") + (it.specs || "");
+      var isWater = s.indexOf("水冷") !== -1 || s.indexOf("液冷") !== -1;
+      return wantWater ? isWater : !isWater;
+    });
+    return hit.length ? hit : items;
   }
 
   /* 无独立型号库的部件（主板/内存/硬盘/机箱/笔记本散热）→ 按配置单价位从 partCatalog 档位直选 */
@@ -254,8 +275,8 @@
         var kbSet = comboItem.filter(function (it) { return (it.style || "").indexOf("键盘") !== -1; });
         var msSet = comboItem.filter(function (it) { return (it.style || "").indexOf("鼠标") !== -1; });
         var segs = config.split(/[+＋]/);
-        var kbPick = pickOne(kbSet.length ? kbSet : comboItem, target * 0.55, segs[0] || "");
-        var msPick = pickOne(msSet.length ? msSet : comboItem, target * 0.45, segs[1] || "");
+        var kbPick = pickOne(kbSet.length ? kbSet : comboItem, target * 0.55, segs[0] || "", cat.items);
+        var msPick = pickOne(msSet.length ? msSet : comboItem, target * 0.45, segs[1] || "", cat.items);
         if (kbPick) out.push({ part: "键盘", icon: "⌨️", config: config, priceText: priceText, cat: cat, pick: kbPick, textPick: null });
         if (msPick) out.push({ part: "鼠标", icon: "🖱️", config: config, priceText: priceText, cat: cat, pick: msPick, textPick: null });
         return;
@@ -269,7 +290,9 @@
           var onlyPsu = items.filter(function (it) { return (it.style || "").indexOf("电源") !== -1; });
           if (onlyPsu.length) items = onlyPsu;
         }
-        pick = pickOne(narrow(items, target), target, config);
+        /* 散热按冷排规格选，不走用途软过滤：软过滤会把它整档降下来 */
+        var pool = cid === "cooler" ? coolerForm(items, config) : narrow(items, target);
+        pick = pickOne(pool, target, config, cat.items);
       } else {
         textPick = catalogPick(part, target);
       }
@@ -1976,8 +1999,8 @@
           var segs = rowText.split(/[+＋]/);
           var kbItems = items.filter(function (it) { return (it.style || "").indexOf("键盘") !== -1; });
           var msItems = items.filter(function (it) { return (it.style || "").indexOf("鼠标") !== -1; });
-          var kbPick = pickOne(kbItems.length ? kbItems : items, combo * 0.55, segs[0] || "");
-          var msPick = pickOne(msItems.length ? msItems : items, combo * 0.45, segs[1] || "");
+          var kbPick = pickOne(kbItems.length ? kbItems : items, combo * 0.55, segs[0] || "", cat.items);
+          var msPick = pickOne(msItems.length ? msItems : items, combo * 0.45, segs[1] || "", cat.items);
           if (kbPick) out.push({ cat: cat, label: "键盘", pick: kbPick });
           if (msPick) out.push({ cat: cat, label: "鼠标", pick: msPick });
           return;
@@ -2001,7 +2024,7 @@
         }
         // 目标价位取配置单同类部件价位，未列的按整机中值 3% 兜底
         var target = Math.min(targets[cid] || base * 0.03, cap);
-        var p = pickOne(items, target, rowText);
+        var p = pickOne(items, target, rowText, cat.items);
         if (p) out.push({ cat: cat, pick: p });
       });
       return out;
