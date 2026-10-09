@@ -5,7 +5,7 @@
  * 价格均为 2026-10 参考行情（人民币），以电商实时价为准。
  * =========================================================== */
 window.PC_DATA = {
-  updated: "2026-10（核验 2026-10-09，扩库 137 款）",
+  updated: "2026-10 参考",
   note: "价格区间为 2026-10 联网核验参考行情（人民币，核验日 2026-10-09）。2026 下半年 DRAM/GPU/SSD 仍处涨价周期：DDR5 16G 单条 700–1800、32G 套条 2800–4000、RTX 5070 6000–6500、RTX 5070 Ti 8000 起、RTX 5080 11100–15000、1TB NVMe 850–950（去年 410，+130%）；CPU/电源/外设相对平稳，主板 9 月起跟涨约 10%。机构口径：IDC 预计高价持续到 2027 全年，明显回落要等 2028 及以后。本站仅作参考行情，购前请按『查实时价』按钮跳电商看当天价",
 
   /* ---------- 适合人群画像 ---------- */
@@ -248,16 +248,20 @@ window.PC_DATA = {
 
   /* ---------- 品类骨架（真实型号由 models.js 合并） ---------- */
   categories: [
-    { id: "cooler",  name: "散热器",   icon: "❄️", items: [] },
-    { id: "stand",   name: "支架",     icon: "🛠️", items: [] },
-    { id: "monitor", name: "显示器",   icon: "🖥️", items: [] },
-    { id: "input",   name: "键鼠外设", icon: "⌨️", items: [] },
-    { id: "audio",   name: "音频设备", icon: "🎧", items: [] },
-    { id: "network", name: "网络设备", icon: "📡", items: [] },
-    { id: "dock",    name: "拓展坞",   icon: "🔌", items: [] },
-    { id: "psu",     name: "电源与机箱", icon: "🔋", items: [] },
     { id: "cpu",     name: "CPU",       icon: "🧠", items: [] },
-    { id: "gpu",     name: "显卡",      icon: "🎮", items: [] }
+    { id: "mobo",    name: "主板",      icon: "🗂️", items: [] },
+    { id: "ram",     name: "内存",      icon: "🧩", items: [] },
+    { id: "gpu",     name: "显卡",      icon: "🎮", items: [] },
+    { id: "ssd",     name: "固态硬盘",  icon: "💾", items: [] },
+    { id: "psu",     name: "电源",      icon: "🔋", items: [] },
+    { id: "case",    name: "机箱",      icon: "🗄️", items: [] },
+    { id: "cooler",  name: "散热器",    icon: "❄️", items: [] },
+    { id: "monitor", name: "显示器",    icon: "🖥️", items: [] },
+    { id: "input",   name: "键鼠外设",  icon: "⌨️", items: [] },
+    { id: "audio",   name: "音频设备",  icon: "🎧", items: [] },
+    { id: "network", name: "网络设备",  icon: "📡", items: [] },
+    { id: "stand",   name: "支架",      icon: "🛠️", items: [] },
+    { id: "dock",    name: "拓展坞",    icon: "🔌", items: [] }
   ],
 
   /* ---------- 个性化测评问题（预算 6 档，与 plans.budget 对齐） ---------- */

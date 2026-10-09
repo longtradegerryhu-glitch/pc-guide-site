@@ -566,7 +566,7 @@ button:focus-visible,
 /* ===========================================================
    配件价格库 / 搭配计划 / 个性化测评
    =========================================================== */
-.empty-box { padding: 28px; text-align: center; color: var(--color-soft); border: 1px dashed var(--color-border); border-radius: var(--radius); }
+.empty-box { padding: 28px; text-align: center; color: var(--color-text-soft); border: 1px dashed var(--color-border); border-radius: var(--radius); }
 
 /* ---- 关键词搜索 ---- */
 .acc-search { margin-bottom: 12px; }
@@ -581,9 +581,9 @@ button:focus-visible,
   border-radius: var(--radius);
   box-shadow: var(--shadow);
 }
-.acc-search-input::placeholder { color: var(--color-soft); }
+.acc-search-input::placeholder { color: var(--color-text-soft); }
 .acc-search-input:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, .14); }
-.acc-search-hint { display: block; margin-top: 8px; font-size: 13px; color: var(--color-soft); }
+.acc-search-hint { display: block; margin-top: 8px; font-size: 13px; color: var(--color-text-soft); }
 .acc-search-hint:empty { display: none; }
 
 /* ---- 筛选面板 ---- */
@@ -597,7 +597,7 @@ button:focus-visible,
 }
 .filter-group { display: flex; align-items: flex-start; gap: 12px; padding: 8px 0; }
 .filter-group + .filter-group { border-top: 1px dashed var(--color-border); }
-.filter-label { flex: 0 0 46px; font-size: 13px; font-weight: 700; color: var(--color-soft); padding-top: 7px; }
+.filter-label { flex: 0 0 46px; font-size: 13px; font-weight: 700; color: var(--color-text-soft); padding-top: 7px; }
 .filter-chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip {
   border: 1px solid var(--color-border);
@@ -611,7 +611,7 @@ button:focus-visible,
 }
 .chip:hover { border-color: var(--color-primary); color: var(--color-primary); }
 .chip.active { background: var(--color-primary); border-color: var(--color-primary); color: #fff; font-weight: 600; }
-.acc-count { font-size: 13px; color: var(--color-soft); margin-bottom: 12px; }
+.acc-count { font-size: 13px; color: var(--color-text-soft); margin-bottom: 12px; }
 
 /* ---- 配件卡片 ---- */
 .acc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
@@ -631,7 +631,7 @@ button:focus-visible,
 .acc-cat { font-size: 12px; color: var(--color-primary); font-weight: 700; }
 .acc-name { font-size: 16px; margin-top: 2px; }
 .acc-price { font-size: 15px; font-weight: 800; color: var(--color-primary); white-space: nowrap; }
-.acc-specs { font-size: 13px; color: var(--color-soft); line-height: 1.55; }
+.acc-specs { font-size: 13px; color: var(--color-text-soft); line-height: 1.55; }
 .acc-meta { display: flex; align-items: center; gap: 10px; font-size: 12px; flex-wrap: wrap; }
 .acc-style { background: var(--color-primary-soft, #eff6ff); color: var(--color-primary); padding: 2px 10px; border-radius: 999px; font-weight: 600; }
 .acc-rating { color: #f59e0b; letter-spacing: 1px; }
@@ -639,8 +639,8 @@ button:focus-visible,
 .acc-tags { display: flex; flex-wrap: wrap; gap: 6px; }
 .tag-pill { background: #f1f5f9; color: #334155; border: 1px solid var(--color-border); padding: 2px 10px; border-radius: 999px; font-size: 12px; }
 .tag-pill.big { font-size: 13px; padding: 4px 12px; }
-.acc-compat { font-size: 12.5px; color: var(--color-soft); border-top: 1px dashed var(--color-border); padding-top: 8px; }
-.acc-model { display: inline-block; font-size: 12px; color: var(--color-soft); margin-top: 2px; }
+.acc-compat { font-size: 12.5px; color: var(--color-text-soft); border-top: 1px dashed var(--color-border); padding-top: 8px; }
+.acc-model { display: inline-block; font-size: 12px; color: var(--color-text-soft); margin-top: 2px; }
 .acc-note { font-size: 13px; color: var(--color-primary); background: var(--color-primary-soft, #eff6ff); border-radius: 8px; padding: 6px 10px; line-height: 1.5; }
 
 /* ---- 性价比等级徽章 ---- */
@@ -668,9 +668,9 @@ button:focus-visible,
 .top-card:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(15, 23, 42, .10); }
 .top-rank { flex: 0 0 40px; width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 800; color: var(--color-primary); background: var(--color-primary-soft, #eff6ff); border-radius: 10px; }
 .top-main { flex: 1; min-width: 0; }
-.top-cat { font-size: 11px; color: var(--color-soft); font-weight: 700; letter-spacing: 1px; }
+.top-cat { font-size: 11px; color: var(--color-text-soft); font-weight: 700; letter-spacing: 1px; }
 .top-name { font-size: 15px; margin: 1px 0 3px; }
-.top-reason { font-size: 12.5px; color: var(--color-soft); line-height: 1.5; }
+.top-reason { font-size: 12.5px; color: var(--color-text-soft); line-height: 1.5; }
 .top-side { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
 .top-price { font-size: 13px; font-weight: 700; color: var(--color-primary); white-space: nowrap; }
 .top-thumb { flex: 0 0 64px; width: 64px; height: 64px; border-radius: 10px; overflow: hidden; background: var(--color-bg-alt); box-shadow: inset 0 0 0 1px var(--color-border); }
@@ -709,7 +709,7 @@ button:focus-visible,
 .top-group-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
 .top-group-icon { font-size: 20px; }
 .top-group-name { font-size: 17px; font-weight: 800; }
-.top-group-count { font-size: 12px; color: var(--color-soft); background: var(--color-primary-soft, #eff6ff); padding: 2px 10px; border-radius: 999px; }
+.top-group-count { font-size: 12px; color: var(--color-text-soft); background: var(--color-primary-soft, #eff6ff); padding: 2px 10px; border-radius: 999px; }
 .top-group-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; }
 .group-rank { font-weight: 800; }
 .group-rank.r1 { color: #d97706; }
@@ -720,11 +720,11 @@ button:focus-visible,
 .plan-tier { display: inline-block; font-size: 12px; font-weight: 700; color: #fff; background: var(--color-primary); padding: 2px 10px; border-radius: 999px; margin-left: 8px; }
 
 /* ---- 方案部件规格说明 ---- */
-.plan-detail { display: block; font-size: 12px; color: var(--color-soft); margin-top: 2px; line-height: 1.5; font-weight: 400; }
+.plan-detail { display: block; font-size: 12px; color: var(--color-text-soft); margin-top: 2px; line-height: 1.5; font-weight: 400; }
 
 /* ---- 预算适配器 ---- */
 .budget-row { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; flex-wrap: wrap; }
-.budget-label { flex: 0 0 86px; font-size: 13px; font-weight: 700; color: var(--color-soft); }
+.budget-label { flex: 0 0 86px; font-size: 13px; font-weight: 700; color: var(--color-text-soft); }
 .budget-input {
   width: 180px; padding: 11px 14px; border: 1px solid var(--color-border); border-radius: 10px;
   font-size: 15px; font-weight: 700; color: var(--color-text); background: var(--color-bg); outline: none;
@@ -747,7 +747,7 @@ button:focus-visible,
 }
 .part-select:focus { border-color: var(--color-primary); }
 .part-price-box { display: inline-flex; align-items: center; gap: 2px; border: 1px solid var(--color-border); border-radius: 8px; padding: 0 4px; background: var(--color-bg); }
-.part-currency { font-size: 13px; color: var(--color-soft); padding-left: 4px; }
+.part-currency { font-size: 13px; color: var(--color-text-soft); padding-left: 4px; }
 .part-price {
   width: 84px; padding: 6px 4px; border: none; outline: none; font-size: 13px; font-weight: 700;
   background: transparent; color: var(--color-primary);
@@ -771,10 +771,10 @@ button:focus-visible,
 .plan-icon { font-size: 30px; }
 .plan-name { font-size: 18px; }
 .plan-budget { font-size: 13px; color: var(--color-primary); font-weight: 700; }
-.plan-summary { font-size: 14px; color: var(--color-soft); }
+.plan-summary { font-size: 14px; color: var(--color-text-soft); }
 .plan-personas { display: flex; flex-wrap: wrap; gap: 6px; }
 .plan-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-.plan-table th { text-align: left; color: var(--color-soft); font-size: 12px; padding: 6px 8px; border-bottom: 1px solid var(--color-border); }
+.plan-table th { text-align: left; color: var(--color-text-soft); font-size: 12px; padding: 6px 8px; border-bottom: 1px solid var(--color-border); }
 .plan-table td { padding: 7px 8px; border-bottom: 1px dashed var(--color-border); vertical-align: top; }
 .plan-table td:first-child { white-space: nowrap; font-weight: 600; }
 .plan-price { color: var(--color-primary); font-weight: 700; white-space: nowrap; }
@@ -815,7 +815,7 @@ button:focus-visible,
 .result-box { border: 1px solid var(--color-primary); border-radius: var(--radius-lg, 16px); padding: 22px 24px; background: linear-gradient(180deg, var(--color-primary-soft, #eff6ff), transparent 60%); }
 .result-title { font-size: 18px; margin-bottom: 14px; }
 .result-persona, .res-section { margin-bottom: 14px; }
-.res-label { display: block; font-size: 12px; font-weight: 700; color: var(--color-soft); letter-spacing: 1px; margin-bottom: 8px; text-transform: uppercase; }
+.res-label { display: block; font-size: 12px; font-weight: 700; color: var(--color-text-soft); letter-spacing: 1px; margin-bottom: 8px; text-transform: uppercase; }
 .res-plan { font-size: 15px; background: var(--color-card); border: 1px solid var(--color-border); border-radius: 12px; padding: 12px 16px; margin-bottom: 14px; line-height: 1.6; }
 .res-budget { color: var(--color-primary); font-weight: 700; white-space: nowrap; }
 .pick-item {
@@ -831,11 +831,11 @@ button:focus-visible,
 .pick-icon { font-size: 22px; }
 .pick-main { flex: 1; min-width: 0; }
 .pick-name { display: block; font-size: 14px; font-weight: 700; }
-.pick-why { display: block; font-size: 12.5px; color: var(--color-soft); margin-top: 2px; line-height: 1.5; }
+.pick-why { display: block; font-size: 12.5px; color: var(--color-text-soft); margin-top: 2px; line-height: 1.5; }
 .pick-price { font-size: 14px; font-weight: 800; color: var(--color-primary); white-space: nowrap; }
 .res-total { font-size: 15px; margin: 6px 0 10px; }
 .res-total b { color: var(--color-primary); font-size: 18px; }
-.res-note { font-size: 12px; color: var(--color-soft); margin-bottom: 16px; }
+.res-note { font-size: 12px; color: var(--color-text-soft); margin-bottom: 16px; }
 .res-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; }
 .res-actions .btn { flex: 1 1 180px; }
 
@@ -1029,7 +1029,7 @@ a.entry-card .card-title { margin-top: 0; }
   margin: 16px auto 0;
   padding: 0 24px;
   font-size: 13px;
-  color: var(--color-soft);
+  color: var(--color-text-soft);
   line-height: 1.5;
 }
 .breadcrumb a { color: var(--color-primary); text-decoration: none; }
@@ -1109,7 +1109,7 @@ a.entry-card .card-title { margin-top: 0; }
 }
 .smart-summary { font-size: 14px; color: var(--color-text-soft); margin: 6px 0 14px; line-height: 1.7; }
 .smart-plan-link { display: inline-block; text-decoration: none; }
-.smart-note { font-size: 12.5px; color: var(--color-soft); margin-top: 12px; line-height: 1.6; }
+.smart-note { font-size: 12.5px; color: var(--color-text-soft); margin-top: 12px; line-height: 1.6; }
 .smart-grid { margin-top: 4px; }
 .smart-why { font-size: 12.5px; color: var(--color-primary); font-weight: 600; line-height: 1.5; }
 
@@ -1198,3 +1198,93 @@ a.entry-card .card-title { margin-top: 0; }
 [data-theme="dark"] .top-tier.t1 { background: rgba(16, 185, 129, .16); color: #6ee7b7; border-color: rgba(16, 185, 129, .30); }
 [data-theme="dark"] .top-tier.t2 { background: rgba(59, 130, 246, .18); color: #93c5fd; border-color: rgba(59, 130, 246, .32); }
 [data-theme="dark"] .top-tier.t3 { background: rgba(245, 158, 11, .16); color: #fcd34d; border-color: rgba(245, 158, 11, .30); }
+
+/* =========================================================
+ * 配件查询增强：搜索行 / 热门词 / 已选条件 / 品类分组 / 命中高亮
+ * ========================================================= */
+.acc-search-row { display: flex; gap: 10px; align-items: center; }
+.acc-search-row .acc-search-input { flex: 1 1 auto; min-width: 0; }
+.acc-clear-btn {
+  flex: none;
+  padding: 11px 16px;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--color-primary);
+  background: var(--color-primary-soft);
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all .18s ease;
+}
+.acc-clear-btn:hover { border-color: var(--color-primary); }
+
+.acc-hot { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px; }
+.acc-hot-label { font-size: 12px; color: var(--color-text-soft); }
+.acc-hot-chip {
+  padding: 4px 12px;
+  font-family: inherit;
+  font-size: 12.5px;
+  color: var(--color-text-soft);
+  background: var(--color-bg-alt);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all .18s ease;
+}
+.acc-hot-chip:hover { color: var(--color-primary); border-color: var(--color-primary); }
+
+.acc-active { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 12px 0 2px; }
+.acc-active-label { font-size: 12px; color: var(--color-text-soft); }
+.acc-active-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px 5px 12px;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--color-text);
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all .18s ease;
+}
+.acc-active-chip:hover { border-color: var(--color-primary); color: var(--color-primary); }
+.acc-active-x { font-size: 15px; line-height: 1; color: var(--color-text-soft); }
+.acc-active-reset {
+  padding: 5px 12px;
+  font-family: inherit;
+  font-size: 12.5px;
+  color: var(--color-text-soft);
+  background: transparent;
+  border: 1px dashed var(--color-border);
+  border-radius: 999px;
+  cursor: pointer;
+}
+.acc-active-reset:hover { color: var(--color-primary); border-color: var(--color-primary); }
+
+.acc-hl { padding: 0 1px; border-radius: 3px; color: inherit; background: rgba(250, 204, 21, .38); }
+[data-theme="dark"] .acc-hl { color: #fde68a; background: rgba(250, 204, 21, .26); }
+
+.acc-group { margin-bottom: 30px; }
+.acc-group:last-child { margin-bottom: 0; }
+.acc-group-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 8px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--color-border);
+}
+.acc-group-head h3 { margin: 0; font-size: 17px; font-weight: 700; color: var(--color-text); }
+.acc-group-count { font-size: 13px; color: var(--color-text-soft); }
+
+.acc-sort-label { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--color-text-soft); }
+
+@media (max-width: 640px) {
+  .acc-search-row { flex-wrap: wrap; }
+  .acc-search-row .acc-search-input { flex: 1 1 100%; }
+  .acc-clear-btn { padding: 8px 14px; }
+}

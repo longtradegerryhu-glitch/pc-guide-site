@@ -139,19 +139,29 @@
     return rows.length ? String(rows[0][1] || "") : "";
   }
 
-  /* 库内型号与配置单行文本双向匹配（压掉空白后比较），命中即「配置单同款」 */
+  /* 库内型号与配置单行文本匹配，命中即「配置单同款」。
+     配置单常用简称（R5 9600X、i5-14600KF），而库内是全称，
+     所以除了整段比对，还要拿型号里的数字加字母组合（如 14600KF、B760M）去对。 */
   function matchAnchors(items, rowText) {
     if (!rowText) return [];
     var sq = function (s) { return String(s).replace(/\s+/g, ""); };
     var rowSq = sq(rowText);
     var segs = rowText.split(/[\/+＋、（(]/).map(function (s) { return sq(s); })
       .filter(function (s) { return s.length >= 4; });
+    var codes = [];
+    segs.forEach(function (seg) {
+      (seg.match(/\d{3,}[A-Za-z]*/g) || []).forEach(function (c) {
+        if (c.length >= 4) codes.push(c.toLowerCase());
+      });
+    });
     return items.filter(function (it) {
       var mSq = sq(it.model);
+      var hay = (mSq + sq(it.name || "")).toLowerCase();
       if (mSq.length >= 2 && rowSq.indexOf(mSq) !== -1) return true;
-      return segs.some(function (seg) {
+      if (segs.some(function (seg) {
         return mSq.indexOf(seg) !== -1 || (mSq.length >= 3 && seg.indexOf(mSq) !== -1);
-      });
+      })) return true;
+      return codes.some(function (c) { return hay.indexOf(c) > -1; });
     });
   }
 
@@ -482,191 +492,367 @@
     var countEl = document.getElementById("accCount");
     var searchEl = document.getElementById("accSearch");
     var searchHintEl = document.getElementById("accSearchHint");
+    var hotEl = document.getElementById("accHot");
+    var clearBtn = document.getElementById("accClearAll");
+    var activeEl = document.getElementById("accActive");
     if (!wrap || !catRow || !sceneRow || !budgetRow) return;
 
-    var state = { cat: "all", scene: "all", look: "all", budget: "all", audience: "all", sort: "default", q: "" };
+    var state = { cat: "all", scene: "all", look: "all", budget: "all", audience: "all", brand: "all", sort: "default", q: "" };
 
-    // 关键词搜索：与筛选条件叠加生效；支持空格分隔多关键词（需全部命中）
-    function matchQuery(item, q) {
-      var hay = [item.name, item.brand, item.model, item.searchName, item.style, item.specs]
+    /* 口语词与英文缩写映射到品类 id：搜「主板」「显卡」这类需求词时直接按品类命中，
+       不需要型号名里真的出现这两个字 */
+    var ALIAS = {
+      "cpu": "cpu", "处理器": "cpu",
+      "主板": "mobo", "motherboard": "mobo", "板子": "mobo",
+      "内存": "ram", "内存条": "ram", "ram": "ram",
+      "硬盘": "ssd", "固态": "ssd", "固态硬盘": "ssd", "ssd": "ssd",
+      "显卡": "gpu", "独显": "gpu", "gpu": "gpu", "图形卡": "gpu",
+      "电源": "psu", "psu": "psu",
+      "机箱": "case", "箱子": "case",
+      "散热": "cooler", "散热器": "cooler", "风冷": "cooler", "水冷": "cooler", "冷排": "cooler",
+      "显示器": "monitor", "monitor": "monitor", "屏幕": "monitor", "显示屏": "monitor",
+      "音频": "audio", "audio": "audio",
+      "网络": "network", "network": "network",
+      "支架": "stand", "stand": "stand",
+      "拓展坞": "dock", "扩展坞": "dock", "dock": "dock"
+    };
+
+    /* 主观需求词映射到规格关键词，让「白色」「静音」「大显存」这类说法也能搜到结果 */
+    var NEED = {
+      "白色": ["白", "ice", "冰"],
+      "静音": ["静音", "噪音", "安静"],
+      "灯效": ["rgb", "argb", "灯"],
+      "无线": ["无线", "蓝牙", "三模", "2.4g"],
+      "蓝牙": ["蓝牙", "无线"],
+      "小机箱": ["itx", "matx", "sfx", "紧凑"],
+      "高刷": ["高刷", "hz"],
+      "游戏": ["游戏", "电竞", "高刷"],
+      "剪辑": ["创作", "剪辑", "生产力", "渲染"],
+      "大显存": ["16g", "24g", "大显存"],
+      "长质保": ["质保"],
+      "性价比": ["高性价比"],
+      "ddr5": ["ddr5"], "ddr4": ["ddr4"],
+      "nvme": ["nvme", "pcie"],
+      "白色": ["白", "ice", "冰"],
+      "itx": ["itx"], "matx": ["matx", "matx"], "atx": ["atx", "eatx"]
+    };
+
+    function tokens(q) { return q.toLowerCase().split(/\s+/).filter(Boolean); }
+
+    /* 单个关键词匹配：别名命中所属品类、或需求词的任一同义词出现在文本里，都算命中 */
+    function matchQuery(item, catId, toks) {
+      var hay = [item.name, item.brand, item.model, item.searchName, item.style, item.specs, item.valueNote, item.compat]
         .concat(item.tags || []).filter(Boolean).join(" ").toLowerCase();
-      return q.toLowerCase().split(/\s+/).filter(Boolean).every(function (t) {
+      return toks.every(function (t) {
+        var asCat = ALIAS[t];
+        if (asCat) return asCat === catId;   // 品类词只按所属品类判定，避免命中别的品类里「提及」它的型号
+        var alts = NEED[t];
+        if (alts && alts.some(function (a) { return hay.indexOf(a) > -1; })) return true;
         return hay.indexOf(t) > -1;
       });
     }
 
-    // 跨页跳转：从颜值/测评页带 ?look=xxx 进来时，自动按该风格预筛选
-    try {
-      var _sp = new URLSearchParams(window.location.search);
-      var _lp = _sp.get("look");
-      if (_lp && styleById[_lp]) state.look = _lp;
-    } catch (e) {}
+    /* 命中关键词高亮，单字不高亮以免整页都是标记 */
+    function hl(text, toks) {
+      var out = esc(text);
+      if (!toks || !toks.length) return out;
+      var seen = {};
+      toks.forEach(function (t) {
+        if (t.length < 2 || seen[t]) return;
+        seen[t] = 1;
+        var re = new RegExp(t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi");
+        out = out.replace(re, function (m) { return '<mark class="acc-hl">' + m + "</mark>"; });
+      });
+      return out;
+    }
+
+    /* 跨品类通用价位档：配件从几十元到几万元都有，档位要能覆盖全区间 */
+    var BANDS = [
+      { id: "all",  label: "全部价位" },
+      { id: "b300", label: "300 元内",     lo: 0,    hi: 300 },
+      { id: "b800", label: "300-800 元",   lo: 300,  hi: 800 },
+      { id: "b2k",  label: "800-2000 元",  lo: 800,  hi: 2000 },
+      { id: "b5k",  label: "2000-5000 元", lo: 2000, hi: 5000 },
+      { id: "bhi",  label: "5000 元以上",  lo: 5000, hi: Infinity }
+    ];
 
     function matchesBudget(item, budget) {
       if (budget === "all") return true;
-      var mid = (item.price[0] + item.price[1]) / 2;
-      if (budget === "cheap") return mid <= 200;
-      if (budget === "mid") return mid > 200 && mid <= 600;
-      if (budget === "high") return mid > 600;
-      return true;
+      var band = null;
+      BANDS.forEach(function (b) { if (b.id === budget) band = b; });
+      if (!band) return true;
+      var m = (item.price[0] + item.price[1]) / 2;
+      return m >= band.lo && m < band.hi;
     }
 
-    function renderChips(row, items, key, onClick) {
+    // 从其他页面带参数跳进来：颜值页带 look，榜单带 cat，搜索建议带 q
+    try {
+      var sp = new URLSearchParams(window.location.search);
+      var lp = sp.get("look");
+      if (lp && styleById[lp]) state.look = lp;
+      var cp = sp.get("cat");
+      if (cp) state.cat = cp;
+      var qp = sp.get("q");
+      if (qp) state.q = qp;
+    } catch (e) {}
+    if (state.q && searchEl) searchEl.value = state.q;
+
+    function catName(id) {
+      var n = "";
+      D.categories.forEach(function (c) { if (c.id === id) n = c.name; });
+      return n;
+    }
+
+    function collect() {
+      var list = [];
+      var toks = state.q ? tokens(state.q) : null;
+      D.categories.forEach(function (cat) {
+        if (state.cat !== "all" && cat.id !== state.cat) return;
+        cat.items.forEach(function (item) {
+          if (state.scene !== "all" && (item.use || []).indexOf(state.scene) === -1) return;
+          if (state.look !== "all" && lookOf(item) !== state.look) return;
+          if (state.brand !== "all" && item.brand !== state.brand) return;
+          if (!matchesBudget(item, state.budget)) return;
+          var aud = item.audience || [];
+          if (state.audience !== "all" && aud.length && aud.indexOf(state.audience) === -1) return;
+          if (toks && !matchQuery(item, cat.id, toks)) return;
+          list.push({ cat: cat, item: item });
+        });
+      });
+      return list;
+    }
+
+    function renderChips(row, items, key) {
       row.innerHTML = items.map(function (it) {
         var active = state[key] === it.id ? " active" : "";
-        return '<button class="chip' + active + '" data-id="' + it.id + '">' + it.label + "</button>";
+        return '<button class="chip' + active + '" data-id="' + esc(it.id) + '">' + esc(it.label) + "</button>";
       }).join("");
       row.querySelectorAll(".chip").forEach(function (b) {
         b.addEventListener("click", function () {
           state[key] = b.getAttribute("data-id");
-          renderChips(row, items, key, onClick);
+          renderChips(row, items, key);
+          if (key === "cat") renderBrands();
           renderCards();
         });
       });
     }
 
-    function renderCards() {
-      var list = [];
+    /* 品牌行按当前品类实际存在的品牌生成，避免选了品牌再切品类出现空结果 */
+    var brandRow = document.getElementById("accBrands");
+    var brandPool = [];
+    function renderBrands() {
+      if (!brandRow) return;
+      brandPool = [];
       D.categories.forEach(function (cat) {
         if (state.cat !== "all" && cat.id !== state.cat) return;
-        cat.items.forEach(function (item) {
-          if (state.scene !== "all" && item.use.indexOf(state.scene) === -1) return;
-          if (state.look !== "all" && lookOf(item) !== state.look) return;
-          if (!matchesBudget(item, state.budget)) return;
-          if (state.q && !matchQuery(item, state.q)) return;
-          var aud = item.audience || [];
-          if (state.audience !== "all" && aud.length && aud.indexOf(state.audience) === -1) return;
-          list.push({ cat: cat, item: item });
+        cat.items.forEach(function (it) { if (it.brand) brandPool.push(it.brand); });
+      });
+      var n = {}, order = [];
+      brandPool.forEach(function (b) { if (!n[b]) { n[b] = 0; order.push(b); } n[b]++; });
+      order.sort(function (a, b) { return n[b] - n[a] || (a < b ? -1 : 1); });
+      if (state.brand !== "all" && order.indexOf(state.brand) === -1) state.brand = "all";
+      renderChips(brandRow,
+        [{ id: "all", label: "全部品牌" }].concat(order.map(function (b) { return { id: b, label: b + " " + n[b] }; })),
+        "brand");
+    }
+
+    function cardHtml(o, toks) {
+      var it = o.item;
+      var look = lookOf(it);
+      var style = look ? styleOf(look) : null;
+      var banner = style
+        ? '<div class="acc-look" style="background:linear-gradient(120deg,' + style.palette[0] + ',' + style.palette[1] + ');">' +
+            '<span class="acc-look-icon">' + style.icon + '</span>' +
+            '<span class="acc-look-name">' + esc(style.name) + '</span></div>'
+        : '';
+      var tags = (it.tags || []).map(function (t) { return '<span class="tag-pill">' + hl(t, toks) + "</span>"; }).join("");
+      var uses = (it.use || []).map(function (u) {
+        return '<span class="use-dot" title="' + useLabels[u] + '">' + useIcons[u] + "</span>";
+      }).join("");
+      var stars = "\u2605\u2605\u2605\u2605\u2605".slice(0, it.rating) + "\u2606\u2606\u2606\u2606\u2606".slice(0, 5 - it.rating);
+      var grade = it.valueGrade ? '<span class="grade grade-' + it.valueGrade + '">' + it.valueGrade + "</span>" : "";
+      return (
+        '<article class="acc-card reveal in">' +
+          banner +
+          '<div class="acc-head">' +
+            '<div><span class="acc-cat">' + o.cat.icon + " " + esc(o.cat.name) + "</span>" +
+            '<h4 class="acc-name">' + hl(it.name, toks) + "</h4>" +
+            (it.brand && it.model ? '<span class="acc-model">' + esc(it.brand + " " + it.model) + "</span>" : "") +
+            "</div>" +
+            '<span class="acc-price">' + fmtPrice(it.price) + "</span>" +
+          "</div>" +
+          '<div class="acc-meta">' +
+            '<span class="acc-style">' + hl(it.style, toks) + "</span>" +
+            '<span class="acc-rating" title="\u63a8\u8350\u5ea6 ' + it.rating + '/5">' + stars + "</span>" +
+            grade + uses +
+          "</div>" +
+          (it.valueNote ? '<div class="acc-note">' + hl(it.valueNote, toks) + "</div>" : "") +
+          '<div class="acc-specs">' + hl(it.specs, toks) + "</div>" +
+          '<div class="acc-tags">' + tags + "</div>" +
+          '<div class="acc-compat">\u642d\u914d\uff1a' + hl(it.compat, toks) + "</div>" +
+          productImageLink(it) +
+        "</article>"
+      );
+    }
+
+    /* 已选条件回显：每个条件都能单独点掉 */
+    function renderActive() {
+      if (!activeEl) return;
+      var chips = [];
+      if (state.q) chips.push({ k: "q", label: "\u641c\u7d22\u300c" + state.q + "\u300d" });
+      if (state.cat !== "all") chips.push({ k: "cat", label: catName(state.cat) });
+      if (state.budget !== "all") {
+        var bl = "";
+        BANDS.forEach(function (b) { if (b.id === state.budget) bl = b.label; });
+        chips.push({ k: "budget", label: bl });
+      }
+      if (state.brand !== "all") chips.push({ k: "brand", label: state.brand });
+      if (state.scene !== "all") chips.push({ k: "scene", label: useLabels[state.scene] });
+      if (state.audience !== "all") chips.push({ k: "audience", label: audLabels[state.audience] });
+      if (state.look !== "all") {
+        var ln = "";
+        STYLES.forEach(function (st) { if (st.id === state.look) ln = st.name; });
+        chips.push({ k: "look", label: ln });
+      }
+      activeEl.hidden = !chips.length;
+      if (clearBtn) clearBtn.hidden = !chips.length;
+      if (!chips.length) { activeEl.innerHTML = ""; return; }
+      activeEl.innerHTML = '<span class="acc-active-label">\u5f53\u524d\u6761\u4ef6</span>' +
+        chips.map(function (c) {
+          return '<button type="button" class="acc-active-chip" data-k="' + c.k + '">' + esc(c.label) +
+            '<span class="acc-active-x" aria-hidden="true">\u00d7</span></button>';
+        }).join("") +
+        '<button type="button" class="acc-active-reset">\u6e05\u7a7a</button>';
+      activeEl.querySelectorAll(".acc-active-chip").forEach(function (b) {
+        b.addEventListener("click", function () {
+          var k = b.getAttribute("data-k");
+          state[k] = (k === "q") ? "" : "all";
+          syncControls();
+          renderCards();
         });
       });
+      var reset = activeEl.querySelector(".acc-active-reset");
+      if (reset) reset.addEventListener("click", clearAll);
+    }
 
-      // 排序：默认按品类顺序；可选 价格升/降、评分降
+    function clearAll() {
+      state.cat = "all"; state.scene = "all"; state.look = "all";
+      state.budget = "all"; state.audience = "all"; state.brand = "all"; state.q = "";
+      state.sort = "default";
+      syncControls();
+      renderCards();
+    }
+
+    // 状态变化后把界面控件同步回去
+    function syncControls() {
+      if (searchEl) searchEl.value = state.q;
+      renderChips(catRow, catItems(), "cat");
+      renderBrands();
+      renderChips(sceneRow, sceneItems(), "scene");
+      renderChips(budgetRow, BANDS.map(function (b) { return { id: b.id, label: b.label }; }), "budget");
+      var looksRow = document.getElementById("accLooks");
+      if (looksRow) renderChips(looksRow, [{ id: "all", label: "全部风格" }].concat(STYLES.map(function (st) { return { id: st.id, label: st.name }; })), "look");
+      var audienceRow = document.getElementById("accAudience");
+      if (audienceRow) renderChips(audienceRow, [{ id: "all", label: "全部人群" }].concat(Object.keys(audLabels).map(function (k) { return { id: k, label: audIcons[k] + " " + audLabels[k] }; })), "audience");
+      if (sortSel) sortSel.value = state.sort;
+    }
+
+    function catItems() {
+      return [{ id: "all", label: "全部品类" }].concat(D.categories.map(function (c) {
+        return { id: c.id, label: c.icon + " " + c.name + " " + c.items.length };
+      }));
+    }
+    function sceneItems() {
+      return [{ id: "all", label: "全部场景" }].concat(Object.keys(useLabels).map(function (k) {
+        return { id: k, label: useLabels[k] };
+      }));
+    }
+
+    function renderCards() {
+      var list = collect();
+      var toks = state.q ? tokens(state.q) : null;
+
       if (state.sort === "priceAsc") {
         list.sort(function (a, b) { return (a.item.price[0] + a.item.price[1]) - (b.item.price[0] + b.item.price[1]); });
       } else if (state.sort === "priceDesc") {
         list.sort(function (a, b) { return (b.item.price[0] + b.item.price[1]) - (a.item.price[0] + a.item.price[1]); });
       } else if (state.sort === "ratingDesc") {
         list.sort(function (a, b) { return b.item.rating - a.item.rating; });
+      } else if (state.sort === "gradeDesc") {
+        list.sort(function (a, b) { return (gradeOrder[b.item.valueGrade] || 0) - (gradeOrder[a.item.valueGrade] || 0); });
       }
 
-      countEl.textContent = "共 " + list.length + " 款（" + D.updated + " 行情）";
+      var allN = totalModels();
+      countEl.textContent = (list.length === allN)
+        ? "\u5171 " + allN + " \u6b3e\uff08" + D.updated + "\u884c\u60c5\uff09"
+        : "\u7b5b\u9009\u51fa " + list.length + " \u6b3e / \u5168\u7ad9 " + allN + " \u6b3e";
       if (searchHintEl) {
         searchHintEl.textContent = state.q
           ? (list.length
-              ? "「" + state.q + "」匹配到 " + list.length + " 款"
-              : "没有匹配「" + state.q + "」的型号。本页收录 10 类配件，内存 / 硬盘等见「搭配计划」")
+              ? "\u300c" + state.q + "\u300d\u547d\u4e2d " + list.length + " \u6b3e"
+              : "\u6ca1\u6709\u5339\u914d\u300c" + state.q + "\u300d\u7684\u578b\u53f7\uff0c\u6362\u4e2a\u5173\u952e\u8bcd\u8bd5\u8bd5")
           : "";
       }
 
+      renderActive();
+
       if (!list.length) {
-        wrap.innerHTML = '<div class="empty-box">没有匹配项，换个筛选条件试试。</div>';
+        wrap.innerHTML = '<div class="empty-box">\u6ca1\u6709\u5339\u914d\u9879\u3002\u53ef\u4ee5\u8bd5\u8bd5\u4e0b\u9762\u7684\u70ed\u95e8\u641c\u7d22\uff0c\u6216\u70b9\u4e0a\u65b9\u6e05\u7a7a\u6761\u4ef6\u91cd\u65b0\u7b5b\u9009\u3002</div>';
         return;
       }
 
-      wrap.innerHTML = list.map(function (o) {
-        var it = o.item;
-        var look = lookOf(it);
-        var style = look ? styleOf(look) : null;
-        var banner = style
-          ? '<div class="acc-look" style="background:linear-gradient(120deg,' + style.palette[0] + ',' + style.palette[1] + ');">' +
-              '<span class="acc-look-icon">' + style.icon + '</span>' +
-              '<span class="acc-look-name">' + esc(style.name) + '</span></div>'
-          : '';
-        var tags = (it.tags || []).map(function (t) {
-          return '<span class="tag-pill">' + t + "</span>";
+      if (state.sort === "default") {
+        var groups = [];
+        D.categories.forEach(function (cat) {
+          var sub = list.filter(function (o) { return o.cat.id === cat.id; });
+          if (sub.length) groups.push({ cat: cat, items: sub });
+        });
+        wrap.innerHTML = groups.map(function (g) {
+          return '<section class="acc-group"><div class="acc-group-head">' +
+            "<h3>" + g.cat.icon + " " + esc(g.cat.name) + "</h3>" +
+            '<span class="acc-group-count">' + g.items.length + " \u6b3e</span></div>" +
+            '<div class="acc-grid">' + g.items.map(function (o) { return cardHtml(o, toks); }).join("") + "</div></section>";
         }).join("");
-        var uses = (it.use || []).map(function (u) {
-          return '<span class="use-dot" title="' + useLabels[u] + '">' + useIcons[u] + "</span>";
-        }).join("");
-        var stars = "★★★★★".slice(0, it.rating) + "☆☆☆☆☆".slice(0, 5 - it.rating);
-        var grade = it.valueGrade ? '<span class="grade grade-' + it.valueGrade + '">' + it.valueGrade + "</span>" : "";
-        return (
-          '<article class="acc-card reveal in">' +
-            banner +
-            '<div class="acc-head">' +
-              '<div><span class="acc-cat">' + o.cat.icon + " " + esc(o.cat.name) + "</span>" +
-              "<h4 class=\"acc-name\">" + esc(it.name) + "</h4>" +
-              (it.brand && it.model ? '<span class="acc-model">' + esc(it.brand + " " + it.model) + "</span>" : "") +
-              "</div>" +
-              '<span class="acc-price">' + fmtPrice(it.price) + "</span>" +
-            "</div>" +
-            '<div class="acc-meta">' +
-              '<span class="acc-style">' + esc(it.style) + "</span>" +
-              '<span class="acc-rating" title="推荐度 ' + it.rating + "/5\">" + stars + "</span>" +
-              grade +
-              uses +
-            "</div>" +
-            (it.valueNote ? '<div class="acc-note">' + esc(it.valueNote) + "</div>" : "") +
-            '<div class="acc-specs">' + esc(it.specs) + "</div>" +
-            '<div class="acc-tags">' + tags + "</div>" +
-            '<div class="acc-compat">搭配：' + esc(it.compat) + "</div>" +
-            productImageLink(it) +
-          "</article>"
-        );
-      }).join("");
+      } else {
+        wrap.innerHTML = '<div class="acc-grid">' + list.map(function (o) { return cardHtml(o, toks); }).join("") + "</div>";
+      }
     }
 
-    renderChips(catRow,
-      [{ id: "all", label: "全部品类" }].concat(D.categories.map(function (c) {
-        return { id: c.id, label: c.icon + " " + c.name };
-      })),
-      "cat");
-    renderChips(sceneRow,
-      [{ id: "all", label: "全部场景" }].concat(Object.keys(useLabels).map(function (k) {
-        return { id: k, label: useLabels[k] };
-      })),
-      "scene");
-    renderChips(budgetRow,
-      [
-        { id: "all", label: "全部预算" },
-        { id: "cheap", label: "≤200 元" },
-        { id: "mid", label: "200-600 元" },
-        { id: "high", label: "600 元+" }
-      ],
-      "budget");
-
-    // 颜值风格筛选
-    var looksRow = document.getElementById("accLooks");
-    if (looksRow) {
-      renderChips(looksRow,
-        [{ id: "all", label: "全部风格" }].concat(STYLES.map(function (s) {
-          return { id: s.id, label: s.name };
-        })),
-        "look");
+    function totalModels() {
+      var n = 0;
+      D.categories.forEach(function (c) { n += c.items.length; });
+      return n;
     }
 
-    // 人群筛选
-    var audienceRow = document.getElementById("accAudience");
-    if (audienceRow) {
-      renderChips(audienceRow,
-        [{ id: "all", label: "全部人群" }].concat(Object.keys(audLabels).map(function (k) {
-          return { id: k, label: audIcons[k] + " " + audLabels[k] };
-        })),
-        "audience");
+    // 热门搜索：覆盖型号、品类、需求词三种典型查法
+    var HOT = ["5070", "\u4e3b\u677f", "\u767d\u8272 \u673a\u7bb1", "2K \u9ad8\u5237", "DDR5", "1TB", "\u65e0\u7ebf\u9f20\u6807", "\u98ce\u51b7", "16G \u663e\u5b58", "\u5c0f\u673a\u7bb1"];
+    if (hotEl) {
+      hotEl.innerHTML = '<span class="acc-hot-label">\u70ed\u95e8\u641c\u7d22</span>' +
+        HOT.map(function (t) { return '<button type="button" class="acc-hot-chip" data-q="' + esc(t) + '">' + esc(t) + "</button>"; }).join("");
+      hotEl.querySelectorAll(".acc-hot-chip").forEach(function (b) {
+        b.addEventListener("click", function () {
+          state.q = b.getAttribute("data-q");
+          if (searchEl) searchEl.value = state.q;
+          renderCards();
+        });
+      });
     }
 
-    // 排序
     var sortSel = document.getElementById("accSort");
     if (sortSel) {
       sortSel.value = state.sort;
-      sortSel.addEventListener("change", function () {
-        state.sort = sortSel.value;
-        renderCards();
-      });
+      sortSel.addEventListener("change", function () { state.sort = sortSel.value; renderCards(); });
     }
 
-    // 关键词搜索（实时过滤，与上方筛选条件叠加）
     if (searchEl) {
-      searchEl.addEventListener("input", function () {
-        state.q = searchEl.value.trim();
-        renderCards();
-      });
-      // ESC 清空
+      searchEl.addEventListener("input", function () { state.q = searchEl.value.trim(); renderCards(); });
       searchEl.addEventListener("keydown", function (e) {
         if (e.key === "Escape") { searchEl.value = ""; state.q = ""; renderCards(); }
       });
     }
+    if (clearBtn) clearBtn.addEventListener("click", clearAll);
 
+    syncControls();
     renderCards();
   }
 
