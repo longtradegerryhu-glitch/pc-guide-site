@@ -13,8 +13,7 @@
   var audLabels = { student: "学生党", office: "办公族", gamer: "游戏党", creator: "创作者", mobile: "移动办公" };
   var audIcons = { student: "🎓", office: "💼", gamer: "🎮", creator: "🎬", mobile: "💻" };
   var gradeOrder = { S: 4, A: 3, B: 1, C: -1 };
-  // 档位 → 真实预算中值。2026-09 行情上行后，plans.price 实际区间已整体上移，
-  // 档位标识必须同步重标定，否则「选高档」会匹配到低一档甚至两档的方案。
+  // 档位 → 真实预算中值（与 plans.price 区间对齐）
   var budgetOrder = { b3000: 4800, b4500: 7500, b6000: 11000, b8500: 16000, b12000: 24000, b20000: 37000 };
 
   /* ---- 颜值风格（Aesthetics） ---- */
@@ -48,7 +47,7 @@
   }
 
   // 站内「查实时价」小卡片：直接跳京东搜索页。
-  // 京东联盟 API 因 ICP 备案要求暂未启用（workers.dev 无备案）；此处改为官方搜索跳转，体验稳定。
+  // 京东联盟 API 未启用（需 ICP 备案），改为官方搜索跳转
   function jdLiveCard(q) {
     var url = 'https://search.jd.com/Search?keyword=' + encodeURIComponent(q);
     return '<div class="jd-live jd-live-static">' +
@@ -72,7 +71,7 @@
     });
   }
 
-  /* ---- 方案配置单 → 配件目标价位（快速推荐与深度测评共用） ---- */
+  /* ---- 方案配置单 → 配件目标价位 ---- */
   /* 部件名 → 配件库类别 id，用于反读「这套方案的同类部件是什么档次」 */
   var PART_CAT = {
     "CPU": "cpu", "显卡": "gpu", "散热": "cooler", "显示器": "monitor",
@@ -813,7 +812,7 @@
         ps.forEach(function (t) { L.push("· " + t); });
       }
       L.push("");
-      // 月份从 D.updated 动态取（形如 "2026-09（核验 2026-09-13）"），避免下次行情核验时漏改
+      // 月份取 D.updated，行情核验时无需改这里
       var updatedTag = String(D.updated || "").split("（")[0] || "最新";
       L.push("价格区间为 " + updatedTag + " 核验参考行情，购机请以电商实时价为准。");
       L.push("本方案由规则生成，请自行复核接口兼容性。");
@@ -847,7 +846,7 @@
     function pickItems(catId, use, pref, budgetCap, plan, intensity, look) {
       var cat = D.categories.filter(function (c) { return c.id === catId; })[0];
       if (!cat) return null;
-      // 目标价位优先取方案配置单里的同类部件价位（与快速推荐同口径），保证配件档次跟得上整机
+      // 目标价位取方案配置单同类部件价位
       var targets = planPartTargets(plan);
       var allowance = targets[catId] || budgetCap * 0.2;
       if (catId === "cooler" && use.indexOf("portable") === -1) allowance = Math.max(allowance, 150);
@@ -928,7 +927,7 @@
     if (!input || !chips || !useRow || !result) return;
 
     var state = { budget: 6000, use: "all", plan: null, rows: [], total: 0 };
-    // 预设档与 plans.price 实际区间对齐（原最高 20000 触不到 ¥32000+ 的旗舰档）
+    // 预设档与 plans.price 区间对齐
     var presets = [5000, 8000, 12000, 17000, 25000, 37000];
 
     function renderChips() {
@@ -1275,7 +1274,7 @@
     if (!wrap || !qBudget || !qUse || !qForm || !btn) return;
 
     var state = { budget: null, use: null, form: null, look: null, intensity: "mid", monitor: "need" };
-    // 档位 label 与 budget 值须与 plans.price 的实际区间对齐（2026-09 行情上行后重标定）
+    // 档位 label 与 budget 值与 plans.price 区间对齐
     var budgetOpts = [
       { id: "3000", label: "5500 元以内", budget: 4800 },
       { id: "4500", label: "5500-8500 元", budget: 7500 },
@@ -1352,8 +1351,7 @@
     function mid(p) { return (p[0] + p[1]) / 2; }
 
     function matchPlan() {
-      // state.budget 是档位 id，须换算成真实预算再比价：直接 parseInt 会拿到档位标识
-      // （如 20000），而旗舰档实际价已到 ¥32000-42000，永远够不到门槛。
+      // state.budget 是档位 id，先换算成真实预算
       var opt = budgetOpts.filter(function (o) { return o.id === state.budget; })[0];
       var b = (opt && opt.budget) || 11000;
       var pool = D.plans.filter(function (pl) {
@@ -1372,7 +1370,7 @@
           budget: b
         };
       }
-      // 预算够不到任何候选方案（如 4800 元想打游戏）→ 取最接近的，并标记让 UI 提示
+      // 预算够不到候选方案时取最接近的，标记让 UI 提示
       return {
         plan: pool.reduce(function (best, pl) {
           return Math.abs(mid(pl.price) - b) < Math.abs(mid(best.price) - b) ? pl : best;
@@ -1391,13 +1389,12 @@
       return parts.length ? "推荐理由：" + parts.join("、") : "";
     }
 
-    /* 配置单某类部件的型号行文本（如 "RTX 5060 Ti 16G / RX 9060 XT 16G"） */
+    /* 配置单某类部件的型号行文本 */
     function planRowOf(plan, names) {
       var rows = (plan.parts || []).filter(function (r) { return names.indexOf(r[0]) !== -1; });
       return rows.length ? String(rows[0][1] || "") : "";
     }
-    /* 库内型号与配置单行文本双向匹配：锚定「配置单同款」，避免推荐与配置单各说各话。
-       比较时先压掉所有空白：「雷蛇毒蝰V3极速版」（配置单）与「毒蝰 V3 极速版」（库）才匹配得上 */
+    /* 库内型号与配置单行文本双向匹配（压掉空白后比较），命中即「配置单同款」 */
     function matchAnchors(items, rowText) {
       if (!rowText) return [];
       var sq = function (s) { return String(s).replace(/\s+/g, ""); };
@@ -1412,7 +1409,7 @@
         });
       });
     }
-    /* 从候选中挑 top1 + 2 个备选：配置单同款置顶，其余按「离目标价位近 + 等级高」排序 */
+    /* 挑 top1 + 2 备选：配置单同款置顶，其余按价位距离+等级排序 */
     function pickOne(items, target, rowText) {
       if (!items.length) return null;
       var win = items.filter(function (it) {
@@ -1458,12 +1455,12 @@
         input: ["键鼠"], audio: ["音频", "耳机/音箱"], psu: ["电源"]
       };
       cats.forEach(function (cid) {
-        // 核显机（配置单无显卡行）不推独显，避免引导用户超预算加装
+        // 核显机不推独显
         if (cid === "gpu" && !hasGpu) return;
         var cat = null;
         D.categories.forEach(function (c) { if (c.id === cid) cat = c; });
         if (!cat || !cat.items.length) return;
-        // 用途严格匹配：游戏外设不再借 portable 标签漏进办公场景
+        // 用途严格匹配
         var items = cat.items.filter(function (it) {
           if (!use) return true;
           return it.use.indexOf(use) !== -1;
@@ -1471,8 +1468,7 @@
         if (!items.length) items = cat.items.slice();
         var rowText = planRowOf(plan, partNames[cid]);
 
-        // 键鼠成对推荐：配置单写「键盘 + 鼠标」组合价，拆成键盘、鼠标两张卡，
-        // 避免只推一把键盘让用户以为是一套
+        // 键鼠拆成键盘、鼠标两张卡，组合目标价 55/45 拆分
         if (cid === "input") {
           var combo = targets.input ? targets.input / (PART_SPLIT["键鼠"] || 1) : base * 0.05;
           combo = Math.min(combo, cap);
@@ -1486,16 +1482,15 @@
           return;
         }
         if (cid === "psu") {
-          // 电源与机箱同属 psu 类别；推荐「电源」位时必须排除机箱
+          // psu 类别含机箱，电源位须先排除
           var onlyPsu = items.filter(function (it) { return (it.style || "").indexOf("电源") !== -1; });
           if (onlyPsu.length) items = onlyPsu;
-          // SFX 是 ITX 小机箱专用规格，现有方案全是 ATX/MATX，推了就是误导
+          // SFX 仅 ITX 用，现有方案不需要
           var noSfx = items.filter(function (it) { return (it.specs || "").indexOf("SFX") === -1; });
           if (noSfx.length) items = noSfx;
         }
         if (cid === "audio") {
-          // 音频与整机预算弱相关（3 万的机器配 500 元游戏耳机很正常）：
-          // 不走价位窗口，按场景过滤后直接取等级最高者
+          // 音频不走价位窗口，按场景过滤取等级最高者
           var ranked = items.slice().sort(function (a, b) {
             var d = (gradeOrder[b.valueGrade] || 0) - (gradeOrder[a.valueGrade] || 0);
             return d !== 0 ? d : b.rating - a.rating;
@@ -1503,7 +1498,7 @@
           if (ranked[0]) out.push({ cat: cat, pick: { item: ranked[0], anchor: false, alts: ranked.slice(1, 3) } });
           return;
         }
-        // 目标价位：优先取方案配置单里同类部件的价位；配置单未列的类别按整机中值 3% 兜底
+        // 目标价位取配置单同类部件价位，未列的按整机中值 3% 兜底
         var target = Math.min(targets[cid] || base * 0.03, cap);
         var p = pickOne(items, target, rowText);
         if (p) out.push({ cat: cat, pick: p });
@@ -1529,6 +1524,28 @@
       var warnHtml = m.fit === "nearest"
         ? '<div class="smart-budget-warn reveal in">你的预算（约 ¥' + m.budget + "）与「" + esc(plan.name) + "」的典型整机价 " + fmtPrice(plan.price) + " 有差距，已为你匹配最接近的方案；想压预算可到「搭配计划」逐件调整配置。</div>"
         : "";
+      /* 全套配置单：plan.parts 全行列表 + 合计价区间，这是结果页的主角 */
+      var totalLo = 0, totalHi = 0;
+      var specRows = (plan.parts || []).map(function (r) {
+        var nums = String(r[2] || "").match(/\d+/g);
+        if (nums) {
+          totalLo += parseInt(nums[0], 10);
+          totalHi += nums.length > 1 ? parseInt(nums[1], 10) : parseInt(nums[0], 10);
+        }
+        return '<tr><td class="spec-part">' + esc(r[0]) + "</td><td>" + esc(r[1]) + "</td>" +
+               '<td class="spec-price">' + esc(r[2]) + "</td></tr>";
+      }).join("");
+      var specHtml =
+        '<div class="smart-spec reveal in">' +
+          '<h3 class="smart-spec-title">全套配置单（' + (plan.parts || []).length + ' 个部件）</h3>' +
+          '<div class="smart-spec-scroll"><table class="smart-spec-table">' +
+          "<thead><tr><th>部件</th><th>配置</th><th>参考价</th></tr></thead><tbody>" +
+          specRows +
+          '<tr class="spec-total"><td>合计</td><td>按各部件区间累加，不含优惠</td>' +
+          '<td class="spec-price">¥' + totalLo.toLocaleString() + " - ¥" + totalHi.toLocaleString() + "</td></tr>" +
+          "</tbody></table></div>" +
+          '<p class="smart-spec-tip">合计按各行参考价累加，所以比上面卡片的方案预算略宽：每行都挑高配就超、都挑低配就省。照单买法：把每行配置复制到京东/淘宝搜索比价下单；不会装机可以约京东上门装机（约 100-200 元），或到「使用指南」照步骤自己装。</p>' +
+        "</div>";
       var planHtml =
         '<div class="smart-plan reveal in">' +
           '<div class="budget-head">' +
@@ -1537,9 +1554,8 @@
             '<span class="plan-budget">参考预算 ' + fmtPrice(plan.price) + " ｜ 适合人群 " + personas + "</span></div>" +
           "</div>" +
           '<p class="smart-summary">' + esc(plan.summary) + "</p>" +
-          '<a class="btn-primary smart-plan-link" href="plans.html">查看完整配置单 ›</a>' +
         "</div>";
-      /* 单张配件卡渲染：cur = { item, anchor, alts }，备选点击后换主项重渲 */
+      /* 单张配件卡：cur = { item, anchor, alts } */
       function cardHtml(o, cur) {
         var it = cur.item;
         var grade = it.valueGrade ? '<span class="grade grade-' + it.valueGrade + '">' + it.valueGrade + "</span>" : "";
@@ -1582,12 +1598,14 @@
       }
       wrap.innerHTML =
         warnHtml +
-        '<div class="smart-res-head reveal in">为你匹配的方案与核心配件</div>' +
+        '<div class="smart-res-head reveal in">你的推荐配置单</div>' +
         planHtml +
+        specHtml +
+        '<h3 class="smart-sub-title reveal in">想换件？各类推荐与备选</h3>' +
         '<div class="acc-grid smart-grid">' +
         picks.map(function (o, i) { return '<div id="smartSlot-' + i + '"></div>'; }).join("") +
         "</div>" +
-        '<p class="smart-note">' + esc(D.note) + "。配件优先推荐配置单同款（带标记），其余按「与该套配置单同档次、评分最高」挑选，每类附备选可点击替换；选「已有显示器」则不再推荐显示器。</p>";
+        '<p class="smart-note">' + esc(D.note) + "。带「配置单同款」标记的就是上表里的型号，其余为同档次备选，点备选可直接换。</p>";
       picks.forEach(function (o, i) { renderSlot(i, o.pick); });
       wrap.scrollIntoView({ behavior: "smooth", block: "start" });
     });
