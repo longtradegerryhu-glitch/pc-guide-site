@@ -1364,13 +1364,22 @@
       if (!pool.length) pool = D.plans.filter(function (pl) { return pl.id !== "mobile"; });
       var hit = pool.filter(function (pl) { return b >= pl.price[0] * 0.85 && b <= pl.price[1] * 1.15; });
       if (hit.length) {
-        return hit.reduce(function (best, pl) {
-          return Math.abs(mid(pl.price) - b) < Math.abs(mid(best.price) - b) ? pl : best;
-        });
+        return {
+          plan: hit.reduce(function (best, pl) {
+            return Math.abs(mid(pl.price) - b) < Math.abs(mid(best.price) - b) ? pl : best;
+          }),
+          fit: "exact",
+          budget: b
+        };
       }
-      return pool.reduce(function (best, pl) {
-        return Math.abs(mid(pl.price) - b) < Math.abs(mid(best.price) - b) ? pl : best;
-      });
+      // 预算够不到任何候选方案（如 4800 元想打游戏）→ 取最接近的，并标记让 UI 提示
+      return {
+        plan: pool.reduce(function (best, pl) {
+          return Math.abs(mid(pl.price) - b) < Math.abs(mid(best.price) - b) ? pl : best;
+        }),
+        fit: "nearest",
+        budget: b
+      };
     }
 
     // 推荐理由：基于用途与强度
@@ -1380,6 +1389,56 @@
       if (intensity === "heavy" && (item.valueGrade === "S" || item.valueGrade === "A")) parts.push("高强度下性价比高");
       if (intensity === "light" && (item.valueGrade === "S" || item.valueGrade === "A")) parts.push("预算内最优解");
       return parts.length ? "推荐理由：" + parts.join("、") : "";
+    }
+
+    /* 配置单某类部件的型号行文本（如 "RTX 5060 Ti 16G / RX 9060 XT 16G"） */
+    function planRowOf(plan, names) {
+      var rows = (plan.parts || []).filter(function (r) { return names.indexOf(r[0]) !== -1; });
+      return rows.length ? String(rows[0][1] || "") : "";
+    }
+    /* 库内型号与配置单行文本双向匹配：锚定「配置单同款」，避免推荐与配置单各说各话。
+       比较时先压掉所有空白：「雷蛇毒蝰V3极速版」（配置单）与「毒蝰 V3 极速版」（库）才匹配得上 */
+    function matchAnchors(items, rowText) {
+      if (!rowText) return [];
+      var sq = function (s) { return String(s).replace(/\s+/g, ""); };
+      var rowSq = sq(rowText);
+      var segs = rowText.split(/[\/+＋、（(]/).map(function (s) { return sq(s); })
+        .filter(function (s) { return s.length >= 4; });
+      return items.filter(function (it) {
+        var mSq = sq(it.model);
+        if (mSq.length >= 2 && rowSq.indexOf(mSq) !== -1) return true;
+        return segs.some(function (seg) {
+          return mSq.indexOf(seg) !== -1 || (mSq.length >= 3 && seg.indexOf(mSq) !== -1);
+        });
+      });
+    }
+    /* 从候选中挑 top1 + 2 个备选：配置单同款置顶，其余按「离目标价位近 + 等级高」排序 */
+    function pickOne(items, target, rowText) {
+      if (!items.length) return null;
+      var win = items.filter(function (it) {
+        var m = mid(it.price);
+        return m >= target * 0.6 && m <= target * 1.5;
+      });
+      var pool = win.length ? win : items;
+      var ranked = pool.slice().sort(function (a, b) {
+        var da = Math.abs(mid(a.price) - target), db = Math.abs(mid(b.price) - target);
+        if (da !== db) return da - db;
+        var d = (gradeOrder[b.valueGrade] || 0) - (gradeOrder[a.valueGrade] || 0);
+        return d !== 0 ? d : b.rating - a.rating;
+      });
+      var anchors = matchAnchors(items, rowText);
+      var top = null, isAnchor = false;
+      if (anchors.length) {
+        top = anchors.slice().sort(function (a, b) {
+          return Math.abs(mid(a.price) - target) - Math.abs(mid(b.price) - target);
+        })[0];
+        isAnchor = true;
+      } else {
+        top = ranked[0] || null;
+      }
+      if (!top) return null;
+      var alts = ranked.filter(function (it) { return it.id !== top.id; }).slice(0, 2);
+      return { item: top, anchor: isAnchor, alts: alts };
     }
 
     function recommendItems(plan, use, intensity, needMonitor) {
@@ -1394,46 +1453,60 @@
       var base = mid(plan.price);
       var targets = planPartTargets(plan);
       var hasGpu = !!(plan.parts || []).filter(function (r) { return r[0] === "显卡"; }).length;
+      var partNames = {
+        cpu: ["CPU"], gpu: ["显卡"], cooler: ["散热"], monitor: ["显示器"],
+        input: ["键鼠"], audio: ["音频", "耳机/音箱"], psu: ["电源"]
+      };
       cats.forEach(function (cid) {
         // 核显机（配置单无显卡行）不推独显，避免引导用户超预算加装
         if (cid === "gpu" && !hasGpu) return;
         var cat = null;
         D.categories.forEach(function (c) { if (c.id === cid) cat = c; });
         if (!cat || !cat.items.length) return;
+        // 用途严格匹配：游戏外设不再借 portable 标签漏进办公场景
         var items = cat.items.filter(function (it) {
           if (!use) return true;
-          return it.use.indexOf(use) !== -1 || it.use.indexOf("portable") !== -1;
+          return it.use.indexOf(use) !== -1;
         });
         if (!items.length) items = cat.items.slice();
-        // 电源与机箱同属 psu 类别；推荐「电源」位时必须排除机箱，否则可能把机箱当电源推
+        var rowText = planRowOf(plan, partNames[cid]);
+
+        // 键鼠成对推荐：配置单写「键盘 + 鼠标」组合价，拆成键盘、鼠标两张卡，
+        // 避免只推一把键盘让用户以为是一套
+        if (cid === "input") {
+          var combo = targets.input ? targets.input / (PART_SPLIT["键鼠"] || 1) : base * 0.05;
+          combo = Math.min(combo, cap);
+          var segs = rowText.split(/[+＋]/);
+          var kbItems = items.filter(function (it) { return (it.style || "").indexOf("键盘") !== -1; });
+          var msItems = items.filter(function (it) { return (it.style || "").indexOf("鼠标") !== -1; });
+          var kbPick = pickOne(kbItems.length ? kbItems : items, combo * 0.55, segs[0] || "");
+          var msPick = pickOne(msItems.length ? msItems : items, combo * 0.45, segs[1] || "");
+          if (kbPick) out.push({ cat: cat, label: "键盘", pick: kbPick });
+          if (msPick) out.push({ cat: cat, label: "鼠标", pick: msPick });
+          return;
+        }
         if (cid === "psu") {
+          // 电源与机箱同属 psu 类别；推荐「电源」位时必须排除机箱
           var onlyPsu = items.filter(function (it) { return (it.style || "").indexOf("电源") !== -1; });
           if (onlyPsu.length) items = onlyPsu;
+          // SFX 是 ITX 小机箱专用规格，现有方案全是 ATX/MATX，推了就是误导
+          var noSfx = items.filter(function (it) { return (it.specs || "").indexOf("SFX") === -1; });
+          if (noSfx.length) items = noSfx;
+        }
+        if (cid === "audio") {
+          // 音频与整机预算弱相关（3 万的机器配 500 元游戏耳机很正常）：
+          // 不走价位窗口，按场景过滤后直接取等级最高者
+          var ranked = items.slice().sort(function (a, b) {
+            var d = (gradeOrder[b.valueGrade] || 0) - (gradeOrder[a.valueGrade] || 0);
+            return d !== 0 ? d : b.rating - a.rating;
+          });
+          if (ranked[0]) out.push({ cat: cat, pick: { item: ranked[0], anchor: false, alts: ranked.slice(1, 3) } });
+          return;
         }
         // 目标价位：优先取方案配置单里同类部件的价位；配置单未列的类别按整机中值 3% 兜底
         var target = Math.min(targets[cid] || base * 0.03, cap);
-        // 只在目标价位附近一个窗口里挑：窗口跟随整机档次上移，
-        // 否则「性价比等级」会把高预算一路拉回中端件（S 级通常正是甜点价位）。
-        var win = items.filter(function (it) {
-          var m = mid(it.price);
-          return m >= target * 0.6 && m <= target * 1.5;
-        });
-        if (!win.length) {
-          // 窗口内无货（型号库该价位段缺失）→ 退化为最接近目标价位的 3 款
-          win = items.slice().sort(function (a, b) {
-            return Math.abs(mid(a.price) - target) - Math.abs(mid(b.price) - target);
-          }).slice(0, 3);
-        }
-        // 窗口内按「离配置单目标价位的距离」优先，等级只在价差相同时作加分：
-        // 否则 S 级甜点件（通常恰是中端价位）会一路压过方案本该配的高端件。
-        win.sort(function (a, b) {
-          var da = Math.abs(mid(a.price) - target), db = Math.abs(mid(b.price) - target);
-          if (da !== db) return da - db;
-          var d = (gradeOrder[b.valueGrade] || 0) - (gradeOrder[a.valueGrade] || 0);
-          return d !== 0 ? d : b.rating - a.rating;
-        });
-        var pick = win[0];
-        if (pick) out.push({ cat: cat, item: pick, why: pickWhy(pick, use, intensity) });
+        var p = pickOne(items, target, rowText);
+        if (p) out.push({ cat: cat, pick: p });
       });
       return out;
     }
@@ -1443,7 +1516,8 @@
         wrap.innerHTML = '<div class="empty-box">请先选择「预算」和「用途」，再点击生成推荐。</div>';
         return;
       }
-      var plan = matchPlan();
+      var m = matchPlan();
+      var plan = m.plan;
       var use = state.use === "portable" ? null : state.use;
       var intensity = state.intensity || "mid";
       var needMonitor = state.monitor !== "have";
@@ -1452,6 +1526,9 @@
         var p = D.personas.filter(function (x) { return x.id === pid; })[0];
         return p ? '<span class="tag-pill">' + p.icon + " " + p.name + "</span>" : "";
       }).join("");
+      var warnHtml = m.fit === "nearest"
+        ? '<div class="smart-budget-warn reveal in">你的预算（约 ¥' + m.budget + "）与「" + esc(plan.name) + "」的典型整机价 " + fmtPrice(plan.price) + " 有差距，已为你匹配最接近的方案；想压预算可到「搭配计划」逐件调整配置。</div>"
+        : "";
       var planHtml =
         '<div class="smart-plan reveal in">' +
           '<div class="budget-head">' +
@@ -1462,28 +1539,56 @@
           '<p class="smart-summary">' + esc(plan.summary) + "</p>" +
           '<a class="btn-primary smart-plan-link" href="plans.html">查看完整配置单 ›</a>' +
         "</div>";
-      var itemsHtml = picks.map(function (o) {
-        var it = o.item;
+      /* 单张配件卡渲染：cur = { item, anchor, alts }，备选点击后换主项重渲 */
+      function cardHtml(o, cur) {
+        var it = cur.item;
         var grade = it.valueGrade ? '<span class="grade grade-' + it.valueGrade + '">' + it.valueGrade + "</span>" : "";
+        var anchorBadge = cur.anchor ? '<span class="anchor-badge">配置单同款</span>' : "";
+        var altsHtml = (cur.alts && cur.alts.length)
+          ? '<div class="smart-alts">备选：' + cur.alts.map(function (a, ai) {
+              return '<button type="button" class="smart-alt-chip" data-alt="' + ai + '">' + esc(a.model) + "</button>";
+            }).join("") + "</div>"
+          : "";
+        var why = pickWhy(it, use, intensity);
         return (
           '<article class="acc-card reveal in">' +
-            '<div class="acc-head"><div><span class="acc-cat">' + o.cat.icon + " " + esc(o.cat.name) + "</span>" +
+            '<div class="acc-head"><div><span class="acc-cat">' + o.cat.icon + " " + esc(o.label || o.cat.name) + anchorBadge + "</span>" +
             '<h4 class="acc-name">' + esc(it.name) + "</h4>" +
             (it.brand && it.model ? '<span class="acc-model">' + esc(it.brand + " " + it.model) + "</span>" : "") + "</div>" +
             '<span class="acc-price">' + fmtPrice(it.price) + "</span></div>" +
             '<div class="acc-meta"><span class="acc-style">' + esc(it.style) + "</span>" +
             '<span class="acc-rating">' + "★★★★★".slice(0, it.rating) + "</span>" + grade + "</div>" +
-            (o.why ? '<div class="smart-why">' + esc(o.why) + "</div>" : "") +
+            (why ? '<div class="smart-why">' + esc(why) + "</div>" : "") +
             (it.valueNote ? '<div class="acc-note">' + esc(it.valueNote) + "</div>" : "") +
             productImageLink(it) +
+            altsHtml +
           "</article>"
         );
-      }).join("");
+      }
+      function renderSlot(i, cur) {
+        var el = document.getElementById("smartSlot-" + i);
+        if (!el) return;
+        var o = picks[i];
+        el.innerHTML = cardHtml(o, cur);
+        el.querySelectorAll(".smart-alt-chip").forEach(function (chip) {
+          chip.addEventListener("click", function () {
+            var ai = parseInt(chip.getAttribute("data-alt"), 10);
+            var chosen = cur.alts[ai];
+            var newAlts = cur.alts.slice();
+            newAlts.splice(ai, 1, cur.item);
+            renderSlot(i, { item: chosen, anchor: false, alts: newAlts });
+          });
+        });
+      }
       wrap.innerHTML =
+        warnHtml +
         '<div class="smart-res-head reveal in">为你匹配的方案与核心配件</div>' +
         planHtml +
-        '<div class="acc-grid smart-grid">' + itemsHtml + "</div>" +
-        '<p class="smart-note">' + esc(D.note) + "。配件按「与该套配置单同档次、且在预算内评分最高」挑选；选「已有显示器」则不再推荐显示器。</p>";
+        '<div class="acc-grid smart-grid">' +
+        picks.map(function (o, i) { return '<div id="smartSlot-' + i + '"></div>'; }).join("") +
+        "</div>" +
+        '<p class="smart-note">' + esc(D.note) + "。配件优先推荐配置单同款（带标记），其余按「与该套配置单同档次、评分最高」挑选，每类附备选可点击替换；选「已有显示器」则不再推荐显示器。</p>";
+      picks.forEach(function (o, i) { renderSlot(i, o.pick); });
       wrap.scrollIntoView({ behavior: "smooth", block: "start" });
     });
   }

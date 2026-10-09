@@ -8,3 +8,4 @@ wrangler.toml
 .assetsignore
 wr-*.md
 cloudflare-deploy-guide.md
+edgeone.json

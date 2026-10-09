@@ -1,0 +1,16 @@
+{
+  "headers": [
+    {
+      "source": "/js/*",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=14400" }]
+    },
+    {
+      "source": "/css/*",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=14400" }]
+    },
+    {
+      "source": "/assets/*",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=86400" }]
+    }
+  ]
+}
