@@ -100,6 +100,93 @@
     return t;
   }
 
+  /* 全套配置单表格：结果页主角，快速推荐与深度测评共用。
+     返回 { html, parts, total }，total 为按行累加的价区间。 */
+  function specTableHtml(plan) {
+    if (!plan) return { html: "", parts: 0, total: [0, 0] };
+    var lo = 0, hi = 0;
+    var rows = (plan.parts || []).map(function (r) {
+      var nums = String(r[2] || "").match(/\d+/g);
+      if (nums) {
+        lo += parseInt(nums[0], 10);
+        hi += nums.length > 1 ? parseInt(nums[1], 10) : parseInt(nums[0], 10);
+      }
+      return '<tr><td class="spec-part">' + esc(r[0]) + "</td><td>" + esc(r[1]) + "</td>" +
+             '<td class="spec-price">' + esc(r[2]) + "</td></tr>";
+    }).join("");
+    var html =
+      '<div class="smart-spec reveal in">' +
+        '<h3 class="smart-spec-title">全套配置单（' + (plan.parts || []).length + ' 个部件）</h3>' +
+        '<div class="smart-spec-scroll"><table class="smart-spec-table">' +
+        "<thead><tr><th>部件</th><th>配置</th><th>参考价</th></tr></thead><tbody>" +
+        rows +
+        '<tr class="spec-total"><td>合计</td><td>按各部件区间累加，不含优惠</td>' +
+        '<td class="spec-price">¥' + lo.toLocaleString() + " - ¥" + hi.toLocaleString() + "</td></tr>" +
+        "</tbody></table></div>" +
+        '<p class="smart-spec-tip">合计按各行参考价累加，所以比方案卡片预算略宽：每行都挑高配就超、都挑低配就省。照单买法：把每行配置复制到京东/淘宝搜索比价下单；不会装机可以约京东上门装机（约 100-200 元），或到「使用指南」照步骤自己装。</p>' +
+      "</div>";
+    return { html: html, parts: (plan.parts || []).length, total: [lo, hi] };
+  }
+
+  /* 方案简述卡：名称 + 档位 + 参考预算 + 适合人群 + 一句话说明 */
+  function planBriefHtml(plan) {
+    var personas = (plan.personas || []).map(function (pid) {
+      var p = D.personas.filter(function (x) { return x.id === pid; })[0];
+      return p ? '<span class="tag-pill">' + p.icon + " " + p.name + "</span>" : "";
+    }).join("");
+    return (
+      '<div class="smart-plan reveal in">' +
+        '<div class="budget-head">' +
+          '<span class="plan-icon">' + plan.icon + "</span>" +
+          '<div><h3 class="plan-name">' + esc(plan.name) + '<span class="plan-tier">' + esc(plan.budgetLabel) + "</span></h3>" +
+          '<span class="plan-budget">参考预算 ' + fmtPrice(plan.price) + " ｜ 适合人群 " + personas + "</span></div>" +
+        "</div>" +
+        '<p class="smart-summary">' + esc(plan.summary) + "</p>" +
+      "</div>"
+    );
+  }
+
+  /* 相邻档位三套对比：主方案前后各取一档；笔记本方案保持单套 */
+  function planSiblingSets(plan, pool) {
+    if (!plan) return [];
+    var isMobile = plan.id === "mobile";
+    var list = (pool || []).filter(function (pl) {
+      return isMobile ? pl.id === "mobile" : pl.id !== "mobile";
+    });
+    if (!list.length) list = [plan];
+    list = list.slice().sort(function (a, b) {
+      return (a.price[0] + a.price[1]) - (b.price[0] + b.price[1]);
+    });
+    var idx = -1;
+    list.forEach(function (pl, i) { if (pl.id === plan.id) idx = i; });
+    if (idx === -1) return [{ plan: plan, tag: "为你匹配", main: true }];
+    var sets = [];
+    if (idx > 0) sets.push({ plan: list[idx - 1], tag: "省预算" });
+    sets.push({ plan: list[idx], tag: "为你匹配", main: true });
+    if (idx < list.length - 1) sets.push({ plan: list[idx + 1], tag: "加预算" });
+    return sets;
+  }
+
+  /* 多套方案切换标签：单套时不渲染 */
+  function planSetTabsHtml(sets, mainIdx) {
+    if (!sets || sets.length <= 1) return "";
+    return '<div class="filter-chips smart-set-tabs">' + sets.map(function (s, i) {
+      return '<button type="button" class="chip' + (i === mainIdx ? " active" : "") + '" data-set="' + i + '">' +
+        s.tag + "｜" + esc(s.plan.name) + " " + fmtPrice(s.plan.price) + "</button>";
+    }).join("") + "</div>";
+  }
+
+  function bindPlanSetTabs(root, render) {
+    if (!root) return;
+    root.querySelectorAll(".smart-set-tabs .chip").forEach(function (chip) {
+      chip.addEventListener("click", function () {
+        root.querySelectorAll(".smart-set-tabs .chip").forEach(function (x) { x.classList.remove("active"); });
+        chip.classList.add("active");
+        render(parseInt(chip.getAttribute("data-set"), 10));
+      });
+    });
+  }
+
   function fmtPrice(p) {
     if (!p) return "随行情";
     if (p[0] === 0 && p[1] === 0) return "随主板";
@@ -651,19 +738,37 @@
       // 1) 基础整机方案（年限/强度参与匹配）
       var plan = pickPlan(use, form, budgetCap, lifespan, intensity);
 
-      // 2) 个性化配件推荐（强度/已有外设参与评分）
-      var picks = focus.map(function (catId) {
-        return pickItems(catId, use, pref, budgetCap, plan, intensity, look);
-      }).filter(Boolean);
-
-      var totalLow = plan ? plan.price[0] : 0;
-      var totalHigh = plan ? plan.price[1] : 0;
-      picks.forEach(function (p) {
-        totalLow += p.item.price[0];
-        totalHigh += p.item.price[1];
+      // 2) 候选池取相邻档位，结果页给 2-3 套对比（与快速推荐同口径）
+      //    用途不匹配的方案不入池：游戏用户不该看到只标了办公的核显机
+      var pool = D.plans.filter(function (pl) {
+        if (form === "laptop") return pl.form.indexOf("laptop") > -1 || pl.form.indexOf("both") > -1;
+        if (form === "desktop" && pl.form.indexOf("desktop") === -1) return false;
+        return pl.uses.some(function (u) { return use.indexOf(u) > -1; });
       });
+      if (!pool.length) {
+        pool = D.plans.filter(function (pl) {
+          return form === "laptop" ? pl.id === "mobile" : pl.id !== "mobile";
+        });
+      }
+      var sets = planSiblingSets(plan, pool);
+      var mainSetIdx = 0;
+      sets.forEach(function (s, i) { if (s.main) mainSetIdx = i; });
 
-      // 3) 人群画像
+      // 3) 配件推荐跟着当前展示的整机方案走，避免整机与配件档次脱节
+      function picksOf(p) {
+        return p ? focus.map(function (catId) {
+          return pickItems(catId, use, pref, budgetCap, p, intensity, look);
+        }).filter(Boolean) : [];
+      }
+      function totalsOf(p, pk) {
+        var lo = p ? p.price[0] : 0, hi = p ? p.price[1] : 0;
+        (pk || []).forEach(function (x) { lo += x.item.price[0]; hi += x.item.price[1]; });
+        return [lo, hi];
+      }
+      var curPlan = plan;
+      var curPicks = picksOf(plan);
+
+      // 4) 人群画像      // 3) 人群画像
       var personaIds = use.map(function (u) {
         if (u === "office") return "office";
         if (u === "game") return "gamer";
@@ -692,25 +797,22 @@
         profile += '<span class="tag-pill">' + esc(styleOf(look).name) + "</span>";
       }
 
-      var picksHtml = picks.map(function (p) {
-        var item = p.item;
-        var cat = p.cat;
-        return (
-          '<div class="pick-item">' +
-            '<span class="pick-icon">' + cat.icon + "</span>" +
-            '<div class="pick-main"><span class="pick-name">' + esc(item.name) + "</span>" +
-            '<span class="pick-why">' + esc(p.why) + "</span>" +
-            productImageLink(item) +
-            "</div>" +
-            '<span class="pick-price">' + fmtPrice(item.price) + "</span>" +
-          "</div>"
-        );
-      }).join("");
-
-      var planHtml = plan
-        ? '<div class="res-plan">' + plan.icon + " <b>" + esc(plan.name) + "</b>：" + esc(plan.summary) +
-          ' <span class="res-budget">参考 ' + fmtPrice(plan.price) + "</span></div>"
-        : '<div class="res-plan">未匹配到整机方案，请参考「搭配计划」板块。</div>';
+      function picksHtmlOf(pk) {
+        return pk.map(function (p) {
+          var item = p.item;
+          var cat = p.cat;
+          return (
+            '<div class="pick-item">' +
+              '<span class="pick-icon">' + cat.icon + "</span>" +
+              '<div class="pick-main"><span class="pick-name">' + esc(item.name) + "</span>" +
+              '<span class="pick-why">' + esc(p.why) + "</span>" +
+              productImageLink(item) +
+              "</div>" +
+              '<span class="pick-price">' + fmtPrice(item.price) + "</span>" +
+            "</div>"
+          );
+        }).join("");
+      }
 
       var lookHtml = "";
       if (style) {
@@ -739,18 +841,41 @@
           '<div class="result-persona"><span class="res-label">需求画像</span>' + profile + "</div>" +
           '<div class="result-persona"><span class="res-label">适合人群</span>' + personas + "</div>" +
           lookHtml +
-          planHtml +
-          '<div class="res-section"><span class="res-label">外设/配件推荐（按你的升级重点）</span>' +
-            (picksHtml || '<div class="empty-box">暂无匹配配件。</div>') +
+          '<div class="smart-res-head reveal in">' +
+            (sets.length > 1 ? "为你匹配 " + sets.length + " 套方案，点标签切换对比；每套都含全套配置单" : "你的全套配置单") +
           "</div>" +
-          '<div class="res-total">整体投入参考：<b>' + fmtPrice([totalLow, totalHigh]) + "</b>（整机 + 所选配件）</div>" +
-          '<div class="res-note">' + esc(D.note) + "。方案为规则推荐，购机前请复核接口兼容性与电商实时价。</div>" +
+          planSetTabsHtml(sets, mainSetIdx) +
+          '<div id="quizSetBody"></div>' +
           pitfallsHTML(use) +
           '<div class="res-actions">' +
             '<button class="btn btn-ghost q-copy">复制方案文本</button>' +
             '<button class="btn btn-ghost q-reset">重新测评</button>' +
           "</div>" +
         "</div>";
+
+      var quizBody = document.getElementById("quizSetBody");
+      function renderQuizSet(si) {
+        var s = sets[si];
+        var p = s.plan;
+        var pk = picksOf(p);
+        curPlan = p;
+        curPicks = pk;
+        if (!quizBody) return;
+        var warn = (p && budgetCap < p.price[0] * 0.85)
+          ? '<div class="smart-budget-warn reveal in">预算 ¥' + budgetCap + " 够不到「" + esc(p.name) + "」的典型整机价 " + fmtPrice(p.price) + "，这是最接近的一套；想压预算可切「省预算」档，或到「搭配计划」逐件调整。</div>"
+          : "";
+        quizBody.innerHTML =
+          warn +
+          (p ? planBriefHtml(p) : '<div class="res-plan">未匹配到整机方案，请参考「搭配计划」板块。</div>') +
+          (p ? specTableHtml(p).html : "") +
+          '<div class="res-section"><span class="res-label">外设与配件推荐（按你的升级重点）</span>' +
+            (picksHtmlOf(pk) || '<div class="empty-box">本次未勾选升级重点，此处不推荐外设；整机配置见上方配置单。</div>') +
+          "</div>" +
+          '<div class="res-total">整体投入参考：<b>' + fmtPrice(totalsOf(p, pk)) + "</b>（整机 + 所选配件）</div>" +
+          '<div class="res-note">' + esc(D.note) + "。方案为规则推荐，购机前请复核接口兼容性与电商实时价。</div>";
+      }
+      bindPlanSetTabs(box, renderQuizSet);
+      renderQuizSet(mainSetIdx);
 
       var reset = box.querySelector(".q-reset");
       if (reset) reset.addEventListener("click", function () {
@@ -768,9 +893,9 @@
             return p ? p.name : "";
           }).filter(Boolean),
           style: (look && look !== "any") ? styleOf(look) : null,
-          plan: plan,
-          picks: picks,
-          total: [totalLow, totalHigh]
+          plan: curPlan,
+          picks: curPicks,
+          total: totalsOf(curPlan, curPicks)
         }), copyBtn);
       });
 
@@ -791,6 +916,10 @@
       if (ctx.style) L.push("颜值风格：" + ctx.style.name + "（配色 " + ctx.style.paletteName + "）");
       if (ctx.plan) {
         L.push("整机方案：" + ctx.plan.name + "，参考 " + fmtPrice(ctx.plan.price) + "（" + ctx.plan.budgetLabel + "）");
+        L.push("全套配置单：");
+        (ctx.plan.parts || []).forEach(function (r) {
+          L.push("· " + r[0] + "：" + r[1] + "（" + r[2] + "）");
+        });
       } else {
         L.push("整机方案：未匹配到，建议放宽预算或调整用途再看一次");
       }
@@ -827,19 +956,26 @@
         return hit;
       });
       if (!candidates.length) return null;
-      // 预算内可选的方案（战未来放宽 35% 上浮）
+      // 预算内可供选择的方案（战未来放宽 35% 上浮）
       var cap = (lifespan === "y5" ? budgetCap * 1.35 : budgetCap * 1.15);
-      var exact = candidates.filter(function (pl) { return pl.price[1] <= cap; });
-      var pool = exact.length ? exact : candidates;
+      function scoreOf(pl) {
+        return pl.uses.filter(function (u) { return use.indexOf(u) > -1; }).length;
+      }
+      // 按「起步价」判断够不够得着：够不着就退回最便宜的一套，
+      // 不能在超预算时反而推旗舰（曾出现 4800 预算匹配到 3 万 2 旗舰机）
+      var pool = candidates.filter(function (pl) { return pl.price[0] <= cap; });
+      if (!pool.length) {
+        return candidates.reduce(function (best, pl) {
+          return pl.price[0] < best.price[0] ? pl : best;
+        });
+      }
       return pool.reduce(function (best, pl) {
-        var score = pl.uses.filter(function (u) { return use.indexOf(u) > -1; }).length;
-        var bestScore = best.uses.filter(function (u) { return use.indexOf(u) > -1; }).length;
+        var score = scoreOf(pl);
+        var bestScore = scoreOf(best);
         // 用途匹配度优先
         if (score !== bestScore) return score > bestScore ? pl : best;
-        // 同匹配度下取价位更高的方案：预算充足却停在低档，是「最高档配置太素」的主因
-        var m = (pl.price[0] + pl.price[1]) / 2;
-        var bm = (best.price[0] + best.price[1]) / 2;
-        return m > bm ? pl : best;
+        // 同匹配度下取预算内更贵的方案：预算充足却停在低档，是「最高档配置太素」的主因
+        return pl.price[0] > best.price[0] ? pl : best;
       }, pool[0]);
     }
 
@@ -1531,47 +1667,7 @@
       var warnHtml = m.fit === "nearest"
         ? '<div class="smart-budget-warn reveal in">你的预算（约 ¥' + m.budget + "）与「" + esc(m.plan.name) + "」的典型整机价 " + fmtPrice(m.plan.price) + " 有差距，已为你匹配最接近的方案；想压预算可到「搭配计划」逐件调整配置。</div>"
         : "";
-      /* 全套配置单表格：plan.parts 全行 + 合计价区间，结果页主角 */
-      function specHtmlOf(plan) {
-        var totalLo = 0, totalHi = 0;
-        var specRows = (plan.parts || []).map(function (r) {
-          var nums = String(r[2] || "").match(/\d+/g);
-          if (nums) {
-            totalLo += parseInt(nums[0], 10);
-            totalHi += nums.length > 1 ? parseInt(nums[1], 10) : parseInt(nums[0], 10);
-          }
-          return '<tr><td class="spec-part">' + esc(r[0]) + "</td><td>" + esc(r[1]) + "</td>" +
-                 '<td class="spec-price">' + esc(r[2]) + "</td></tr>";
-        }).join("");
-        return (
-          '<div class="smart-spec reveal in">' +
-            '<h3 class="smart-spec-title">全套配置单（' + (plan.parts || []).length + ' 个部件）</h3>' +
-            '<div class="smart-spec-scroll"><table class="smart-spec-table">' +
-            "<thead><tr><th>部件</th><th>配置</th><th>参考价</th></tr></thead><tbody>" +
-            specRows +
-            '<tr class="spec-total"><td>合计</td><td>按各部件区间累加，不含优惠</td>' +
-            '<td class="spec-price">¥' + totalLo.toLocaleString() + " - ¥" + totalHi.toLocaleString() + "</td></tr>" +
-            "</tbody></table></div>" +
-            '<p class="smart-spec-tip">合计按各行参考价累加，所以比方案卡片预算略宽：每行都挑高配就超、都挑低配就省。照单买法：把每行配置复制到京东/淘宝搜索比价下单；不会装机可以约京东上门装机（约 100-200 元），或到「使用指南」照步骤自己装。</p>' +
-          "</div>"
-        );
-      }
-      function planHtmlOf(plan) {
-        var personas = (plan.personas || []).map(function (pid) {
-          var p = D.personas.filter(function (x) { return x.id === pid; })[0];
-          return p ? '<span class="tag-pill">' + p.icon + " " + p.name + "</span>" : "";
-        }).join("");
-        return (
-          '<div class="smart-plan reveal in">' +
-            '<div class="budget-head">' +
-              '<span class="plan-icon">' + plan.icon + "</span>" +
-              '<div><h3 class="plan-name">' + esc(plan.name) + '<span class="plan-tier">' + esc(plan.budgetLabel) + "</span></h3>" +
-              '<span class="plan-budget">参考预算 ' + fmtPrice(plan.price) + " ｜ 适合人群 " + personas + "</span></div>" +
-            "</div>" +
-            '<p class="smart-summary">' + esc(plan.summary) + "</p>" +
-          "</div>"
-        );
-      }
+      /* 结果页组装：配置单表格与方案卡用模块级函数 */
       /* 单张配件卡：cur = { item, anchor, alts } */
       function cardHtml(o, cur) {
         var it = cur.item;
@@ -1620,8 +1716,8 @@
         if (!body) return;
         body.innerHTML =
           (s.main ? warnHtml : "") +
-          planHtmlOf(s.plan) +
-          specHtmlOf(s.plan) +
+          planBriefHtml(s.plan) +
+          specTableHtml(s.plan).html +
           '<h3 class="smart-sub-title reveal in">想换件？各类推荐与备选</h3>' +
           '<div class="acc-grid smart-grid">' +
           picks.map(function (o, i) { return '<div id="smartSlot-' + i + '"></div>'; }).join("") +
@@ -1633,20 +1729,9 @@
         '<div class="smart-res-head reveal in">' +
         (sets.length > 1 ? "为你匹配 " + sets.length + " 套方案，点标签切换对比" : "你的推荐配置单") +
         "</div>" +
-        (sets.length > 1
-          ? '<div class="filter-chips smart-set-tabs">' + sets.map(function (s, i) {
-              return '<button type="button" class="chip' + (i === mainSetIdx ? " active" : "") + '" data-set="' + i + '">' +
-                s.tag + "｜" + esc(s.plan.name) + " " + fmtPrice(s.plan.price) + "</button>";
-            }).join("") + "</div>"
-          : "") +
+        planSetTabsHtml(sets, mainSetIdx) +
         '<div id="smartSetBody"></div>';
-      wrap.querySelectorAll(".smart-set-tabs .chip").forEach(function (chip) {
-        chip.addEventListener("click", function () {
-          wrap.querySelectorAll(".smart-set-tabs .chip").forEach(function (x) { x.classList.remove("active"); });
-          chip.classList.add("active");
-          renderSet(parseInt(chip.getAttribute("data-set"), 10));
-        });
-      });
+      bindPlanSetTabs(wrap, renderSet);
       renderSet(mainSetIdx);
       wrap.scrollIntoView({ behavior: "smooth", block: "start" });
     });
