@@ -62,3 +62,17 @@
 `/v1/models` 在该网关不存在（404 `Invalid request path`），不能用它验证 Key。
 
 → 下一步：用户在该直达页确认 Key 是否真的存在（或重建一把），把值发来或写入 `E:/AI/_ai_key.txt`，跑 `apply_key.py` 一键验真 + 配置 + 部署 + 线上实测。
+
+## 八、跳转功能增强（本轮一并上线）
+「跳转」原先只能跳到页面，落点没有上下文。现在支持带筛选参数：
+- `recommend.js` 的 `initAccessories()` 新增 `fromUrl()`：识别 `?q=&cat=&budget=&scene=`，进入即按条件筛好（`state` 在 `syncControls()` 之前赋值，UI 与结果一起同步）
+- `ai.js` 的 `OK_HREF` 放行带 query 的站内链接。**坑**：`md()` 是「先整体转义再匹配链接」，URL 里的 `&` 会变成 `&amp;`，字符集必须含 `;`，否则带两个参数的链接会被整条拒掉；另需含中文（`?q=显卡`）
+- `chat.js` 系统提示词补上可用参数（品类 id / 价位 id），模型据此给出精准链接
+- 品类 id：cpu/mobo/ram/gpu/ssd/psu/case/cooler/monitor/input/audio/network/stand/dock；价位 id：b300/b800/b2k/b5k/bhi
+- 新增 `test_jump.js`：白名单单测 + 带参进入 jsdom 端到端 **17/17 PASS**；回归 `run_query.js` / `test_ai.js`(16/16) / `audit.js`(78/0) 全通过
+- 提交 `e397217` 已推送；部署 `dpwhhwhv4c2f`；线上复核三文件 MD5 与本地一致、`?q=` 入参代码在线
+
+## 九、控制台位置的关键澄清
+用户「找不到」的根因很可能在这：**Pages 与 Makers 是控制台里两个不同的入口**。
+- 本项目部署后的控制台链接是 `console.cloud.tencent.com/edgeone/**pages**/project/makers-xtsrzn0uqidk/...`（Pages 区），这个区里没有 Models 菜单
+- 创建 Key 的页面在 **Makers 区**：`https://console.cloud.tencent.com/edgeone/makers?tab=models&subTab=apikey`
