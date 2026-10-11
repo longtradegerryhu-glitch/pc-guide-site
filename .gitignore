@@ -6,3 +6,5 @@ _smoke_out.txt
 *.tmp
 *.bak
 node_modules/
+.env
+.env.local

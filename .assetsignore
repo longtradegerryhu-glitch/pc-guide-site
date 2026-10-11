@@ -9,3 +9,5 @@ wrangler.toml
 wr-*.md
 cloudflare-deploy-guide.md
 edgeone.json
+.env
+.env.*

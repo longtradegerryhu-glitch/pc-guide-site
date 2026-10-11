@@ -199,7 +199,12 @@
           else bubble.innerHTML = '<span class="ai-err">已停止。</span>';
           return;
         }
-        bubble.innerHTML = '<span class="ai-err">' + esc(err && err.message ? err.message : "出了点问题，请稍后重试。") + "</span>";
+        var msg = err && err.message ? err.message : "出了点问题，请稍后重试。";
+        bubble.innerHTML = '<span class="ai-err">' + esc(msg) + "</span>";
+        if (msg.indexOf("未就绪") > -1) {
+          bubble.innerHTML += '<br><br>可以先到 <a class="ai-link" href="/accessories.html">配件与榜单</a>' +
+            ' 或 <a class="ai-link" href="/smart.html">智能推荐</a> 看看。';
+        }
       })
       .then(function () {
         setBusy(false);

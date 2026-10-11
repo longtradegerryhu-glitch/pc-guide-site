@@ -100,6 +100,9 @@ export async function onRequestPost(context) {
     var detail = '';
     try { detail = await upstream.text(); } catch (e) {}
     console.error('[chat] upstream ' + upstream.status + ': ' + String(detail).slice(0, 400));
+    if (upstream.status === 401 || upstream.status === 403) {
+      return fail('ai_credential_invalid', 'AI 服务凭据无效或尚未生效，请稍后再试。', 503);
+    }
     if (upstream.status === 429) {
       return fail('rate_limited', '提问有点频繁，稍等几秒再试。', 429);
     }
