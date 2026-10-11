@@ -78,7 +78,8 @@
     "散热": "cooler", "显示器": "monitor", "键鼠": "input", "电源": "psu", "机箱": "case",
     "音频": "audio", "耳机/音箱": "audio",
     "笔记本支架": "stand", "笔记本散热": "laptop-cool", "拓展坞": "dock",
-    "外接显示器": "monitor", "便携键鼠": "input"
+    "外接显示器": "monitor", "便携键鼠": "input",
+    "笔记本": "laptop"
   };
 
   /* 从方案自己的配置单提取各类部件的目标价位（取价格中值）。
@@ -1187,7 +1188,8 @@
       });
       if (!pool.length) {
         pool = D.plans.filter(function (pl) {
-          return form === "laptop" ? pl.id === "mobile" : pl.id !== "mobile";
+          if (form === "laptop") return pl.form.indexOf("laptop") > -1 || pl.form.indexOf("both") > -1;
+          return pl.form.indexOf("desktop") > -1;
         });
       }
       var sets = planSiblingSets(plan, pool);
@@ -1406,6 +1408,13 @@
         var hit = pl.uses.some(function (u) { return use.indexOf(u) > -1; });
         return hit;
       });
+      // 选了笔记本却没命中任何笔记本方案时，退回全部笔记本形态方案，
+      // 不能返回 null（曾出现「选笔记本推不出方案」）
+      if (!candidates.length && form === "laptop") {
+        candidates = D.plans.filter(function (pl) {
+          return pl.form.indexOf("laptop") > -1 || pl.form.indexOf("both") > -1;
+        });
+      }
       if (!candidates.length) return null;
       // 预算内可供选择的方案（战未来放宽 35% 上浮）
       var cap = (lifespan === "y5" ? budgetCap * 1.35 : budgetCap * 1.15);
@@ -1878,7 +1887,7 @@
     ];
     var formOpts = [
       { id: "desktop", label: "台式整机" },
-      { id: "laptop", label: "笔记本 + 外设" },
+      { id: "laptop", label: "笔记本电脑" },
       { id: "both", label: "两台都有" }
     ];
     var intensityOpts = [
@@ -1940,11 +1949,21 @@
       var opt = budgetOpts.filter(function (o) { return o.id === state.budget; })[0];
       var b = (opt && opt.budget) || 11000;
       var pool = D.plans.filter(function (pl) {
-        if (pl.id === "mobile") return state.form === "laptop" || state.form === "both";
+        var isLaptopPlan = pl.form.indexOf("laptop") > -1 || pl.form.indexOf("both") > -1;
+        // 形态硬过滤：选笔记本就只给笔记本方案，选台式不进纯笔记本方案
+        if (state.form === "laptop" && !isLaptopPlan) return false;
+        if (state.form === "desktop" && isLaptopPlan && pl.form.indexOf("desktop") === -1) return false;
         if (state.use && pl.uses.indexOf(state.use) === -1) return false;
         return true;
       });
-      if (!pool.length) pool = D.plans.filter(function (pl) { return pl.id !== "mobile"; });
+      if (!pool.length) {
+        pool = D.plans.filter(function (pl) {
+          var isLaptopPlan = pl.form.indexOf("laptop") > -1 || pl.form.indexOf("both") > -1;
+          if (state.form === "laptop") return isLaptopPlan;
+          if (state.form === "desktop") return pl.form.indexOf("desktop") > -1;
+          return true;
+        });
+      }
       var hit = pool.filter(function (pl) { return b >= pl.price[0] * 0.85 && b <= pl.price[1] * 1.15; });
       if (hit.length) {
         return {
