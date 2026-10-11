@@ -103,6 +103,41 @@
     return t;
   }
 
+  /* 笔记本本体占预算大头，且不同档位机型差距大：目标价随预算上探，
+     上限不超过本档配置单价位上限的 1.35 倍。原实现按模板行价固定取值，
+     导致「预算拉满也只会拿到模板里那台入门本」。 */
+  function laptopBudgetTarget(priceText, budgetCap) {
+    if (!budgetCap) return 0;
+    var nums = String(priceText || "").match(/\d+/g);
+    if (!nums || !nums.length) return 0;
+    var lo = parseInt(nums[0], 10);
+    var hi = nums.length > 1 ? parseInt(nums[1], 10) : lo;
+    return Math.min(Math.max(budgetCap * 0.72, lo), hi * 1.35);
+  }
+
+  /* 预算与方案价的错位提示：快速推荐与深度测评共用，避免两条路径各写一套文案 */
+  function budgetWarnHtml(plan, budgetCap, hasHigher, use, form, hasLower) {
+    if (!plan || !budgetCap) return "";
+    var head = '<div class="smart-budget-warn reveal in">你的预算（约 ¥' + budgetCap + "）";
+    if (budgetCap < plan.price[0] * 0.85) {
+      return head + "够不到「" + esc(plan.name) + "」的典型整机价 " + fmtPrice(plan.price) + "，这是最接近的一套；" +
+        (hasLower
+          ? "想压预算可切「省预算」档，或到「搭配计划」逐件调整。"
+          : "站内这个用途的起点就是这一档，想压到预算内建议先放宽用途，或到「搭配计划」逐件缩减配置。") +
+        "</div>";
+    }
+    if (budgetCap > plan.price[1] * 1.15) {
+      return head + "高于「" + esc(plan.name) + "」的典型整机价 " + fmtPrice(plan.price) + "。" +
+        (use === "office" ? "办公用途把预算堆得更高，流畅度几乎没有变化。" : "") +
+        (form === "laptop" ? "笔记本这个形态本身有价位上限，同用途再往上只有一两千的差距。" : "") +
+        (hasHigher
+          ? "多出来的钱建议投在显示器素质、存储容量或静音上，比继续堆硬件更实在；也可以点「加预算」档看看更高一档的方案。"
+          : "这已是该用途在站内的最高一档，再往上加预算提升有限，余量建议转到显示器、存储或外设上。") +
+        "</div>";
+    }
+    return "";
+  }
+
   /* 全套配置单表格：结果页主角，快速推荐与深度测评共用。
      返回 { html, parts, total }，total 为按行累加的价区间。 */
   function specTableHtml(plan) {
@@ -152,7 +187,10 @@
     var codes = [];
     segs.forEach(function (seg) {
       (seg.match(/\d{3,}[A-Za-z]*/g) || []).forEach(function (c) {
-        if (c.length >= 4) codes.push(c.toLowerCase());
+        if (c.length < 4) return;
+        /* 年份不是型号码：「无界14S 2026」里的 2026 会把一堆 2026 款认成同款 */
+        if (/^(19|20)\d{2}$/.test(c)) return;
+        codes.push(c.toLowerCase());
       });
     });
     return items.filter(function (it) {
@@ -172,7 +210,7 @@
   }
 
   /* 挑 top1 + 2 备选：配置单同款置顶，其余按价位距离 + 等级排序 */
-  function pickOne(items, target, rowText, allItems) {
+  function pickOne(items, target, rowText, allItems, minAnchorMid) {
     if (!items.length) return null;
     var win = items.filter(function (it) {
       var m = mid(it.price);
@@ -188,10 +226,12 @@
     /* 同款要在「全量品类库」里找：候选池已被用途/价位过滤，可能把配置单点名的那件挤掉了 */
     var anchors = matchAnchors(allItems && allItems.length ? allItems : items, rowText);
     var top = null, isAnchor = false;
-    if (anchors.length) {
-      top = anchors.slice().sort(function (a, b) {
-        return Math.abs(mid(a.price) - target) - Math.abs(mid(b.price) - target);
-      })[0];
+    var anchorTop = anchors.length ? anchors.slice().sort(function (a, b) {
+      return Math.abs(mid(a.price) - target) - Math.abs(mid(b.price) - target);
+    })[0] : null;
+    /* 预算明显高于配置单同款时不再锁死同款：否则预算拉满也只能拿到模板里那件入门型号 */
+    if (anchorTop && (minAnchorMid === undefined || mid(anchorTop.price) >= minAnchorMid)) {
+      top = anchorTop;
       isAnchor = true;
     } else {
       top = ranked[0] || null;
@@ -244,6 +284,7 @@
     var uses = opts.uses || [];
     var targets = planPartTargets(plan);
     var base = mid(plan.price || [0, 0]);
+    var budgetCap = opts.budgetCap || 0;
     var out = [];
 
     /* 用途只作软过滤：过滤后若覆盖不到配置单价位，就退回全库。
@@ -268,9 +309,19 @@
       if (cid) D.categories.forEach(function (c) { if (c.id === cid) cat = c; });
       var target = targets[cid] || base * 0.03;
       if (PART_SPLIT[part]) target = target / PART_SPLIT[part];
+      /* 笔记本本体按预算选档：配置单行价只是模板，不该锁死选择 */
+      var minAnchorMid;
+      if (cid === "laptop") {
+        var lapTarget = laptopBudgetTarget(priceText, budgetCap);
+        if (lapTarget > 0) {
+          target = lapTarget;
+          minAnchorMid = lapTarget * 0.6;
+        }
+      }
 
       // 键鼠是「键盘 + 鼠标」组合件，拆成两条，否则只出一件
-      if (part === "键鼠" && cat && cat.items && cat.items.length) {
+      // 「便携键鼠」是笔记本方案里的同一件组合，同样要拆
+      if ((part === "键鼠" || part === "便携键鼠") && cat && cat.items && cat.items.length) {
         var comboItem = cat.items;
         if (uses.length) comboItem = narrow(comboItem, target);
         var kbSet = comboItem.filter(function (it) { return (it.style || "").indexOf("键盘") !== -1; });
@@ -293,7 +344,7 @@
         }
         /* 散热按冷排规格选，不走用途软过滤：软过滤会把它整档降下来 */
         var pool = cid === "cooler" ? coolerForm(items, config) : narrow(items, target);
-        pick = pickOne(pool, target, config, cat.items);
+        pick = pickOne(pool, target, config, cat.items, minAnchorMid);
       } else {
         textPick = catalogPick(part, target);
       }
@@ -1182,7 +1233,8 @@
       // 2) 候选池取相邻档位，结果页给 2-3 套对比（与快速推荐同口径）
       //    用途不匹配的方案不入池：游戏用户不该看到只标了办公的核显机
       var pool = D.plans.filter(function (pl) {
-        if (form === "laptop") return pl.form.indexOf("laptop") > -1 || pl.form.indexOf("both") > -1;
+        var isLaptopPlan = pl.form.indexOf("laptop") > -1 || pl.form.indexOf("both") > -1;
+        if (form === "laptop" && !isLaptopPlan) return false;
         if (form === "desktop" && pl.form.indexOf("desktop") === -1) return false;
         return pl.uses.some(function (u) { return use.indexOf(u) > -1; });
       });
@@ -1210,7 +1262,7 @@
       var curPlan = plan;
       // 导出文本也用全套部件，避免导出结果只剩外设
       function partRowsToPicks(pl) {
-        return fullPartRows(pl, { uses: use, priority: focusIds }).map(function (r) {
+        return fullPartRows(pl, { uses: use, priority: focusIds, budgetCap: budgetCap }).map(function (r) {
           var it = r.pick && r.pick.item;
           return {
             cat: { name: r.part, icon: r.cat ? r.cat.icon : "🔧" },
@@ -1313,15 +1365,14 @@
         curPlan = p;
         curPicks = partRowsToPicks(p);
         if (!quizBody) return;
-        var warn = (p && budgetCap < p.price[0] * 0.85)
-          ? '<div class="smart-budget-warn reveal in">预算 ¥' + budgetCap + " 够不到「" + esc(p.name) + "」的典型整机价 " + fmtPrice(p.price) + "，这是最接近的一套；想压预算可切「省预算」档，或到「搭配计划」逐件调整。</div>"
-          : "";
+        var warn = budgetWarnHtml(p, budgetCap, sets.length > si + 1,
+          use.indexOf("office") > -1 ? "office" : use[0], form, si > 0);
         quizBody.innerHTML =
           warn +
           (p ? planBriefHtml(p) : '<div class="res-plan">未匹配到整机方案，请参考「搭配计划」板块。</div>') +
           (p ? specTableHtml(p).html : "") +
           '<div class="res-section"><span class="res-label">每个部件买什么型号（整机件 + 外设全覆盖，升级重点已置顶）</span>' +
-            (p ? (fullPartsHtml(p, { uses: use, priority: focusIds }) || '<div class="empty-box">未匹配到可推荐的部件型号，请参考上方配置单。</div>') : "") +
+            (p ? (fullPartsHtml(p, { uses: use, priority: focusIds, budgetCap: budgetCap }) || '<div class="empty-box">未匹配到可推荐的部件型号，请参考上方配置单。</div>') : "") +
           "</div>" +
           '<div class="res-total">整体投入参考：<b>' + fmtPrice(p ? specTableHtml(p).total : [0, 0]) + "</b>（按配置单各行参考价累加，不含优惠）</div>" +
           '<div class="res-note">' + esc(D.note) + "。方案为规则推荐，购机前请复核接口兼容性与电商实时价。</div>";
@@ -1968,7 +2019,10 @@
       if (hit.length) {
         return {
           plan: hit.reduce(function (best, pl) {
-            return Math.abs(mid(pl.price) - b) < Math.abs(mid(best.price) - b) ? pl : best;
+            var db = Math.abs(mid(pl.price) - b), dBest = Math.abs(mid(best.price) - b);
+            if (db !== dBest) return db < dBest ? pl : best;
+            /* 距离并列时取更高一档：预算拉满不该在并列里掉到低档 */
+            return mid(pl.price) > mid(best.price) ? pl : best;
           }),
           fit: "exact",
           budget: b,
@@ -1978,7 +2032,9 @@
       // 预算够不到候选方案时取最接近的，标记让 UI 提示
       return {
         plan: pool.reduce(function (best, pl) {
-          return Math.abs(mid(pl.price) - b) < Math.abs(mid(best.price) - b) ? pl : best;
+          var db = Math.abs(mid(pl.price) - b), dBest = Math.abs(mid(best.price) - b);
+          if (db !== dBest) return db < dBest ? pl : best;
+          return mid(pl.price) > mid(best.price) ? pl : best;
         }),
         fit: "nearest",
         budget: b,
@@ -2083,14 +2139,7 @@
       sets.push({ plan: m.plan, tag: "为你匹配", main: true });
       var mainSetIdx = sets.length - 1;
       if (mainIdx < sorted.length - 1) sets.push({ plan: sorted[mainIdx + 1], tag: "加预算" });
-      var over = m.fit === "nearest" && m.budget > mid(m.plan.price);
-      var warnHtml = m.fit === "nearest"
-        ? (over
-            ? '<div class="smart-budget-warn reveal in">你的预算（约 ¥' + m.budget + "）高于「" + esc(m.plan.name) + "」的典型整机价 " + fmtPrice(m.plan.price) + "。"
-              + (use === "office" ? "办公用途把预算堆得更高，流畅度几乎没有变化。" : "")
-              + "多出来的钱建议投在显示器素质、存储容量或静音上，比继续堆 CPU 更实在；也可以点「加预算」档看看更高一档的方案。</div>"
-            : '<div class="smart-budget-warn reveal in">你的预算（约 ¥' + m.budget + "）够不到「" + esc(m.plan.name) + "」的典型整机价 " + fmtPrice(m.plan.price) + "，这是最接近的一套；想压预算可到「搭配计划」逐件调整配置。</div>")
-        : "";
+      var warnHtml = budgetWarnHtml(m.plan, m.budget, mainIdx < sorted.length - 1, use, state.form, mainIdx > 0);
       /* 结果页组装：配置单表格与方案卡用模块级函数 */
       /* 单张配件卡：cur = { item, anchor, alts } */
       function cardHtml(o, cur) {
@@ -2143,7 +2192,7 @@
           specTableHtml(s.plan).html +
           '<h3 class="smart-sub-title reveal in">每个部件买什么型号</h3>' +
           '<p class="smart-sub-title-note">按配置单顺序逐项给型号与备选，整机件和外设都在内。带「配置单同款」的就是上表里的型号，其余是同一档次的备选；主板、内存、硬盘、机箱没有独立型号库，按配置单档位直选。</p>' +
-          fullPartsHtml(s.plan, { uses: use ? [use] : [] }) +
+          fullPartsHtml(s.plan, { uses: use ? [use] : [], budgetCap: m.budget }) +
           '<p class="smart-note">' + esc(D.note) + "</p>";
       }
       wrap.innerHTML =

@@ -248,7 +248,7 @@
     main.appendChild(el("span", "ai-head-icon", "✨"));
     var txt = el("div", "ai-head-text");
     txt.appendChild(el("strong", "", "AI 装机助手"));
-    txt.appendChild(el("span", "ai-head-sub", "基于站内 567 款型号与 10 套配置单"));
+    txt.appendChild(el("span", "ai-head-sub", "基于站内 567 款型号与 13 套配置单"));
     main.appendChild(txt);
 
     var close = el("button", "ai-close", "×");
