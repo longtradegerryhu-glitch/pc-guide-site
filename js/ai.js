@@ -204,7 +204,7 @@
         bubble.innerHTML = '<span class="ai-err">' + esc(msg) + "</span>";
         if (/未就绪|凭据|不可用|繁忙/.test(msg)) {
           bubble.innerHTML += '<br><br>AI 服务暂时不可用，可以先从这些入口找答案：' +
-            '<br>· <a class="ai-link" href="/accessories.html">配件与榜单</a>（15 类 567 款型号，可按品类/价位筛选）' +
+            '<br>· <a class="ai-link" href="/accessories.html">配件与榜单</a>（15 类 591 款型号，可按品类/价位筛选）' +
             '<br>· <a class="ai-link" href="/smart.html">智能推荐</a>（6 题快速推荐 / 10 题深度测评）' +
             '<br>· <a class="ai-link" href="/plans.html">搭配计划</a>（6 档整机方案）' +
             '<br>· <a class="ai-link" href="/guide.html">使用指南</a> · <a class="ai-link" href="/faq.html">常见问题</a>';
@@ -248,7 +248,7 @@
     main.appendChild(el("span", "ai-head-icon", "✨"));
     var txt = el("div", "ai-head-text");
     txt.appendChild(el("strong", "", "AI 装机助手"));
-    txt.appendChild(el("span", "ai-head-sub", "基于站内 567 款型号与 13 套配置单"));
+    txt.appendChild(el("span", "ai-head-sub", "基于站内 591 款型号与 16 套配置单"));
     main.appendChild(txt);
 
     var close = el("button", "ai-close", "×");
