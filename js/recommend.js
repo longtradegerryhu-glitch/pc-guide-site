@@ -875,6 +875,20 @@
     }
     if (clearBtn) clearBtn.addEventListener("click", clearAll);
 
+    /* 支持从其它页面或 AI 回答里带条件跳进来：/accessories?q=显卡&cat=gpu&budget=b2k */
+    (function fromUrl() {
+      var qs;
+      try { qs = new URLSearchParams(window.location.search); } catch (e) { return; }
+      var q0 = (qs.get("q") || "").trim();
+      if (q0) state.q = q0;
+      var c0 = qs.get("cat");
+      if (c0 && D.categories.some(function (c) { return c.id === c0; })) state.cat = c0;
+      var b0 = qs.get("budget");
+      if (b0 && BANDS.some(function (b) { return b.id === b0; })) state.budget = b0;
+      var s0 = qs.get("scene");
+      if (s0 && Object.keys(useLabels).some(function (k) { return k === s0; })) state.scene = s0;
+    })();
+
     syncControls();
     renderCards();
   }
