@@ -1,0 +1,7 @@
+{
+  "name": "pc-guide-site",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "电脑使用指南与配套硬件总结 · 静态站点 + AI 问答云函数"
+}
