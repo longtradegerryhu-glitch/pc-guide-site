@@ -79,7 +79,16 @@
     "音频": "audio", "耳机/音箱": "audio",
     "笔记本支架": "stand", "笔记本散热": "laptop-cool", "拓展坞": "dock",
     "外接显示器": "monitor", "便携键鼠": "input",
-    "笔记本": "laptop"
+    "笔记本": "laptop",
+    "手机": "phone", "平板": "tablet",
+    "充电器": "charger", "数据线": "charger", "移动电源": "charger",
+    "插线板": "charger", "转接器": "charger",
+    "手机壳": "mobileacc", "保护膜": "mobileacc", "镜头膜": "mobileacc",
+    "手机支架": "mobileacc", "张持杆": "mobileacc", "稳定器": "mobileacc",
+    "游戏手柄": "mobileacc", "平板键盘": "mobileacc", "手写笔": "mobileacc",
+    "触控板": "mobileacc", "散热配件": "mobileacc", "清洁工具": "mobileacc",
+    "屏幕挂绳": "mobileacc", "指环支架": "mobileacc", "游戏配件": "mobileacc",
+    "投屏器": "mobileacc", "存储": "charger"
   };
 
   /* 从方案自己的配置单提取各类部件的目标价位（取价格中值）。
@@ -106,13 +115,34 @@
   /* 笔记本本体占预算大头，且不同档位机型差距大：目标价随预算上探，
      上限不超过本档配置单价位上限的 1.35 倍。原实现按模板行价固定取值，
      导致「预算拉满也只会拿到模板里那台入门本」。 */
-  function laptopBudgetTarget(priceText, budgetCap) {
+  var WHOLE_BUDGET_SHARE = { laptop: 0.72, phone: 0.8, tablet: 0.82 };
+  function laptopBudgetTarget(priceText, budgetCap, share) {
     if (!budgetCap) return 0;
     var nums = String(priceText || "").match(/\d+/g);
     if (!nums || !nums.length) return 0;
     var lo = parseInt(nums[0], 10);
     var hi = nums.length > 1 ? parseInt(nums[1], 10) : lo;
-    return Math.min(Math.max(budgetCap * 0.72, lo), hi * 1.35);
+    return Math.min(Math.max(budgetCap * (share || 0.72), lo), hi * 1.35);
+  }
+
+  /* 移动设备的预算档与台式完全不同：手机 4000 — 6000、平板 900 — 12000。
+     若直接拿台式的预算档，选手机就会被折扣到最低档（同样的陷阱）。
+     按形态把同一档位重映射到该形态的真实价位轴。 */
+  var MOBILE_BUDGET_AXIS = {
+    phone:  [0, 1400, 2600, 4200, 6500, 9500, 14000],
+    tablet: [0, 1300, 2400, 3600, 5200, 7500, 10500]
+  };
+  /* 形态匹配：选哪种设备就只进哪类方案，“多台互补”才不过滤 */
+  function formFit(pl, form) {
+    if (!form || form === "both") return true;
+    return pl.form.indexOf(form) > -1;
+  }
+  function mobileBudgetCap(form, budgetKey) {
+    var axis = MOBILE_BUDGET_AXIS[form];
+    if (!axis) return budgetOrder[budgetKey] || 0;
+    var order = ["b3000", "b4500", "b6000", "b8500", "b12000", "b20000"];
+    var i = order.indexOf(budgetKey);
+    return axis[i > -1 ? i + 1 : 3];
   }
 
   /* 预算与方案价的错位提示：快速推荐与深度测评共用，避免两条路径各写一套文案 */
@@ -311,8 +341,8 @@
       if (PART_SPLIT[part]) target = target / PART_SPLIT[part];
       /* 笔记本本体按预算选档：配置单行价只是模板，不该锁死选择 */
       var minAnchorMid;
-      if (cid === "laptop") {
-        var lapTarget = laptopBudgetTarget(priceText, budgetCap);
+      if (WHOLE_BUDGET_SHARE[cid]) {
+        var lapTarget = laptopBudgetTarget(priceText, budgetCap, WHOLE_BUDGET_SHARE[cid]);
         if (lapTarget > 0) {
           target = lapTarget;
           minAnchorMid = lapTarget * 0.6;
@@ -589,7 +619,19 @@
       "音频": "audio", "audio": "audio",
       "网络": "network", "network": "network",
       "支架": "stand", "stand": "stand",
-      "拓展坞": "dock", "扩展坞": "dock", "dock": "dock"
+      "拓展坞": "dock", "扩展坞": "dock", "dock": "dock",
+      "笔记本": "laptop", "轻薄本": "laptop", "上网本": "laptop", "laptop": "laptop",
+      "手机": "phone", "智能手机": "phone", "强光手机": "phone",
+      "游戏手机": "phone", "iphone": "phone", "phone": "phone",
+      "平板": "tablet", "学习平板": "tablet", "ipad": "tablet", "手写平板": "tablet",
+      "影音平板": "tablet", "tablet": "tablet",
+      "充电器": "charger", "充电头": "charger", "快充": "charger", "氮化锡": "charger",
+      "数据线": "charger", "type-c": "charger", "线束": "charger", "移动电源": "charger",
+      "充电宝": "charger", "车充": "charger", "无线充电": "charger", "投屏器": "charger",
+      "转接器": "charger", "otg": "charger", "插线板": "charger",
+      "手机壳": "mobileacc", "保护壳": "mobileacc", "手机模": "mobileacc", "保护膜": "mobileacc",
+      "防窥": "mobileacc", "自拍杆": "mobileacc", "云台": "mobileacc", "手柄": "mobileacc",
+      "手写笔": "mobileacc", "键盘": "mobileacc", "穿戴消毒": "mobileacc", "车载支架": "mobileacc"
     };
 
     /* 主观需求词映射到规格关键词，让「白色」「静音」「大显存」这类说法也能搜到结果 */
@@ -609,10 +651,47 @@
       "ddr5": ["ddr5"], "ddr4": ["ddr4"],
       "nvme": ["nvme", "pcie"],
       "白色": ["白", "ice", "冰"],
-      "itx": ["itx"], "matx": ["matx", "matx"], "atx": ["atx", "eatx"]
+      "itx": ["itx"], "matx": ["matx", "matx"], "atx": ["atx", "eatx"],
+      "长续航": ["续航", "容量", "大电池", "mah", "大容量"],
+      "快充": ["快充", "w 快充", "充电速度"],
+      "薄薄": ["薄", "轻", "权重"],
+      "折叠屏": ["折叠"], "大折叠": ["折叠"],
+      "护眼": ["护眼", "类纸", "防闪光"],
+      "手写": ["手写", "笔", "压感", "类纸"],
+      "影像": ["影像", "主摄", "长焦", "影像旗舰"],
+      "单手": ["单手", "轻薄", "小屏"],
+      "端耐": ["端耐", "防护", "抗摔", "坚固"],
+      "安全": ["安全", "认证", "质量"],
+      "笔记本敢": ["容量", "纯碰盘", "面积", "录像"],
+      "容量大": ["大容量", "20000mah", "256g", "512g", "1tb"],
+      "定位": ["定位", "额外追踪", "卡"]
     };
 
     function tokens(q) { return q.toLowerCase().split(/\s+/).filter(Boolean); }
+
+    /* 中文没有空格分词，「长续航手机」「折叠屏手机」会被当成整串去匹配而落空。
+       先用 ALIAS / NEED 的词表做贪心切分，把整串拆成可判定的语义单元。 */
+    function segmentQuery(q) {
+      var raw = tokens(q);
+      var keys = Object.keys(ALIAS).concat(Object.keys(NEED))
+        .filter(function (k) { return k.length > 1; })
+        .sort(function (a, b) { return b.length - a.length; });
+      var out = [];
+      raw.forEach(function (t) {
+        if (out.length || !/^[\u4e00-\u9fa5]+$/.test(t)) { out.push(t); return; }
+        var rest = t, buf = "", i = 0;
+        while (i < rest.length) {
+          var hit = null;
+          for (var j = 0; j < keys.length; j++) {
+            if (rest.slice(i, i + keys[j].length) === keys[j]) { hit = keys[j]; break; }
+          }
+          if (hit) { if (buf) { out.push(buf); buf = ""; } out.push(hit); i += hit.length; }
+          else { buf += rest[i]; i += 1; }
+        }
+        if (buf) out.push(buf);
+      });
+      return out.length ? out : raw;
+    }
 
     /* 单个关键词匹配：别名命中所属品类、或需求词的任一同义词出现在文本里，都算命中 */
     function matchQuery(item, catId, toks) {
@@ -644,11 +723,14 @@
     /* 跨品类通用价位档：配件从几十元到几万元都有，档位要能覆盖全区间 */
     var BANDS = [
       { id: "all",  label: "全部价位" },
-      { id: "b300", label: "300 元内",     lo: 0,    hi: 300 },
+      { id: "b50",  label: "50 元内",      lo: 0,    hi: 50 },
+      { id: "b300", label: "50-300 元",     lo: 50,   hi: 300 },
       { id: "b800", label: "300-800 元",   lo: 300,  hi: 800 },
       { id: "b2k",  label: "800-2000 元",  lo: 800,  hi: 2000 },
       { id: "b5k",  label: "2000-5000 元", lo: 2000, hi: 5000 },
-      { id: "bhi",  label: "5000 元以上",  lo: 5000, hi: Infinity }
+      { id: "b8k",  label: "5000-8000 元", lo: 5000, hi: 8000 },
+      { id: "bhih", label: "8000-12000 元", lo: 8000, hi: 12000 },
+      { id: "bhi",  label: "12000 元以上", lo: 12000, hi: Infinity }
     ];
 
     function matchesBudget(item, budget) {
@@ -680,7 +762,7 @@
 
     function collect() {
       var list = [];
-      var toks = state.q ? tokens(state.q) : null;
+      var toks = state.q ? segmentQuery(state.q) : null;
       D.categories.forEach(function (cat) {
         if (state.cat !== "all" && cat.id !== state.cat) return;
         cat.items.forEach(function (item) {
@@ -1225,7 +1307,7 @@
         focusIds = focusIds.concat(["cpu", "gpu", "mobo", "ram", "ssd", "psu", "case", "cooler"]);
       }
 
-      var budgetCap = budgetOrder[budget];
+      var budgetCap = MOBILE_BUDGET_AXIS[form] ? mobileBudgetCap(form, budget) : budgetOrder[budget];
 
       // 1) 基础整机方案（年限/强度参与匹配）
       var plan = pickPlan(use, form, budgetCap, lifespan, intensity);
@@ -1233,16 +1315,11 @@
       // 2) 候选池取相邻档位，结果页给 2-3 套对比（与快速推荐同口径）
       //    用途不匹配的方案不入池：游戏用户不该看到只标了办公的核显机
       var pool = D.plans.filter(function (pl) {
-        var isLaptopPlan = pl.form.indexOf("laptop") > -1 || pl.form.indexOf("both") > -1;
-        if (form === "laptop" && !isLaptopPlan) return false;
-        if (form === "desktop" && pl.form.indexOf("desktop") === -1) return false;
+        if (!formFit(pl, form)) return false;
         return pl.uses.some(function (u) { return use.indexOf(u) > -1; });
       });
       if (!pool.length) {
-        pool = D.plans.filter(function (pl) {
-          if (form === "laptop") return pl.form.indexOf("laptop") > -1 || pl.form.indexOf("both") > -1;
-          return pl.form.indexOf("desktop") > -1;
-        });
+        pool = D.plans.filter(function (pl) { return formFit(pl, form); });
       }
       var sets = planSiblingSets(plan, pool);
       var mainSetIdx = 0;
@@ -1454,17 +1531,14 @@
 
     function pickPlan(use, form, budgetCap, lifespan, intensity) {
       var candidates = D.plans.filter(function (pl) {
-        if (form === "laptop" && pl.form.indexOf("laptop") === -1 && pl.form.indexOf("both") === -1) return false;
-        if (form === "desktop" && pl.form.indexOf("desktop") === -1) return false;
+        if (!formFit(pl, form)) return false;
         var hit = pl.uses.some(function (u) { return use.indexOf(u) > -1; });
         return hit;
       });
-      // 选了笔记本却没命中任何笔记本方案时，退回全部笔记本形态方案，
+      // 选了笔记本/手机/平板却没命中任何同形态方案时，退回全部同形态方案，
       // 不能返回 null（曾出现「选笔记本推不出方案」）
-      if (!candidates.length && form === "laptop") {
-        candidates = D.plans.filter(function (pl) {
-          return pl.form.indexOf("laptop") > -1 || pl.form.indexOf("both") > -1;
-        });
+      if (!candidates.length && form && form !== "both") {
+        candidates = D.plans.filter(function (pl) { return pl.form.indexOf(form) > -1; });
       }
       if (!candidates.length) return null;
       // 预算内可供选择的方案（战未来放宽 35% 上浮）
@@ -1939,7 +2013,9 @@
     var formOpts = [
       { id: "desktop", label: "台式整机" },
       { id: "laptop", label: "笔记本电脑" },
-      { id: "both", label: "两台都有" }
+      { id: "phone", label: "手机" },
+      { id: "tablet", label: "平板" },
+      { id: "both", label: "多台互补" }
     ];
     var intensityOpts = [
       { id: "light", label: "轻量够用" },
@@ -1999,21 +2075,17 @@
       // state.budget 是档位 id，先换算成真实预算
       var opt = budgetOpts.filter(function (o) { return o.id === state.budget; })[0];
       var b = (opt && opt.budget) || 11000;
+      if (MOBILE_BUDGET_AXIS[state.form]) b = mobileBudgetCap(state.form, {
+        3000: "b3000", 4500: "b4500", 6000: "b6000",
+        8500: "b8500", 12000: "b12000", 20000: "b20000"
+      }[state.budget] || "b6000");
       var pool = D.plans.filter(function (pl) {
-        var isLaptopPlan = pl.form.indexOf("laptop") > -1 || pl.form.indexOf("both") > -1;
-        // 形态硬过滤：选笔记本就只给笔记本方案，选台式不进纯笔记本方案
-        if (state.form === "laptop" && !isLaptopPlan) return false;
-        if (state.form === "desktop" && isLaptopPlan && pl.form.indexOf("desktop") === -1) return false;
+        if (!formFit(pl, state.form)) return false;
         if (state.use && pl.uses.indexOf(state.use) === -1) return false;
         return true;
       });
       if (!pool.length) {
-        pool = D.plans.filter(function (pl) {
-          var isLaptopPlan = pl.form.indexOf("laptop") > -1 || pl.form.indexOf("both") > -1;
-          if (state.form === "laptop") return isLaptopPlan;
-          if (state.form === "desktop") return pl.form.indexOf("desktop") > -1;
-          return true;
-        });
+        pool = D.plans.filter(function (pl) { return formFit(pl, state.form); });
       }
       var hit = pool.filter(function (pl) { return b >= pl.price[0] * 0.85 && b <= pl.price[1] * 1.15; });
       if (hit.length) {
