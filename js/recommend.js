@@ -76,7 +76,16 @@
   var PART_CAT = {
     "CPU": "cpu", "显卡": "gpu", "主板": "mobo", "内存": "ram", "硬盘": "ssd",
     "散热": "cooler", "显示器": "monitor", "键鼠": "input", "电源": "psu", "机箱": "case",
-    "音频": "audio", "耳机/音箱": "audio",
+    "音频": "audio", "音箱": "audio", "麦克风": "audio",
+    "耳机": "earphone", "耳机/音箱": "earphone", "蓝牙耳机": "earphone",
+    "降噪耳机": "earphone", "头戴耳机": "earphone", "真无线耳机": "earphone",
+    "游戏耳机": "earphone", "监听耳机": "earphone", "有线耳机": "earphone",
+    "运动耳机": "earphone", "开放式耳机": "earphone", "骨传导耳机": "earphone",
+    "手表": "wearable", "手环": "wearable", "智能手表": "wearable",
+    "运动手表": "wearable", "智能戒指": "wearable", "直播麦": "wearable",
+    "摄像头": "wearable", "路由器": "wearable", "智能音箱": "wearable",
+    "台灯": "wearable", "运动相机": "wearable", "无人机": "wearable",
+    "相机": "wearable", "体脂秤": "wearable",
     "笔记本支架": "stand", "笔记本散热": "laptop-cool", "拓展坞": "dock",
     "外接显示器": "monitor", "便携键鼠": "input",
     "笔记本": "laptop",
@@ -602,7 +611,7 @@
     var activeEl = document.getElementById("accActive");
     if (!wrap || !catRow || !sceneRow || !budgetRow) return;
 
-    var state = { cat: "all", scene: "all", look: "all", budget: "all", audience: "all", brand: "all", sort: "default", q: "" };
+    var state = { device: "all", cat: "all", scene: "all", look: "all", budget: "all", audience: "all", brand: "all", sort: "default", q: "" };
 
     /* 口语词与英文缩写映射到品类 id：搜「主板」「显卡」这类需求词时直接按品类命中，
        不需要型号名里真的出现这两个字 */
@@ -631,7 +640,15 @@
       "转接器": "charger", "otg": "charger", "插线板": "charger",
       "手机壳": "mobileacc", "保护壳": "mobileacc", "手机模": "mobileacc", "保护膜": "mobileacc",
       "防窥": "mobileacc", "自拍杆": "mobileacc", "云台": "mobileacc", "手柄": "mobileacc",
-      "手写笔": "mobileacc", "键盘": "mobileacc", "穿戴消毒": "mobileacc", "车载支架": "mobileacc"
+      "手写笔": "mobileacc", "键盘": "mobileacc", "穿戴消毒": "mobileacc", "车载支架": "mobileacc",
+      "耳机": "earphone", "耳麦": "earphone", "蓝牙耳机": "earphone", "降噪耳机": "earphone",
+      "头戴": "earphone", "入耳": "earphone", "真无线": "earphone", "开放式耳机": "earphone",
+      "骨传导": "earphone", "游戏耳机": "earphone", "监听耳机": "earphone", "有线耳机": "earphone",
+      "音箱": "audio", "麦克风": "audio", "声卡": "audio", "桌面音箱": "audio",
+      "手表": "wearable", "手环": "wearable", "智能手表": "wearable", "运动手表": "wearable",
+      "智能戒指": "wearable", "体脂秤": "wearable", "无人机": "wearable", "运动相机": "wearable",
+      "摄像头": "wearable", "路由器": "wearable", "智能音箱": "wearable", "台灯": "wearable",
+      "相机": "wearable", "微单": "wearable"
     };
 
     /* 主观需求词映射到规格关键词，让「白色」「静音」「大显存」这类说法也能搜到结果 */
@@ -664,7 +681,18 @@
       "安全": ["安全", "认证", "质量"],
       "笔记本敢": ["容量", "纯碰盘", "面积", "录像"],
       "容量大": ["大容量", "20000mah", "256g", "512g", "1tb"],
-      "定位": ["定位", "额外追踪", "卡"]
+      "定位": ["定位", "额外追踪", "卡"],
+      "音质": ["音质", "解析", "声场", "单元", "低频", "人声"],
+      "降噪强": ["降噪", "隔音", "主动降噪", "通透"],
+      "佩戴舒服": ["佩戴", "舒适", "轻", "不夹", "耳压"],
+      "长续航耳机": ["续航", "小时", "充电盒"],
+      "运动耳机": ["运动", "跑步", "骑行", "耳挂", "不入耳", "防水"],
+      "低延迟耳机": ["延迟", "游戏模式", "电竞"],
+      "健康": ["健康", "心率", "血氧", "睡眠", "血压", "压力"],
+      "独立通话": ["通话", "esim", "蓝牙通话", "麦克风"],
+      "双设备": ["双设备", "多点", "两台", "切换"],
+      "直播麦": ["直播", "配音", "话筒", "拾音", "心形"],
+      "智能家居": ["智能", "米家", "物联", "摄像", "看家"]
     };
 
     function tokens(q) { return q.toLowerCase().split(/\s+/).filter(Boolean); }
@@ -747,6 +775,8 @@
       var sp = new URLSearchParams(window.location.search);
       var lp = sp.get("look");
       if (lp && styleById[lp]) state.look = lp;
+      var dp = sp.get("dev");
+      if (dp && (D.devices || []).some(function (d) { return d.id === dp; })) state.device = dp;
       var cp = sp.get("cat");
       if (cp) state.cat = cp;
       var qp = sp.get("q");
@@ -764,6 +794,7 @@
       var list = [];
       var toks = state.q ? segmentQuery(state.q) : null;
       D.categories.forEach(function (cat) {
+        if (state.device !== "all" && cat.device !== state.device) return;
         if (state.cat !== "all" && cat.id !== state.cat) return;
         cat.items.forEach(function (item) {
           if (state.scene !== "all" && (item.use || []).indexOf(state.scene) === -1) return;
@@ -801,6 +832,7 @@
       if (!brandRow) return;
       brandPool = [];
       D.categories.forEach(function (cat) {
+        if (state.device !== "all" && cat.device !== state.device) return;
         if (state.cat !== "all" && cat.id !== state.cat) return;
         cat.items.forEach(function (it) { if (it.brand) brandPool.push(it.brand); });
       });
@@ -893,7 +925,7 @@
     }
 
     function clearAll() {
-      state.cat = "all"; state.scene = "all"; state.look = "all";
+      state.device = "all"; state.cat = "all"; state.scene = "all"; state.look = "all";
       state.budget = "all"; state.audience = "all"; state.brand = "all"; state.q = "";
       state.sort = "default";
       syncControls();
@@ -903,6 +935,7 @@
     // 状态变化后把界面控件同步回去
     function syncControls() {
       if (searchEl) searchEl.value = state.q;
+      renderDevices();
       renderChips(catRow, catItems(), "cat");
       renderBrands();
       renderChips(sceneRow, sceneItems(), "scene");
@@ -915,9 +948,48 @@
     }
 
     function catItems() {
-      return [{ id: "all", label: "全部品类" }].concat(D.categories.map(function (c) {
+      var cats = D.categories.filter(function (c) {
+        return state.device === "all" || c.device === state.device;
+      });
+      var head = state.device === "all"
+        ? [{ id: "all", label: "全部品类" }]
+        : [{ id: "all", label: "该设备全部品类" }];
+      return head.concat(cats.map(function (c) {
         return { id: c.id, label: c.icon + " " + c.name + " " + c.items.length };
       }));
+    }
+
+    /* 设备切换行：先选设备（电脑 / 手机 / 平板 / 耳机与穿戴），品类行随之收敛 */
+    var deviceRow = document.getElementById("accDevices");
+    function renderDevices() {
+      if (!deviceRow) return;
+      var opts = [{ id: "all", name: "全部设备", icon: "\ud83e\udde9", desc: "21 个品类全量筛选" }].concat(D.devices || []);
+      deviceRow.innerHTML = opts.map(function (d) {
+        var cats = D.categories.filter(function (c) { return c.device === d.id; });
+        var cnt = cats.reduce(function (a, c) { return a + c.items.length; }, 0);
+        var on = state.device === d.id;
+        return '<button type="button" class="acc-device' + (on ? " active" : "") + '" data-id="' + esc(d.id) + '">' +
+          '<span class="acc-device-icon">' + d.icon + "</span>" +
+          '<span class="acc-device-body"><span class="acc-device-name">' + esc(d.name) + "</span>" +
+          '<span class="acc-device-desc">' + esc(d.desc || "") + "</span></span>" +
+          '<span class="acc-device-count">' + cats.length + " 类 · " + cnt + " 款</span></button>";
+      }).join("");
+      deviceRow.querySelectorAll(".acc-device").forEach(function (b) {
+        b.addEventListener("click", function () {
+          var id = b.getAttribute("data-id");
+          state.device = id;
+          // 切设备后原品类可能不属于新设备，重置品类与品牌
+          if (state.cat !== "all") {
+            var cur = D.categories.filter(function (x) { return x.id === state.cat; })[0];
+            if (cur && id !== "all" && cur.device !== id) state.cat = "all";
+          }
+          state.brand = "all";
+          renderDevices();
+          renderChips(catRow, catItems(), "cat");
+          renderBrands();
+          renderCards();
+        });
+      });
     }
     function sceneItems() {
       return [{ id: "all", label: "全部场景" }].concat(Object.keys(useLabels).map(function (k) {

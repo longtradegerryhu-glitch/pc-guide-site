@@ -587,6 +587,48 @@ button:focus-visible,
 .acc-search-hint:empty { display: none; }
 
 /* ---- 筛选面板 ---- */
+/* 设备分区切换：电脑 / 手机 / 平板 / 耳机与穿戴，配件页先把设备分清再看品类 */
+.acc-devices {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.acc-device {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-card);
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  transition: border-color .15s ease, transform .15s ease;
+}
+.acc-device:hover { border-color: var(--color-primary); transform: translateY(-1px); }
+.acc-device.active { border-color: var(--color-primary); background: var(--color-primary-soft, rgba(37, 99, 235, .06)); }
+.acc-device-icon { font-size: 22px; line-height: 1; flex: 0 0 auto; }
+.acc-device-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1 1 auto; }
+.acc-device-name { font-size: 15px; font-weight: 700; color: var(--color-text); }
+.acc-device-desc { font-size: 12px; color: var(--color-text-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.acc-device-count {
+  flex: 0 0 auto;
+  font-size: 12px;
+  color: var(--color-text-soft);
+  padding: 3px 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  white-space: nowrap;
+}
+@media (max-width: 640px) {
+  .acc-devices { grid-template-columns: 1fr 1fr; }
+  .acc-device-count { display: none; }
+}
+
+.filter-panel {
 .filter-panel {
   background: var(--color-card);
   border: 1px solid var(--color-border);
@@ -1218,6 +1260,46 @@ a.entry-card .card-title { margin-top: 0; }
   transition: all .18s ease;
 }
 .acc-clear-btn:hover { border-color: var(--color-primary); }
+
+/* 首页「按设备选购」入口：电脑 / 手机 / 平板 / 耳机与穿戴 */
+.device-entries {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px;
+}
+.device-entry {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 20px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-card);
+  box-shadow: var(--shadow);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color .15s ease, transform .15s ease;
+}
+.device-entry:hover { border-color: var(--color-primary); transform: translateY(-2px); }
+.device-entry-icon { font-size: 30px; line-height: 1; flex: 0 0 auto; }
+.device-entry-body { display: flex; flex-direction: column; gap: 3px; flex: 1 1 auto; min-width: 0; }
+.device-entry-name { font-size: 17px; font-weight: 700; color: var(--color-text); }
+.device-entry-desc { font-size: 13px; color: var(--color-text-soft); }
+.device-entry-count {
+  flex: 0 0 auto;
+  font-size: 12px;
+  color: var(--color-text-soft);
+  padding: 4px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  white-space: nowrap;
+}
+@media (max-width: 640px) {
+  .device-entries { grid-template-columns: 1fr; }
+  .device-entry-count { display: none; }
+}
+
+.acc-hot { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px; }
 
 .acc-hot { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px; }
 .acc-hot-label { font-size: 12px; color: var(--color-text-soft); }
