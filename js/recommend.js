@@ -56,6 +56,18 @@
       '<div class="jd-live-hint">站内实时价暂未上线（联盟 API 合规受限），点上面按钮看官方实时价</div>' +
     '</div>';
   }
+  /* 精简版查价入口：只保留淘宝/京东两个文字链接，去掉图片按钮与实时价提示块。
+   * 专供列表类界面（配件库、榜单）使用，避免每张卡片塞进 4 个链接。 */
+  function productLinksLite(item) {
+    if (!item || !item.name) return "";
+    var n = item.searchName || (item.brand && item.model ? (item.brand + " " + item.model) : item.name);
+    var q = encodeURIComponent(n);
+    return '<div class="prod-link prod-link-lite">' +
+      '<a class="prod-shop prod-tb" href="https://s.taobao.com/search?q=' + q + '" target="_blank" rel="noopener noreferrer">淘宝查价</a>' +
+      '<a class="prod-shop prod-jd" href="https://search.jd.com/Search?keyword=' + q + '" target="_blank" rel="noopener noreferrer">京东查价</a>' +
+    '</div>';
+  }
+
   function styleOf(id) { return styleById[id] || null; }
   function countByStyle(sid) {
     var n = 0;
@@ -877,9 +889,12 @@
           "</div>" +
           (it.valueNote ? '<div class="acc-note">' + hl(it.valueNote, toks) + "</div>" : "") +
           '<div class="acc-specs">' + hl(it.specs, toks) + "</div>" +
-          '<div class="acc-tags">' + tags + "</div>" +
-          '<div class="acc-compat">\u642d\u914d\uff1a' + hl(it.compat, toks) + "</div>" +
-          productImageLink(it) +
+          '<div class="acc-detail">' +
+            (tags ? '<div class="acc-tags">' + tags + "</div>" : "") +
+            (it.compat ? '<div class="acc-compat">\u642d\u914d\uff1a' + hl(it.compat, toks) + "</div>" : "") +
+            productLinksLite(it) +
+          "</div>" +
+          '<button type="button" class="acc-detail-toggle" aria-expanded="false">详情</button>' +
         "</article>"
       );
     }
@@ -1045,6 +1060,22 @@
       } else {
         wrap.innerHTML = '<div class="acc-grid">' + list.map(function (o) { return cardHtml(o, toks); }).join("") + "</div>";
       }
+      bindDetailToggles();
+    }
+
+    /* 卡片「详情」展开：默认收起，点击后显示标签/搭配/查价 */
+    function bindDetailToggles() {
+      wrap.querySelectorAll(".acc-detail-toggle").forEach(function (b) {
+        b.addEventListener("click", function () {
+          var card = b.closest(".acc-card");
+          var detail = card && card.querySelector(".acc-detail");
+          if (!detail) return;
+          var open = b.getAttribute("aria-expanded") === "true";
+          b.setAttribute("aria-expanded", open ? "false" : "true");
+          b.textContent = open ? "详情" : "收起";
+          detail.classList.toggle("open", !open);
+        });
+      });
     }
 
     function totalModels() {
@@ -1178,18 +1209,25 @@
 
     function cardHtml(o, rankLabel) {
       var e = o.entry;
+      var q = encodeURIComponent(o.item.name);
       return (
         '<article class="top-card reveal in">' +
           '<span class="top-rank">' + rankLabel + "</span>" +
           '<div class="top-main">' +
-            '<span class="top-cat">' + esc(o.cat.name) + " · " + esc(o.item.style || "") + "</span>" +
             '<h4 class="top-name">' + esc(o.item.name) + "</h4>" +
             '<p class="top-reason">' + esc(e.reason) + "</p>" +
-            productImageLink(o.item) +
+            '<div class="top-links">' +
+              '<a class="top-shop top-tb" href="https://s.taobao.com/search?q=' + q + '" target="_blank" rel="noopener noreferrer">淘宝查价</a>' +
+              '<a class="top-shop top-jd" href="https://search.jd.com/Search?keyword=' + q + '" target="_blank" rel="noopener noreferrer">京东查价</a>' +
+            "</div>" +
           "</div>" +
           '<div class="top-side">' +
-            '<span class="top-tier ' + (TIER_CLS[e.tier] || "") + '">' + esc(e.tier) + "</span>" +
-            '<span class="grade grade-' + e.grade + '">' + e.grade + "</span>" +
+            '<span class="top-meta">' + esc(o.cat.name) +
+              (o.item.style ? " · " + esc(o.item.style) : "") + "</span>" +
+            '<span class="top-badges">' +
+              '<span class="top-tier ' + (TIER_CLS[e.tier] || "") + '">' + esc(e.tier) + "</span>" +
+              '<span class="grade grade-' + e.grade + '">' + e.grade + "</span>" +
+            "</span>" +
             '<span class="top-price">' + fmtPrice(o.item.price) + "</span>" +
           "</div>" +
         "</article>"
@@ -1200,9 +1238,32 @@
       var tiers = TIERS.map(function (t) {
         return t + " " + ALL.filter(function (o) { return o.entry.tier === t; }).length;
       }).join(" · ");
-      return '<p class="top-summary reveal in">当前显示 <b>' + n + "</b> 款，全部上榜 " + ALL.length +
-        " 款，覆盖 " + D.categories.length + " 个品类（" + tiers +
-        "）。档位按用途与价位划分；同一档位内先按性价比等级、再按参考均价排序。</p>";
+      return '<p class="top-summary reveal in">共 <b>' + n + "</b> 款上榜，覆盖 " +
+        D.categories.length + " 个品类（" + tiers +
+        "）。同一档位内先按性价比等级、再按参考均价排序。</p>";
+    }
+
+    /* 品类分组：标题栏可点击折叠/展开，默认展开前 3 组 */
+    var DEFAULT_OPEN = 3;
+
+    function groupHtml(cat, group, open) {
+      var cards = group.map(function (o, i) {
+        return cardHtml(o, '<span class="group-rank r' + (i + 1) + '">#' + (i + 1) + "</span>");
+      }).join("");
+      var best = group[0];
+      return (
+        '<section class="top-group reveal in' + (open ? " open" : "") + '" data-cat="' + cat.id + '">' +
+          '<button type="button" class="top-group-head" aria-expanded="' + (open ? "true" : "false") + '">' +
+            '<span class="top-group-icon">' + cat.icon + "</span>" +
+            '<h3 class="top-group-name">' + esc(cat.name) + "</h3>" +
+            '<span class="top-group-count">' + group.length + " 款</span>" +
+            '<span class="top-group-lead">' + esc(best.item.name) + " · " +
+              esc(best.entry.grade) + " 级 " + esc(best.entry.tier) + "</span>" +
+            '<span class="top-group-caret" aria-hidden="true"></span>' +
+          "</button>" +
+          '<div class="top-group-grid"' + (open ? "" : " hidden") + ">" + cards + "</div>" +
+        "</section>"
+      );
     }
 
     function render() {
@@ -1214,36 +1275,66 @@
         return;
       }
       if (state.mode === "cat") {
-        html += D.categories.map(function (cat) {
-          var group = rows.filter(function (o) { return o.cat.id === cat.id; }).sort(rankSort);
-          if (!group.length) return "";
-          var cards = group.map(function (o, i) {
-            return cardHtml(o, '<span class="group-rank r' + (i + 1) + '">#' + (i + 1) + "</span>");
-          }).join("");
-          return (
-            '<div class="top-group reveal in">' +
-              '<div class="top-group-head"><span class="top-group-icon">' + cat.icon + "</span>" +
-              '<h3 class="top-group-name">' + esc(cat.name) + "</h3>" +
-              '<span class="top-group-count">' + group.length + " 款上榜</span></div>" +
-              '<div class="top-group-grid">' + cards + "</div>" +
-            "</div>"
-          );
+        var groups = D.categories.map(function (cat) {
+          var g = rows.filter(function (o) { return o.cat.id === cat.id; }).sort(rankSort);
+          return g.length ? { cat: cat, rows: g } : null;
+        }).filter(Boolean);
+        html += groups.map(function (x, i) {
+          return groupHtml(x.cat, x.rows, i < DEFAULT_OPEN);
         }).join("");
+        html += '<div class="top-expand-all">' +
+          '<button type="button" class="chip" id="topToggleAll">展开全部 ' + groups.length + " 个品类</button></div>";
       } else {
         rows.sort(rankSort);
         html += rows.map(function (o, i) { return cardHtml(o, "#" + (i + 1)); }).join("");
       }
       wrap.innerHTML = html;
+      bindGroups();
+    }
+
+    /* 折叠交互：标题栏点击展开/收起，另有「展开全部」 */
+    function bindGroups() {
+      wrap.querySelectorAll(".top-group-head").forEach(function (h) {
+        h.addEventListener("click", function () {
+          var g = h.closest(".top-group");
+          var open = g.classList.toggle("open");
+          h.setAttribute("aria-expanded", open ? "true" : "false");
+          var body = g.querySelector(".top-group-grid");
+          if (body) body.hidden = !open;
+        });
+      });
+      var t = document.getElementById("topToggleAll");
+      if (!t) return;
+      var allOpen = wrap.querySelectorAll(".top-group.open").length ===
+        wrap.querySelectorAll(".top-group").length;
+      t.textContent = allOpen ? "收起全部品类" : "展开全部 " +
+        wrap.querySelectorAll(".top-group").length + " 个品类";
+      t.addEventListener("click", function () {
+        var open = t.textContent.indexOf("收起") !== 0;
+        wrap.querySelectorAll(".top-group").forEach(function (g) {
+          g.classList.toggle("open", open);
+          g.querySelector(".top-group-head").setAttribute("aria-expanded", open ? "true" : "false");
+          var b = g.querySelector(".top-group-grid");
+          if (b) b.hidden = !open;
+        });
+        t.textContent = open ? "收起全部品类" : "展开全部 " +
+          wrap.querySelectorAll(".top-group").length + " 个品类";
+      });
     }
 
     tabs.innerHTML =
-      '<button class="chip active" data-mode="cat">按品类排行</button>' +
-      '<button class="chip" data-mode="all">全站总榜</button>' +
-      '<span class="top-tabs-sep"></span>' +
-      '<button class="chip active" data-tier="all">全部档位</button>' +
-      TIERS.map(function (t) {
-        return '<button class="chip" data-tier="' + t + '">' + t + "</button>";
-      }).join("");
+      '<div class="top-tabs-row">' +
+        '<span class="top-tabs-label">排行方式</span>' +
+        '<button class="chip active" data-mode="cat">按品类</button>' +
+        '<button class="chip" data-mode="all">全站总榜</button>' +
+      "</div>" +
+      '<div class="top-tabs-row">' +
+        '<span class="top-tabs-label">价位档位</span>' +
+        '<button class="chip active" data-tier="all">全部</button>' +
+        TIERS.map(function (t) {
+          return '<button class="chip" data-tier="' + t + '">' + t + "</button>";
+        }).join("") +
+      "</div>";
 
     tabs.querySelectorAll(".chip").forEach(function (b) {
       b.addEventListener("click", function () {
