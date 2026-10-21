@@ -27,7 +27,14 @@ const BASE = {
 const HARD = ['name', 'brand', 'model', 'searchName', 'style', 'specs'];
 const SOFT = ['valueNote', 'compat'];
 const S = x => String(x == null ? '' : x).toLowerCase();
+
+/* 归一化：小写 + 去空白 + 去横线类符号。
+   ⚠ 这是全项目唯一实现。rebuild2.js 的入库查重闸必须 require 这里，
+     不许另写一份 —— 闸与审计口径不一致，审计数字就失去意义。 */
 const norm = x => S(x).replace(/\s+/g, '').replace(/[\-－—_]/g, '');
+
+/* 重复判定的键：品类 + 归一化品牌 + 归一化型号 */
+const dupKey = (cat, it) => cat + '|' + norm(it && it.brand) + '|' + norm(it && it.model);
 
 function allItems(models) {
   const out = [];
@@ -39,7 +46,7 @@ function allItems(models) {
 function dupStats(models) {
   const m = new Map();
   allItems(models).forEach(({ cat, it }) => {
-    const k = cat + '|' + norm(it.brand) + '|' + norm(it.model);
+    const k = dupKey(cat, it);
     if (!m.has(k)) m.set(k, []);
     m.get(k).push(it);
   });
@@ -122,4 +129,4 @@ async function runChecks({ models, searchProbe, base = BASE }) {
   return { items, stats: { dup: d, price: p, specsBad: bad } };
 }
 
-module.exports = { BASE, dupStats, specsInconsistentCount, priceStats, runChecks, allItems, norm };
+module.exports = { BASE, dupStats, specsInconsistentCount, priceStats, runChecks, allItems, norm, dupKey, S };
