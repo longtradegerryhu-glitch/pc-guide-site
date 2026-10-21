@@ -650,6 +650,13 @@
     var activeEl = document.getElementById("accActive");
     if (!wrap || !catRow || !sceneRow || !budgetRow) return;
 
+    /* 分组展开状态：品类 id -> 是否展开。默认只展开首个有结果的分组，
+   其余折叠，用户按需点开，避免 21 组全量铺开造成的视觉与性能负担 */
+    var openGroups = {};
+    var lastSig = "";
+    var GROUP_PAGE = 12;   // 单组首屏渲染条数
+    var groupShown = {};   // 品类 id -> 已展开条数
+
     var state = { device: "all", cat: "all", scene: "all", look: "all", budget: "all", brand: "all", sort: "default", q: "" };
 
     /* 口语词与英文缩写映射到品类 id：搜「主板」「显卡」这类需求词时直接按品类命中，
@@ -1057,7 +1064,7 @@
         ? [{ id: "all", label: "全部品类" }]
         : [{ id: "all", label: "该设备全部品类" }];
       return head.concat(cats.map(function (c) {
-        return { id: c.id, label: c.icon + " " + c.name + " " + c.items.length };
+        return { id: c.id, label: c.icon + " " + c.name };
       }));
     }
 
@@ -1065,16 +1072,14 @@
     var deviceRow = document.getElementById("accDevices");
     function renderDevices() {
       if (!deviceRow) return;
-      var opts = [{ id: "all", name: "全部设备", icon: "\ud83e\udde9", desc: "21 个品类全量筛选" }].concat(D.devices || []);
+      var opts = [{ id: "all", name: "全部设备", icon: "\ud83c\udf0d", desc: "全部品类" }].concat(D.devices || []);
       deviceRow.innerHTML = opts.map(function (d) {
-        var cats = D.categories.filter(function (c) { return c.device === d.id; });
-        var cnt = cats.reduce(function (a, c) { return a + c.items.length; }, 0);
         var on = state.device === d.id;
         return '<button type="button" class="acc-device' + (on ? " active" : "") + '" data-id="' + esc(d.id) + '">' +
           '<span class="acc-device-icon">' + d.icon + "</span>" +
           '<span class="acc-device-body"><span class="acc-device-name">' + esc(d.name) + "</span>" +
           '<span class="acc-device-desc">' + esc(d.desc || "") + "</span></span>" +
-          '<span class="acc-device-count">' + cats.length + " 类 · " + cnt + " 款</span></button>";
+          '<span class="acc-device-arrow" aria-hidden="true">\u2192</span></button>';
       }).join("");
       deviceRow.querySelectorAll(".acc-device").forEach(function (b) {
         b.addEventListener("click", function () {
@@ -1102,11 +1107,7 @@
       var list = collect();
       var toks = state.q ? tokens(state.q) : null;
 
-      if (state.sort === "priceAsc") {
-        list.sort(function (a, b) { return (a.item.price[0] + a.item.price[1]) - (b.item.price[0] + b.item.price[1]); });
-      } else if (state.sort === "priceDesc") {
-        list.sort(function (a, b) { return (b.item.price[0] + b.item.price[1]) - (a.item.price[0] + a.item.price[1]); });
-      } else if (state.sort === "ratingDesc") {
+      if (state.sort === "ratingDesc") {
         list.sort(function (a, b) { return b.item.rating - a.item.rating; });
       } else if (state.sort === "gradeDesc") {
         list.sort(function (a, b) { return (gradeOrder[b.item.valueGrade] || 0) - (gradeOrder[a.item.valueGrade] || 0); });
@@ -1114,8 +1115,8 @@
 
       var allN = totalModels();
       countEl.textContent = (list.length === allN)
-        ? "\u5171 " + allN + " \u6b3e\uff08" + D.updated + "\u884c\u60c5\uff09"
-        : "\u7b5b\u9009\u51fa " + list.length + " \u6b3e / \u5168\u7ad9 " + allN + " \u6b3e";
+        ? D.updated + " \u884c\u60c5"
+        : "\u7b5b\u51fa " + list.length + " \u6b3e";
       if (searchHintEl) {
         searchHintEl.textContent = state.q
           ? (list.length
@@ -1131,23 +1132,77 @@
         return;
       }
 
-      if (state.sort === "default") {
-        var groups = [];
-        D.categories.forEach(function (cat) {
-          var sub = list.filter(function (o) { return o.cat.id === cat.id; });
-          if (sub.length) groups.push({ cat: cat, items: sub });
-        });
-        wrap.innerHTML = groups.map(function (g) {
-          return '<section class="acc-group"><div class="acc-group-head">' +
-            "<h3>" + g.cat.icon + " " + esc(g.cat.name) + "</h3>" +
-            '<span class="acc-group-count">' + g.items.length + " \u6b3e</span></div>" +
-            '<div class="acc-grid">' + g.items.map(function (o) { return cardHtml(o, toks); }).join("") + "</div></section>";
-        }).join("");
-      } else {
-        wrap.innerHTML = '<div class="acc-grid">' + list.map(function (o) { return cardHtml(o, toks); }).join("") + "</div>";
+      var groups = [];
+      D.categories.forEach(function (cat) {
+        var sub = list.filter(function (o) { return o.cat.id === cat.id; });
+        if (sub.length) groups.push({ cat: cat, items: sub });
+      });
+
+      /* 展开策略（条件变化时重置分组状态）：
+         搜索命中多个品类时全部展开 —— 用户已用关键词缩小范围，再要求逐组点开是多余步骤；
+         无搜索词时只展开首组，其余折叠，避免 21 组一次铺开造成的视觉与性能负担。 */
+      var sig = state.device + "|" + state.cat + "|" + state.scene + "|" +
+                state.look + "|" + state.budget + "|" + state.brand + "|" + state.q;
+      if (sig !== lastSig) {
+        lastSig = sig;
+        openGroups = {};
+        groupShown = {};
+        if (state.q && groups.length > 1) {
+          groups.forEach(function (g) {
+            openGroups[g.cat.id] = true;
+            groupShown[g.cat.id] = GROUP_PAGE;
+          });
+        } else if (groups.length) {
+          openGroups[groups[0].cat.id] = true;
+          groupShown[groups[0].cat.id] = GROUP_PAGE;
+        }
       }
+
+      wrap.innerHTML = groups.map(function (g, gi) {
+        var cid = g.cat.id;
+        var open = !!openGroups[cid];
+        var total = g.items.length;
+        var shown = open ? Math.max(groupShown[cid] || GROUP_PAGE, GROUP_PAGE) : 0;
+        var slice = g.items.slice(0, shown);
+        var more = total - slice.length;
+        return '<section class="acc-group' + (open ? " open" : "") + '" data-cat="' + esc(cid) + '">' +
+          '<button type="button" class="acc-group-head" aria-expanded="' + (open ? "true" : "false") + '">' +
+            "<h3>" + g.cat.icon + " " + esc(g.cat.name) + "</h3>" +
+            '<span class="acc-group-count">' + total + " \u6b3e</span>" +
+            '<span class="acc-group-caret" aria-hidden="true">' + (open ? "\u2212" : "+") + "</span>" +
+          "</button>" +
+          '<div class="acc-group-body"' + (open ? "" : " hidden") + ">" +
+            '<div class="acc-grid">' + slice.map(function (o) { return cardHtml(o, toks); }).join("") + "</div>" +
+            (more > 0
+              ? '<button type="button" class="acc-group-more" data-more="' + esc(cid) + '">\u663e\u793a\u5176\u4f59 ' + more + " \u6b3e</button>"
+              : "") +
+          "</div>" +
+        "</section>";
+      }).join("");
+
+      bindGroups();
       bindDetailToggles();
       bindLookDots();
+    }
+
+    /* 分组折叠 / 单组展开更多：分组头点开/收起，「显示其余 N 款」追加渲染 */
+    function bindGroups() {
+      wrap.querySelectorAll(".acc-group-head").forEach(function (b) {
+        b.addEventListener("click", function () {
+          var cid = b.closest(".acc-group").getAttribute("data-cat");
+          var now = !openGroups[cid];
+          openGroups[cid] = now;
+          if (now && !groupShown[cid]) groupShown[cid] = GROUP_PAGE;
+          renderCards();
+        });
+      });
+      wrap.querySelectorAll(".acc-group-more").forEach(function (b) {
+        b.addEventListener("click", function () {
+          var cid = b.getAttribute("data-more");
+          groupShown[cid] = (groupShown[cid] || GROUP_PAGE) + GROUP_PAGE * 2;
+          renderCards();
+        });
+      });
     }
 
     /* 外观小圆点：点击即按该外观风格筛选 */

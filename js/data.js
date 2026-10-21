@@ -518,13 +518,16 @@ window.PC_DATA = {
   ],
 
   /* ---------- 品类骨架（真实型号由 models.js 合并） ---------- */
-  /* 设备分区：21 个品类按「电脑 / 手机 / 平板 / 耳机与穿戴」四个设备域归类，
-     配件页与首页按 device 独立成区，避免 21 个品类平铺时找不到自己要买的是哪一类设备。 */
+  /* 设备分区：21 个品类按「买来装在哪 / 给谁用」归成六个设备域。
+     原先只有四域时，电脑域塞了 14 个品类、平板域只有 1 个，两边粒度严重失衡；
+     现按购买行为重切：装机核心件 / 桌面外设 / 笔记本整机 / 手机 / 平板 / 影音穿戴。 */
   devices: [
-    { id: "pc",     name: "电脑",       icon: "💻", desc: "台式散件、笔记本与电脑外设" },
+    { id: "pc",     name: "电脑装机",   icon: "🎨", desc: "CPU 主板显卡硬盘等核心部件" },
+    { id: "desk",   name: "桌面外设",   icon: "🖥", desc: "显示器、键鼠、音箱与网络" },
+    { id: "laptop", name: "笔记本",     icon: "💻", desc: "笔记本整机与移动办公" },
     { id: "phone",  name: "手机",       icon: "📱", desc: "手机本体、充电供电与保护配件" },
-    { id: "tablet", name: "平板",       icon: "📶", desc: "平板本体与平板外设" },
-    { id: "audio",  name: "耳机与穿戴", icon: "🎧", desc: "耳机、音箱与智能穿戴" }
+    { id: "tablet", name: "平板",       icon: "📶", desc: "平板本体与手写影音" },
+    { id: "av",     name: "影音穿戴",   icon: "🎧", desc: "耳机、音箱麦克风与智能穿戴" }
   ],
 
   categories: [
@@ -536,19 +539,19 @@ window.PC_DATA = {
     { id: "psu",     name: "电源",      icon: "🔋", device: "pc", items: [] },
     { id: "case",    name: "机箱",      icon: "🗄️", device: "pc", items: [] },
     { id: "cooler",  name: "散热器",    icon: "❄️", device: "pc", items: [] },
-    { id: "monitor", name: "显示器",    icon: "🖥️", device: "pc", items: [] },
-    { id: "input",   name: "键鼠外设",  icon: "⌨️", device: "pc", items: [] },
-    { id: "network", name: "网络设备",  icon: "📡", device: "pc", items: [] },
-    { id: "stand",   name: "支架",      icon: "🛠️", device: "pc", items: [] },
-    { id: "dock",    name: "拓展坞",    icon: "🔌", device: "pc", items: [] },
-    { id: "laptop",  name: "笔记本电脑", icon: "💻", device: "pc", items: [] },
+    { id: "monitor", name: "显示器",    icon: "🖥️", device: "desk", items: [] },
+    { id: "input",   name: "键鼠外设",  icon: "⌨️", device: "desk", items: [] },
+    { id: "network", name: "网络设备",  icon: "📡", device: "desk", items: [] },
+    { id: "stand",   name: "支架",      icon: "🛠️", device: "desk", items: [] },
+    { id: "dock",    name: "拓展坞",    icon: "🔌", device: "desk", items: [] },
+    { id: "laptop",  name: "笔记本电脑", icon: "💻", device: "laptop", items: [] },
     { id: "phone",     name: "手机",        icon: "📱", device: "phone", items: [] },
     { id: "charger",   name: "充电与供电",  icon: "⚡", device: "phone", items: [] },
     { id: "mobileacc", name: "手机与平板配件", icon: "🧿", device: "phone", items: [] },
     { id: "tablet",    name: "平板",        icon: "📶", device: "tablet", items: [] },
-    { id: "earphone", name: "耳机与耳麦", icon: "🎧", device: "audio", items: [] },
-    { id: "audio",   name: "音箱与麦克风",  icon: "🖣", device: "audio", items: [] },
-    { id: "wearable", name: "智能穿戴与配套", icon: "⌚", device: "audio", items: [] }
+    { id: "earphone", name: "耳机与耳麦", icon: "🎧", device: "av", items: [] },
+    { id: "audio",   name: "音箱与麦克风",  icon: "🖣", device: "desk", items: [] },
+    { id: "wearable", name: "智能穿戴与配套", icon: "⌚", device: "av", items: [] }
   ],
 
   /* ---------- 个性化测评问题（预算 6 档，与 plans.budget 对齐） ---------- */
