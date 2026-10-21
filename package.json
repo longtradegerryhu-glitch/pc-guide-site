@@ -6,6 +6,11 @@
   "description": "电脑使用指南与配套硬件总结 · 静态站点 + AI 问答云函数",
   "scripts": {
     "test": "node tests/audit-search.cjs",
+    "test:selftest": "node tests/selftest-mutation.cjs",
+    "test:all": "node tests/selftest-mutation.cjs && node tests/audit-search.cjs",
     "audit:search": "node tests/audit-search.cjs"
+  },
+  "devDependencies": {
+    "jsdom": "^26.0.0"
   }
 }

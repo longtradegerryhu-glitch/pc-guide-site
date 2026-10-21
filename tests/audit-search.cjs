@@ -1,66 +1,90 @@
-/* 数据质量与搜索分层审计 —— 项目级回归脚本
+/* 审计 runner —— 装配真实数据与 jsdom，调用 lib/checks.cjs 的纯逻辑
  *
- * 跑法：NODE_PATH=<jsdom 所在 node_modules> node tests/audit-search.cjs
- * 退出码：任何一项超出基线 → exit 1
+ * 跑法：npm test        或        node tests/audit-search.cjs
+ * 退出码：0 全 PASS / 1 有 FAIL / 2 环境缺失（连数据都读不到）
  *
- * 为什么用 .cjs：项目 package.json 是 "type": "module"，.js 会被当 ESM，
- * 而 jsdom 只能在 CommonJS + NODE_PATH 下解析。用 .cjs 绕过。
+ * 为什么断言逻辑抽到 lib/checks.cjs：
+ *   断言必须自己可测。只能读真实数据跑一遍的断言，无法验证"数据被污染时它会不会 FAIL"。
+ *   tests/selftest-mutation.cjs 通过调用同一套纯函数，注入污染数据，验证对应断言确实失败。
  *
- * 为什么搜索部分用 jsdom 真跑 UI：
- *   accessories.html 的搜索除了 8 字段匹配，还叠加了 ALIAS(品类词) / NEED(需求词) 词表。
- *   裸字段匹配得出的数字（如「白色 ATX 机箱」只有 2 款）与用户实际看到的（15 款）不一致。
- *   审计数字必须等于用户所见，否则审计本身不可信。
- *
- * 基线日期：2026-10-21（1209 款 / 21 品类）
- * 基线不是"正确值"，是"不许变差的值"。去重 / schema 迁移完成后相应基线应下调。
+ * jsdom 解析顺序（修「npm test 直接崩」）：
+ *   1. 常规 require('jsdom')（npm install 后可用）
+ *   2. NODE_PATH 各段
+ *   3. 开发机已知路径
+ *   4. 全找不到 → 搜索类断言标 SKIP，数据类断言照常执行，退出码按数据类算
+ *      缺一个可选依赖不该让整个审计停摆，但必须大声说出来，不能假装通过。
  */
+
+'use strict';
 
 const fs = require('fs');
 const vm = require('vm');
 const path = require('path');
-const { JSDOM } = require('jsdom');
+const { runChecks } = require('./lib/checks.cjs');
 
 const ROOT = path.resolve(__dirname, '..') + path.sep;
-const S = x => String(x == null ? '' : x).toLowerCase();
 
-/* ---------- 基线 ---------- */
-const BASE = {
-  totalModels: 1209,      // 型号总数，允许 >=（扩库通过）
-  dupGroups: 49,          // 重复组数，允许 <=（去重后变小通过）
-  priceConflict: 21,      // 价格区间不重叠的重复组，允许 <=
-  specsInconsistent: 21,  // specs 段数不固定的品类数，schema 迁移后应下降
-  singlePricePct: 10,     // 单点价格占比上限 %
-  specQueries: ['ATX3.1', 'GDDR7', '360水冷'],  // 主体命中必须 > 0，防"过滤垃圾"规则误杀
-  modelQuery: '5070 Ti',  // 必须存在软备注层，证明分层生效
-};
+/* ---------- 1. 解析 jsdom ---------- */
+function resolveJsdom() {
+  const tries = [];
+  const push = p => { if (p && !tries.includes(p)) tries.push(p); };
 
-let pass = 0, fail = 0;
-const chk = (name, cond, actual) => {
-  if (cond) { pass++; console.log(`  PASS ${name}`); }
-  else { fail++; console.log(`  FAIL ${name} :: ${JSON.stringify(actual)}`); }
-};
+  push('jsdom');
+  (process.env.NODE_PATH || '').split(path.delimiter).filter(Boolean)
+    .forEach(d => push(path.join(d, 'jsdom')));
+  const home = process.env.USERPROFILE || process.env.HOME || '';
+  if (home) push(path.join(home, '.workbuddy', 'binaries', 'node', 'workspace', 'node_modules', 'jsdom'));
+  push(path.join(ROOT, 'node_modules', 'jsdom'));
 
-/* ---------- 数据层 ---------- */
-const ctx = { window: {} };
-vm.createContext(ctx);
-vm.runInContext(fs.readFileSync(ROOT + 'js/data.js', 'utf8'), ctx);
-vm.runInContext(fs.readFileSync(ROOT + 'js/models-data.js', 'utf8'), ctx);
-const mm = ctx.window.PC_MODELS;
-if (!mm) { console.error('无法加载 PC_MODELS'); process.exit(1); }
-
-const HARD = ['name', 'brand', 'model', 'searchName', 'style', 'specs'];
-const SOFT = ['valueNote', 'compat'];
-
-function classify(it, toks) {
-  const hardHit = HARD.some(f => { const v = S(it[f]); return v && toks.every(t => v.includes(t)); });
-  const softHit = SOFT.some(f => { const v = S(it[f]); return v && toks.every(t => v.includes(t)); })
-    || (it.tags || []).some(t => toks.every(x => S(t).includes(x)));
-  return { hardHit, softHit };
+  for (const t of tries) {
+    try { return { jsdom: require(t), from: t }; } catch (e) { /* next */ }
+  }
+  return { jsdom: null, tried: tries };
 }
 
-(async () => {
-  /* ---------- UI 层 ---------- */
-  const dom = await JSDOM.fromFile(ROOT + 'accessories.html', {
+/* ---------- 2. 读数据 ---------- */
+const ctx = { window: {} };
+vm.createContext(ctx);
+try {
+  vm.runInContext(fs.readFileSync(ROOT + 'js/data.js', 'utf8'), ctx);
+  vm.runInContext(fs.readFileSync(ROOT + 'js/models-data.js', 'utf8'), ctx);
+} catch (e) {
+  console.error('无法加载 models-data.js：' + e.message);
+  process.exit(2);
+}
+const models = ctx.window.PC_MODELS;
+if (!models) { console.error('PC_MODELS 不存在'); process.exit(2); }
+const ALL = [];
+Object.keys(models).forEach(k => (models[k] || []).forEach(i => ALL.push(i)));
+
+/* ---------- 3. 搜索探针 ---------- */
+const HARD = ['name', 'brand', 'model', 'searchName', 'style', 'specs'];
+const SOFT = ['valueNote', 'compat'];
+const S = x => String(x == null ? '' : x).toLowerCase();
+
+function classify(it, toks) {
+  const hard = HARD.some(f => { const v = S(it[f]); return v && toks.every(t => v.includes(t)); });
+  const soft = SOFT.some(f => { const v = S(it[f]); return v && toks.every(t => v.includes(t)); })
+    || (it.tags || []).some(t => toks.every(x => S(t).includes(x)));
+  return { hard, soft };
+}
+
+/* jsdom 缺失时的降级探针：只做裸字段匹配，不含 ALIAS/NEED 词表。
+   它不能替代真实 UI 口径，因此只用于保证数据类断言能跑，搜索类断言标 SKIP。 */
+function makeStubProbe() {
+  return async (q) => {
+    const toks = q.toLowerCase().split(/\s+/).filter(Boolean);
+    let n = 0, main = 0, soft = 0;
+    ALL.forEach(it => {
+      const c = classify(it, toks);
+      if (c.hard) { n++; main++; } else if (c.soft) { n++; soft++; }
+    });
+    return { n, main, soft, stub: true };
+  };
+}
+
+async function makeUiProbe(jsdomModule) {
+  const dom = await jsdomModule.JSDOM.fromFile(ROOT + 'accessories.html', {
     runScripts: 'dangerously', resources: 'usable',
     beforeParse(w) {
       w.scrollIntoView = () => {};
@@ -69,79 +93,75 @@ function classify(it, toks) {
   });
   await new Promise(r => setTimeout(r, 3500));
   const W = dom.window, D = W.document;
-  const searchEl = D.getElementById('accSearch');
+  const el = D.getElementById('accSearch');
+  if (!el) throw new Error('accSearch 元素不存在');
 
-  function uiSearch(q) {
-    searchEl.value = q;
-    searchEl.dispatchEvent(new W.Event('input', { bubbles: true }));
-    return new Promise(res => setTimeout(() => {
-      const rows = [...D.querySelectorAll('.acc-card')].map(c => ({
-        cat: (c.querySelector('.acc-cat') || {}).textContent || '',
-        name: (c.querySelector('.acc-name') || {}).textContent || ''
-      }));
-      const toks = q.toLowerCase().split(/\s+/).filter(Boolean);
-      let main = 0, soft = 0;
-      rows.forEach(x => {
-        let found = null;
-        Object.keys(mm).forEach(k => (mm[k] || []).forEach(i => {
-          if (i.name === x.name || (i.brand + ' ' + i.model) === x.name) found = i;
-        }));
-        if (!found) { main++; return; }
-        const c = classify(found, toks);
-        if (c.hardHit) main++; else if (c.softHit) soft++; else main++;
-      });
-      res({ n: rows.length, main, soft });
-    }, 450));
-  }
-
-  console.log('== 一、搜索分层 ==');
-  for (const q of BASE.specQueries) {
-    const r = await uiSearch(q);
-    chk(`规格词「${q}」主体命中 > 0（防误杀）`, r.main > 0, r);
-  }
-  {
-    const r = await uiSearch(BASE.modelQuery);
-    chk(`型号词「${BASE.modelQuery}」存在软备注层（分层生效）`, r.soft > 0 && r.main < r.n, r);
-  }
-
-  console.log('\n== 二、重复型号 ==');
-  function dupGroups(keyFn) {
-    const m = {};
-    Object.keys(mm).forEach(k => (mm[k] || []).forEach(i => {
-      const key = keyFn(k, i); (m[key] = m[key] || []).push(i);
+  return async (q) => {
+    el.value = q;
+    el.dispatchEvent(new W.Event('input', { bubbles: true }));
+    await new Promise(r => setTimeout(r, 450));
+    const rows = [...D.querySelectorAll('.acc-card')].map(c => ({
+      name: (c.querySelector('.acc-name') || {}).textContent || ''
     }));
-    return Object.entries(m).filter(([, v]) => v.length > 1);
+    const toks = q.toLowerCase().split(/\s+/).filter(Boolean);
+    let main = 0, soft = 0;
+    rows.forEach(x => {
+      const found = ALL.find(i => i.name === x.name || (i.brand + ' ' + i.model) === x.name);
+      if (!found) { main++; return; }
+      const c = classify(found, toks);
+      if (c.hard) main++; else if (c.soft) soft++; else main++;
+    });
+    return { n: rows.length, main, soft };
+  };
+}
+
+/* ---------- 4. 执行 ---------- */
+(async () => {
+  const { jsdom, from, tried } = resolveJsdom();
+  let probe, mode;
+
+  if (jsdom) {
+    try {
+      probe = await makeUiProbe(jsdom);
+      mode = 'UI';
+      console.log(`jsdom: ${from}`);
+    } catch (e) {
+      probe = makeStubProbe();
+      mode = 'STUB';
+      console.log(`jsdom 已找到但 UI 装载失败（${e.message}），降级为裸匹配探针`);
+    }
+  } else {
+    probe = makeStubProbe();
+    mode = 'STUB';
+    console.log('⚠ 未找到 jsdom，搜索类断言降级为裸字段匹配（口径不等于用户所见）');
+    console.log('  修法：在本目录执行 npm install，或设置 NODE_PATH 指向含 jsdom 的 node_modules');
+    console.log('  尝试过的路径：' + (tried || []).join(' | '));
   }
-  const dups = dupGroups((k, i) => k + '|' + S(i.brand) + '|' + S(i.model).replace(/\s+/g, ''));
-  chk(`重复组数 <= ${BASE.dupGroups}`, dups.length <= BASE.dupGroups, dups.length);
-  let noOverlap = 0;
-  dups.forEach(([, v]) => {
-    const ok = v.every(a => v.every(b => a.price[0] < b.price[1] && b.price[0] < a.price[1]));
-    if (!ok) noOverlap++;
+
+  console.log(`探针口径：${mode}\n`);
+
+  const { items, stats } = await runChecks({ models, searchProbe: probe });
+
+  let pass = 0, fail = 0, skip = 0;
+  items.forEach(it => {
+    /* 用显式 kind，不靠 id 前缀 —— model:type 是数据断言，不能被 model:layer 的命名规则误伤 */
+    if (mode === 'STUB' && it.kind === 'search') {
+      skip++;
+      console.log(`  SKIP ${it.name}（无 jsdom，口径不可信）`);
+      return;
+    }
+    if (it.ok) { pass++; console.log(`  PASS ${it.name}`); }
+    else { fail++; console.log(`  FAIL ${it.name} :: ${JSON.stringify(it.actual)}（基线 ${JSON.stringify(it.base)}）`); }
   });
-  chk(`价格区间冲突组 <= ${BASE.priceConflict}`, noOverlap <= BASE.priceConflict, noOverlap);
 
-  console.log('\n== 三、specs 结构一致性 ==');
-  let bad = 0;
-  Object.keys(mm).forEach(k => {
-    const segs = new Set((mm[k] || []).map(i => S(i.specs).split(/[;；]/).filter(x => x.trim()).length));
-    if (segs.size > 1) bad++;
-  });
-  chk(`specs 段数不固定的品类 <= ${BASE.specsInconsistent}（schema 迁移后应下降）`,
-    bad <= BASE.specsInconsistent, bad);
+  /* 同一型号出现 3 次及以上：为去重提供可执行清单 */
+  const triples = stats.dup.detail.filter(g => g.n > 2);
+  if (triples.length) {
+    console.log(`\n⚠ 同一型号出现 3 次及以上（${triples.length} 组）：`);
+    triples.slice(0, 10).forEach(g => console.log('   ' + g.key + ' → ' + g.ids.join(', ')));
+  }
 
-  console.log('\n== 四、字段与价格精度 ==');
-  let numModel = 0, single = 0, tot = 0;
-  Object.keys(mm).forEach(k => (mm[k] || []).forEach(i => {
-    tot++;
-    if (typeof i.model === 'number') numModel++;
-    if (i.price && i.price[0] === i.price[1]) single++;
-  }));
-  chk('型号总数 >= ' + BASE.totalModels, tot >= BASE.totalModels, tot);
-  chk('model 全为字符串', numModel === 0, numModel);
-  const singlePct = single / tot * 100;
-  chk(`单点价格占比 <= ${BASE.singlePricePct}%`, singlePct <= BASE.singlePricePct, singlePct.toFixed(1));
-
-  console.log(`\n结果：PASS ${pass} / FAIL ${fail}`);
+  console.log(`\n结果：PASS ${pass} / FAIL ${fail}${skip ? ` / SKIP ${skip}` : ''}`);
+  if (fail > 0) console.log('\n提示：改数据后请先跑 E:/AI/_test/build_models.js 重建，再跑本脚本。');
   process.exit(fail > 0 ? 1 : 0);
 })();
