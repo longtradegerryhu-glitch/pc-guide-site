@@ -702,6 +702,28 @@ button:focus-visible,
 .acc-model { display: inline-block; font-size: 12px; color: var(--color-text-soft); margin-top: 2px; }
 .acc-note { font-size: 13px; color: var(--color-primary); background: var(--color-primary-soft, #eff6ff); border-radius: 8px; padding: 6px 10px; line-height: 1.5; }
 
+/* 外观风格小圆点（卡片内，点击即按该外观筛选） */
+.acc-look-dot {
+  display: inline-flex; align-items: center; gap: 4px;
+  border: 1px solid var(--color-border); border-radius: 999px;
+  padding: 1px 9px 1px 6px; font-size: 11.5px; cursor: pointer;
+  color: var(--color-text); font-family: inherit; line-height: 1.7;
+}
+.acc-look-dot:hover { border-color: var(--color-primary); }
+.acc-look-dot:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 1px; }
+.acc-look-dot.active { border-color: var(--color-primary); box-shadow: 0 0 0 1px var(--color-primary); }
+.acc-look-dot-name { font-weight: 600; }
+
+/* 品牌：常用区 + 更多品牌折叠区 */
+.acc-brand-top { display: flex; flex-wrap: wrap; gap: 8px; }
+.acc-brand-rest { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--color-border); }
+.acc-brand-more {
+  margin-top: 10px; background: none; border: 1px solid var(--color-border); color: var(--color-primary);
+  font-size: 12.5px; font-weight: 600; padding: 4px 14px; border-radius: 999px; cursor: pointer; font-family: inherit;
+}
+.acc-brand-more:hover { border-color: var(--color-primary); background: var(--color-primary-soft, #eff6ff); }
+.acc-brand-more:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+
 /* 配件卡详情区：默认收起，点「详情」展开 */
 .acc-detail { display: none; flex-direction: column; gap: 8px; border-top: 1px dashed var(--color-border); padding-top: 9px; }
 .acc-detail.open { display: flex; }

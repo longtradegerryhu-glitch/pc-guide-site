@@ -12,6 +12,33 @@
   var useIcons = { office: "💼", game: "🎮", create: "🎬", portable: "💻" };
   var audLabels = { student: "学生党", office: "办公族", gamer: "游戏党", creator: "创作者", mobile: "移动办公" };
   var audIcons = { student: "🎓", office: "💼", gamer: "🎮", creator: "🎬", mobile: "💻" };
+
+  /* 合并后的「使用场景」：把原 use（场景）与 audience（人群）两套语义重叠的标签
+     归并为 5 个用户能直接理解的用途。命中规则为「用途或人群任一匹配即算命中」，
+     避免合并后反而筛掉了原本能看到的型号。 */
+  var SCENES = [
+    { id: "office", label: "办公学习", icon: "💼",
+      use: ["office"], aud: ["office", "student"] },
+    { id: "game", label: "游戏电竞", icon: "🎮",
+      use: ["game"], aud: ["gamer"] },
+    { id: "create", label: "内容创作", icon: "🎬",
+      use: ["create"], aud: ["creator"] },
+    { id: "portable", label: "移动便携", icon: "💻",
+      use: ["portable"], aud: ["mobile"] },
+    { id: "allround", label: "全能通用", icon: "✨", use: [], aud: [] }
+  ];
+
+  /* 判断型号是否命中某场景；allround 命中全部 */
+  function sceneMatch(item, sid) {
+    if (sid === "all") return true;
+    var sc = SCENES.filter(function (x) { return x.id === sid; })[0];
+    if (!sc) return true;
+    if (sc.id === "allround") return true;
+    var u = item.use || [], a = item.audience || [];
+    for (var i = 0; i < sc.use.length; i++) if (u.indexOf(sc.use[i]) > -1) return true;
+    for (var j = 0; j < sc.aud.length; j++) if (a.indexOf(sc.aud[j]) > -1) return true;
+    return false;
+  }
   var gradeOrder = { S: 4, A: 3, B: 1, C: -1 };
   // 档位 → 真实预算中值（与 plans.price 区间对齐）
   var budgetOrder = { b3000: 4800, b4500: 7500, b6000: 11000, b8500: 16000, b12000: 24000, b20000: 37000 };
@@ -623,7 +650,7 @@
     var activeEl = document.getElementById("accActive");
     if (!wrap || !catRow || !sceneRow || !budgetRow) return;
 
-    var state = { device: "all", cat: "all", scene: "all", look: "all", budget: "all", audience: "all", brand: "all", sort: "default", q: "" };
+    var state = { device: "all", cat: "all", scene: "all", look: "all", budget: "all", brand: "all", sort: "default", q: "" };
 
     /* 口语词与英文缩写映射到品类 id：搜「主板」「显卡」这类需求词时直接按品类命中，
        不需要型号名里真的出现这两个字 */
@@ -809,12 +836,10 @@
         if (state.device !== "all" && cat.device !== state.device) return;
         if (state.cat !== "all" && cat.id !== state.cat) return;
         cat.items.forEach(function (item) {
-          if (state.scene !== "all" && (item.use || []).indexOf(state.scene) === -1) return;
+          if (state.scene !== "all" && !sceneMatch(item, state.scene)) return;
           if (state.look !== "all" && lookOf(item) !== state.look) return;
           if (state.brand !== "all" && item.brand !== state.brand) return;
           if (!matchesBudget(item, state.budget)) return;
-          var aud = item.audience || [];
-          if (state.audience !== "all" && aud.length && aud.indexOf(state.audience) === -1) return;
           if (toks && !matchQuery(item, cat.id, toks)) return;
           list.push({ cat: cat, item: item });
         });
@@ -837,11 +862,17 @@
       });
     }
 
-    /* 品牌行按当前品类实际存在的品牌生成，避免选了品牌再切品类出现空结果 */
+    /* 品牌行按当前品类实际存在的品牌生成，避免选了品牌再切品类出现空结果。
+       全量设备下有近 200 个品牌，平铺无法使用：
+       默认只显示型号数最多的 TOP_BRAND_LIMIT 个常用品牌，其余收进「更多品牌」折叠区，
+       另配品牌搜索框直达。已选品牌始终显示在常用区。 */
     var brandRow = document.getElementById("accBrands");
     var brandPool = [];
-    function renderBrands() {
-      if (!brandRow) return;
+    var TOP_BRAND_LIMIT = 12;
+    var brandAllOpen = false;
+    var brandQuery = "";
+
+    function collectBrands() {
       brandPool = [];
       D.categories.forEach(function (cat) {
         if (state.device !== "all" && cat.device !== state.device) return;
@@ -851,20 +882,78 @@
       var n = {}, order = [];
       brandPool.forEach(function (b) { if (!n[b]) { n[b] = 0; order.push(b); } n[b]++; });
       order.sort(function (a, b) { return n[b] - n[a] || (a < b ? -1 : 1); });
+      return { order: order, count: n };
+    }
+
+    function renderBrands() {
+      if (!brandRow) return;
+      var b = collectBrands();
+      var order = b.order, n = b.count;
       if (state.brand !== "all" && order.indexOf(state.brand) === -1) state.brand = "all";
-      renderChips(brandRow,
-        [{ id: "all", label: "全部品牌" }].concat(order.map(function (b) { return { id: b, label: b + " " + n[b] }; })),
-        "brand");
+
+      // 搜索过滤
+      var shown = order;
+      if (brandQuery) {
+        var q = brandQuery.toLowerCase();
+        shown = order.filter(function (x) { return x.toLowerCase().indexOf(q) > -1; });
+      }
+
+      var top = shown.slice(0, TOP_BRAND_LIMIT);
+      var rest = shown.slice(TOP_BRAND_LIMIT);
+      // 已选品牌若在「更多」里，提到常用区首位
+      if (state.brand !== "all" && rest.indexOf(state.brand) > -1) {
+        rest = rest.filter(function (x) { return x !== state.brand; });
+        top = [state.brand].concat(top.filter(function (x) { return x !== state.brand; }));
+      }
+
+      var mk = function (list) {
+        return list.map(function (x) { return { id: x, label: x + " " + n[x] }; });
+      };
+
+      var html = '<div class="acc-brand-top">' +
+        '<button class="chip' + (state.brand === "all" ? " active" : "") + '" data-id="all">全部品牌</button>' +
+        mk(top).map(function (it) {
+          return '<button class="chip' + (state.brand === it.id ? " active" : "") + '" data-id="' + esc(it.id) + '">' + esc(it.label) + "</button>";
+        }).join("") +
+        "</div>";
+
+      if (rest.length) {
+        html += '<div class="acc-brand-rest"' + (brandAllOpen ? "" : " hidden") + ">" +
+          mk(rest).map(function (it) {
+            return '<button class="chip' + (state.brand === it.id ? " active" : "") + '" data-id="' + esc(it.id) + '">' + esc(it.label) + "</button>";
+          }).join("") + "</div>";
+        html += '<button type="button" class="acc-brand-more" id="accBrandMore">' +
+          (brandAllOpen ? "收起品牌" : "更多品牌 " + rest.length + " 个") + "</button>";
+      }
+
+      brandRow.innerHTML = html;
+      brandRow.querySelectorAll(".chip").forEach(function (b2) {
+        b2.addEventListener("click", function () {
+          state.brand = b2.getAttribute("data-id");
+          renderBrands();
+          renderCards();
+        });
+      });
+      var more = document.getElementById("accBrandMore");
+      if (more) {
+        more.addEventListener("click", function () {
+          brandAllOpen = !brandAllOpen;
+          renderBrands();
+        });
+      }
     }
 
     function cardHtml(o, toks) {
       var it = o.item;
       var look = lookOf(it);
       var style = look ? styleOf(look) : null;
-      var banner = style
-        ? '<div class="acc-look" style="background:linear-gradient(120deg,' + style.palette[0] + ',' + style.palette[1] + ');">' +
-            '<span class="acc-look-icon">' + style.icon + '</span>' +
-            '<span class="acc-look-name">' + esc(style.name) + '</span></div>'
+      // 外观风格小圆点：不再单占筛选维度，点一下即按该外观筛选
+      var lookDot = style
+        ? '<button type="button" class="acc-look-dot' + (state.look === style.id ? " active" : "") +
+          '" data-look="' + esc(style.id) + '" title="按「' + esc(style.name) + '」外观筛选" ' +
+          'style="background:linear-gradient(120deg,' + style.palette[0] + ',' + style.palette[1] + ');">' +
+          '<span aria-hidden="true">' + style.icon + '</span>' +
+          '<span class="acc-look-dot-name">' + esc(style.name) + '</span></button>'
         : '';
       var tags = (it.tags || []).map(function (t) { return '<span class="tag-pill">' + hl(t, toks) + "</span>"; }).join("");
       var uses = (it.use || []).map(function (u) {
@@ -874,7 +963,6 @@
       var grade = it.valueGrade ? '<span class="grade grade-' + it.valueGrade + '">' + it.valueGrade + "</span>" : "";
       return (
         '<article class="acc-card reveal in">' +
-          banner +
           '<div class="acc-head">' +
             '<div><span class="acc-cat">' + o.cat.icon + " " + esc(o.cat.name) + "</span>" +
             '<h4 class="acc-name">' + hl(it.name, toks) + "</h4>" +
@@ -885,7 +973,7 @@
           '<div class="acc-meta">' +
             '<span class="acc-style">' + hl(it.style, toks) + "</span>" +
             '<span class="acc-rating" title="\u63a8\u8350\u5ea6 ' + it.rating + '/5">' + stars + "</span>" +
-            grade + uses +
+            grade + uses + lookDot +
           "</div>" +
           (it.valueNote ? '<div class="acc-note">' + hl(it.valueNote, toks) + "</div>" : "") +
           '<div class="acc-specs">' + hl(it.specs, toks) + "</div>" +
@@ -911,8 +999,11 @@
         chips.push({ k: "budget", label: bl });
       }
       if (state.brand !== "all") chips.push({ k: "brand", label: state.brand });
-      if (state.scene !== "all") chips.push({ k: "scene", label: useLabels[state.scene] });
-      if (state.audience !== "all") chips.push({ k: "audience", label: audLabels[state.audience] });
+      if (state.scene !== "all") {
+        var scName = state.scene;
+        SCENES.forEach(function (x) { if (x.id === state.scene) scName = x.label; });
+        chips.push({ k: "scene", label: scName });
+      }
       if (state.look !== "all") {
         var ln = "";
         STYLES.forEach(function (st) { if (st.id === state.look) ln = st.name; });
@@ -941,7 +1032,7 @@
 
     function clearAll() {
       state.device = "all"; state.cat = "all"; state.scene = "all"; state.look = "all";
-      state.budget = "all"; state.audience = "all"; state.brand = "all"; state.q = "";
+      state.budget = "all"; state.brand = "all"; state.q = "";
       state.sort = "default";
       syncControls();
       renderCards();
@@ -955,10 +1046,6 @@
       renderBrands();
       renderChips(sceneRow, sceneItems(), "scene");
       renderChips(budgetRow, BANDS.map(function (b) { return { id: b.id, label: b.label }; }), "budget");
-      var looksRow = document.getElementById("accLooks");
-      if (looksRow) renderChips(looksRow, [{ id: "all", label: "全部风格" }].concat(STYLES.map(function (st) { return { id: st.id, label: st.name }; })), "look");
-      var audienceRow = document.getElementById("accAudience");
-      if (audienceRow) renderChips(audienceRow, [{ id: "all", label: "全部人群" }].concat(Object.keys(audLabels).map(function (k) { return { id: k, label: audIcons[k] + " " + audLabels[k] }; })), "audience");
       if (sortSel) sortSel.value = state.sort;
     }
 
@@ -1007,11 +1094,10 @@
       });
     }
     function sceneItems() {
-      return [{ id: "all", label: "全部场景" }].concat(Object.keys(useLabels).map(function (k) {
-        return { id: k, label: useLabels[k] };
+      return [{ id: "all", label: "全部场景" }].concat(SCENES.map(function (x) {
+        return { id: x.id, label: x.icon + " " + x.label };
       }));
     }
-
     function renderCards() {
       var list = collect();
       var toks = state.q ? tokens(state.q) : null;
@@ -1061,6 +1147,18 @@
         wrap.innerHTML = '<div class="acc-grid">' + list.map(function (o) { return cardHtml(o, toks); }).join("") + "</div>";
       }
       bindDetailToggles();
+      bindLookDots();
+    }
+
+    /* 外观小圆点：点击即按该外观风格筛选 */
+    function bindLookDots() {
+      wrap.querySelectorAll(".acc-look-dot").forEach(function (b) {
+        b.addEventListener("click", function () {
+          var id = b.getAttribute("data-look");
+          state.look = state.look === id ? "all" : id;
+          renderCards();
+        });
+      });
     }
 
     /* 卡片「详情」展开：默认收起，点击后显示标签/搭配/查价 */
