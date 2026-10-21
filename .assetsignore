@@ -11,3 +11,4 @@ cloudflare-deploy-guide.md
 edgeone.json
 .env
 .env.*
+tests/
