@@ -650,12 +650,12 @@
     var activeEl = document.getElementById("accActive");
     if (!wrap || !catRow || !sceneRow || !budgetRow) return;
 
-    /* 分组展开状态：品类 id -> 是否展开。默认只展开首个有结果的分组，
-   其余折叠，用户按需点开，避免 21 组全量铺开造成的视觉与性能负担 */
-    var openGroups = {};
+    /* 分组渐进加载：每组先出 GROUP_PAGE 款，之后按「加载更多」每次追加 LOAD_STEP 款。
+       分组不做折叠——内容一律直接可见，不要求用户点开任何东西。 */
     var lastSig = "";
-    var GROUP_PAGE = 12;   // 单组首屏渲染条数
-    var groupShown = {};   // 品类 id -> 已展开条数
+    var GROUP_PAGE = 24;   // 每组首屏渲染条数
+    var LOAD_STEP = 24;    // 「加载更多」每次追加条数
+    var groupShown = {};   // 品类 id -> 已加载条数
 
     var state = { device: "all", cat: "all", scene: "all", look: "all", budget: "all", brand: "all", sort: "default", q: "" };
 
@@ -1138,68 +1138,45 @@
         if (sub.length) groups.push({ cat: cat, items: sub });
       });
 
-      /* 展开策略（条件变化时重置分组状态）：
-         搜索命中多个品类时全部展开 —— 用户已用关键词缩小范围，再要求逐组点开是多余步骤；
-         无搜索词时只展开首组，其余折叠，避免 21 组一次铺开造成的视觉与性能负担。 */
+      /* 所有分组直接渲染，不折叠。条件变化时重置每组已加载条数 */
       var sig = state.device + "|" + state.cat + "|" + state.scene + "|" +
                 state.look + "|" + state.budget + "|" + state.brand + "|" + state.q;
       if (sig !== lastSig) {
         lastSig = sig;
-        openGroups = {};
         groupShown = {};
-        if (state.q && groups.length > 1) {
-          groups.forEach(function (g) {
-            openGroups[g.cat.id] = true;
-            groupShown[g.cat.id] = GROUP_PAGE;
-          });
-        } else if (groups.length) {
-          openGroups[groups[0].cat.id] = true;
-          groupShown[groups[0].cat.id] = GROUP_PAGE;
-        }
       }
 
-      wrap.innerHTML = groups.map(function (g, gi) {
+      wrap.innerHTML = groups.map(function (g) {
         var cid = g.cat.id;
-        var open = !!openGroups[cid];
         var total = g.items.length;
-        var shown = open ? Math.max(groupShown[cid] || GROUP_PAGE, GROUP_PAGE) : 0;
+        var shown = Math.max(groupShown[cid] || GROUP_PAGE, GROUP_PAGE);
         var slice = g.items.slice(0, shown);
         var more = total - slice.length;
-        return '<section class="acc-group' + (open ? " open" : "") + '" data-cat="' + esc(cid) + '">' +
-          '<button type="button" class="acc-group-head" aria-expanded="' + (open ? "true" : "false") + '">' +
+        return '<section class="acc-group" data-cat="' + esc(cid) + '">' +
+          '<div class="acc-group-head">' +
             "<h3>" + g.cat.icon + " " + esc(g.cat.name) + "</h3>" +
             '<span class="acc-group-count">' + total + " \u6b3e</span>" +
-            '<span class="acc-group-caret" aria-hidden="true">' + (open ? "\u2212" : "+") + "</span>" +
-          "</button>" +
-          '<div class="acc-group-body"' + (open ? "" : " hidden") + ">" +
+          "</div>" +
+          '<div class="acc-group-body">' +
             '<div class="acc-grid">' + slice.map(function (o) { return cardHtml(o, toks); }).join("") + "</div>" +
             (more > 0
-              ? '<button type="button" class="acc-group-more" data-more="' + esc(cid) + '">\u663e\u793a\u5176\u4f59 ' + more + " \u6b3e</button>"
+              ? '<button type="button" class="acc-group-more" data-more="' + esc(cid) + '">\u52a0\u8f7d\u66f4\u591a\uff08\u8fd8\u6709 ' + more + " \u6b3e\uff09</button>"
               : "") +
           "</div>" +
         "</section>";
       }).join("");
 
-      bindGroups();
+      bindMore();
       bindDetailToggles();
       bindLookDots();
     }
 
-    /* 分组折叠 / 单组展开更多：分组头点开/收起，「显示其余 N 款」追加渲染 */
-    function bindGroups() {
-      wrap.querySelectorAll(".acc-group-head").forEach(function (b) {
-        b.addEventListener("click", function () {
-          var cid = b.closest(".acc-group").getAttribute("data-cat");
-          var now = !openGroups[cid];
-          openGroups[cid] = now;
-          if (now && !groupShown[cid]) groupShown[cid] = GROUP_PAGE;
-          renderCards();
-        });
-      });
+    /* 「加载更多」：每步追加 LOAD_STEP 款，只影响该分组 */
+    function bindMore() {
       wrap.querySelectorAll(".acc-group-more").forEach(function (b) {
         b.addEventListener("click", function () {
           var cid = b.getAttribute("data-more");
-          groupShown[cid] = (groupShown[cid] || GROUP_PAGE) + GROUP_PAGE * 2;
+          groupShown[cid] = (groupShown[cid] || GROUP_PAGE) + LOAD_STEP;
           renderCards();
         });
       });

@@ -1421,36 +1421,16 @@ a.entry-card .card-title { margin-top: 0; }
 .acc-hl { padding: 0 1px; border-radius: 3px; color: inherit; background: rgba(250, 204, 21, .38); }
 [data-theme="dark"] .acc-hl { color: #fde68a; background: rgba(250, 204, 21, .26); }
 
-.acc-group { margin-bottom: 8px; border: 1px solid var(--color-border); border-radius: var(--radius); background: var(--color-card); box-shadow: var(--shadow); overflow: hidden; }
-.acc-group.open { margin-bottom: 14px; }
+.acc-group { margin-bottom: 14px; border: 1px solid var(--color-border); border-radius: var(--radius); background: var(--color-card); box-shadow: var(--shadow); overflow: hidden; }
 .acc-group-head {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: 10px;
-  width: 100%;
-  padding: 14px 18px;
-  background: none;
-  border: 0;
-  font: inherit;
-  color: inherit;
-  text-align: left;
-  cursor: pointer;
-  transition: background .15s ease;
+  padding: 14px 18px 10px;
 }
-.acc-group-head:hover { background: var(--color-primary-soft, rgba(37, 99, 235, .06)); }
 .acc-group-head h3 { margin: 0; font-size: 16px; font-weight: 700; color: var(--color-text); flex: 1 1 auto; }
 .acc-group-count { font-size: 13px; color: var(--color-text-soft); font-variant-numeric: tabular-nums; }
-.acc-group-caret {
-  flex: 0 0 auto;
-  width: 22px; height: 22px;
-  display: inline-flex; align-items: center; justify-content: center;
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
-  font-size: 15px; line-height: 1;
-  color: var(--color-primary);
-  background: var(--color-bg);
-}
-.acc-group-body { padding: 4px 18px 18px; }
+.acc-group-body { padding: 0 18px 18px; }
 .acc-group-more {
   display: block;
   width: 100%;
