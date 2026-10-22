@@ -80,7 +80,11 @@ function readSteps(dom) {
   return [...dom.window.document.querySelectorAll('.quiz-step')].map(s => ({
     id: s.getAttribute('data-step'),
     badge: ((s.querySelector('.q-step') || {}).textContent || '').trim(),
-    title: ((s.querySelector('.q-title') || {}).textContent || '').replace(/\s+/g, ' ').trim(),
+    /* 标题必须剔除编号徽章：.q-title 里含 "1/10" 这类 badge，
+       desktop(1/10) 与 phone(1/9) 的 badge 本就不同，
+       不剔除则「题干是否随形态变化」永远为真 → 断言恒真、变异抓不住。 */
+    title: (((s.querySelector('.q-title') || {}).textContent || '').replace(/\s+/g, ' ').trim())
+      .replace(/^\d+\s*\/\s*\d+\s*/, '').trim(),
     opts: [...s.querySelectorAll('.q-opt')].map(b => ({
       id: b.getAttribute('data-o'),
       label: ((b.querySelector('.q-opt-label') || {}).textContent || '').trim(),
