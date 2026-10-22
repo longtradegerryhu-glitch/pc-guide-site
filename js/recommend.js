@@ -836,6 +836,40 @@
       return n;
     }
 
+    /* ---------- 同型号去重（ORD-08） ----------
+       同一型号在库里可能存了两条记录：不同 id、不同价格区间。
+       页面只出一条合并卡：价格取并集，标注「价格存疑」，不替用户选其中一条。
+       口径来自 js/dup-core.js —— 与入库闸、审计断言共用同一份实现，不许在这儿另写一套。 */
+    var DupCore = window.PCDup || null;
+
+    function mergeEntries(list) {
+      if (!DupCore) return list.map(function (o) { return { cat: o.cat, item: o.item, merge: null }; });
+      var order = [], bucket = {};
+      list.forEach(function (o) {
+        var k = DupCore.keyOf(o.cat.id, o.item);
+        if (!bucket[k]) { bucket[k] = { cat: o.cat, items: [] }; order.push(k); }
+        bucket[k].items.push(o.item);
+      });
+      return order.map(function (k) {
+        var b = bucket[k];
+        if (b.items.length === 1) return { cat: b.cat, item: b.items[0], merge: null };
+        var m = DupCore.mergeGroup(b.cat.id, b.items);
+        return { cat: b.cat, item: m.item, merge: m };
+      });
+    }
+
+    /* 全量合并后的卡片数：用来判断"是否处于未筛选状态"，不能再用原始 1209 条 */
+    var mergedTotalCache = null;
+    function mergedTotal() {
+      if (mergedTotalCache != null) return mergedTotalCache;
+      var all = [];
+      D.categories.forEach(function (c) {
+        c.items.forEach(function (it) { all.push({ cat: c, item: it }); });
+      });
+      mergedTotalCache = mergeEntries(all).length;
+      return mergedTotalCache;
+    }
+
     function collect() {
       var list = [];
       var toks = state.q ? segmentQuery(state.q) : null;
@@ -851,7 +885,7 @@
           list.push({ cat: cat, item: item });
         });
       });
-      return list;
+      return mergeEntries(list);
     }
 
     function renderChips(row, items, key) {
@@ -968,6 +1002,21 @@
       }).join("");
       var stars = "\u2605\u2605\u2605\u2605\u2605".slice(0, it.rating) + "\u2606\u2606\u2606\u2606\u2606".slice(0, 5 - it.rating);
       var grade = it.valueGrade ? '<span class="grade grade-' + it.valueGrade + '">' + it.valueGrade + "</span>" : "";
+      /* 合并卡：把"两条记录"这件事显式说出来，藏起来等于骗人 */
+      var badge = "", caliber = "";
+      if (o.merge) {
+        if (o.merge.dispute) {
+          badge = '<span class="acc-merge-badge warn" title="\u540c\u578b\u53f7\u4e24\u6761\u8bb0\u5f55\u62a5\u4ef7\u533a\u95f4\u4e0d\u91cd\u53e0">\u4ef7\u683c\u5b58\u7591</span>';
+          caliber = '<div class="acc-caliber"><b>\u4ef7\u683c\u5b58\u7591</b>\uff1a\u5e93\u5185\u540c\u578b\u53f7\u6709 ' +
+            o.merge.ids.length + ' \u6761\u8bb0\u5f55\uff0c\u62a5\u4ef7\u533a\u95f4\u4e0d\u91cd\u53e0\uff08' +
+            o.merge.ranges.map(function (r) { return fmtPrice(r); }).join(" \u4e0e ") +
+            '\uff09\u3002\u6b64\u5904\u53d6\u5e76\u96c6\u533a\u95f4\u663e\u793a\uff0c\u672a\u66ff\u4f60\u9009\u5176\u4e2d\u4e00\u6761\uff0c\u4e0b\u5355\u524d\u8bf7\u81ea\u884c\u6bd4\u4ef7\u3002</div>';
+        } else {
+          badge = '<span class="acc-merge-badge" title="\u540c\u578b\u53f7\u91cd\u590d\u5f55\u5165\uff0c\u5df2\u5408\u5e76\u4e3a\u4e00\u6761">\u5df2\u5408\u5e76 ' + o.merge.ids.length + " \u6761</span>";
+          caliber = '<div class="acc-caliber">\u5e93\u5185\u540c\u578b\u53f7\u6709 ' + o.merge.ids.length +
+            ' \u6761\u91cd\u590d\u8bb0\u5f55\uff0c\u62a5\u4ef7\u533a\u95f4\u4e00\u81f4\uff0c\u5df2\u5408\u5e76\u4e3a\u4e00\u6761\u663e\u793a\u3002</div>';
+        }
+      }
       return (
         '<article class="acc-card reveal in">' +
           '<div class="acc-head">' +
@@ -975,7 +1024,7 @@
             '<h4 class="acc-name">' + hl(it.name, toks) + "</h4>" +
             (it.brand && it.model ? '<span class="acc-model">' + esc(it.brand + " " + it.model) + "</span>" : "") +
             "</div>" +
-            '<span class="acc-price">' + fmtPrice(it.price) + "</span>" +
+            '<span class="acc-price">' + fmtPrice(it.price) + "</span>" + badge +
           "</div>" +
           '<div class="acc-meta">' +
             '<span class="acc-style">' + hl(it.style, toks) + "</span>" +
@@ -984,6 +1033,7 @@
           "</div>" +
           (it.valueNote ? '<div class="acc-note">' + hl(it.valueNote, toks) + "</div>" : "") +
           '<div class="acc-specs">' + hl(it.specs, toks) + "</div>" +
+          caliber +
           '<div class="acc-detail">' +
             (tags ? '<div class="acc-tags">' + tags + "</div>" : "") +
             (it.compat ? '<div class="acc-compat">\u642d\u914d\uff1a' + hl(it.compat, toks) + "</div>" : "") +
@@ -1113,7 +1163,7 @@
         list.sort(function (a, b) { return (gradeOrder[b.item.valueGrade] || 0) - (gradeOrder[a.item.valueGrade] || 0); });
       }
 
-      var allN = totalModels();
+      var allN = mergedTotal();
       countEl.textContent = (list.length === allN)
         ? D.updated + " \u884c\u60c5"
         : "\u7b5b\u51fa " + list.length + " \u6b3e";
@@ -1206,12 +1256,6 @@
           detail.classList.toggle("open", !open);
         });
       });
-    }
-
-    function totalModels() {
-      var n = 0;
-      D.categories.forEach(function (c) { n += c.items.length; });
-      return n;
     }
 
     // 热门搜索：覆盖型号、品类、需求词三种典型查法

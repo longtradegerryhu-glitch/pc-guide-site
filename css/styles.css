@@ -694,6 +694,20 @@ button:focus-visible,
 .acc-cat { font-size: 12px; color: var(--color-primary); font-weight: 700; }
 .acc-name { font-size: 16px; margin-top: 2px; }
 .acc-price { font-size: 15px; font-weight: 800; color: var(--color-primary); white-space: nowrap; }
+/* 合并卡标注：同型号两条记录合成一条时，把这件事显式说出来 */
+.acc-merge-badge {
+  display: inline-block; margin-left: 8px; padding: 1px 7px; border-radius: 999px;
+  font-size: 11px; font-weight: 700; line-height: 1.6; white-space: nowrap;
+  color: var(--color-text-soft); background: rgba(120, 130, 150, .14);
+  border: 1px solid rgba(120, 130, 150, .28);
+}
+.acc-merge-badge.warn { color: #b45309; background: rgba(245, 158, 11, .16); border-color: rgba(217, 119, 6, .42); }
+.acc-caliber {
+  font-size: 12px; line-height: 1.6; margin-top: 8px; padding: 7px 10px; border-radius: 8px;
+  color: var(--color-text-soft); background: rgba(120, 130, 150, .08);
+  border-left: 3px solid rgba(120, 130, 150, .4);
+}
+.acc-caliber b { color: #b45309; }
 .acc-specs { font-size: 13px; color: var(--color-text-soft); line-height: 1.55; }
 .acc-meta { display: flex; align-items: center; gap: 10px; font-size: 12px; flex-wrap: wrap; }
 .acc-style { background: var(--color-primary-soft, #eff6ff); color: var(--color-primary); padding: 2px 10px; border-radius: 999px; font-weight: 600; }

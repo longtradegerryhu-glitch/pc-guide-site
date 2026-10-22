@@ -1,0 +1,1682 @@
+{
+  "generatedAt": "2026-10-22T05:47:19.284Z",
+  "source": "js/models-data.js",
+  "highRatioThreshold": 1.5,
+  "summary": {
+    "total": 1209,
+    "groups": 49,
+    "extra": 49,
+    "cards": 1160,
+    "maxPerGroup": 2,
+    "conflict": 17,
+    "highDiff": 5
+  },
+  "groups": [
+    {
+      "catId": "earphone",
+      "catLabel": "🎧 耳机与耳麦",
+      "brand": "铁三角",
+      "model": "ATH-CLR100",
+      "records": [
+        {
+          "id": "ep31",
+          "name": "铁三角 ATH-CLR100 有线入耳",
+          "price": [
+            549,
+            899
+          ],
+          "specs": "动圈单元;入耳式;1.2m 线;3.5mm / USB-C 版"
+        },
+        {
+          "id": "va1",
+          "name": "铁三角 ATH-CLR100",
+          "price": [
+            99,
+            149
+          ],
+          "specs": "3.5mm 有线;入耳式;小尺寸单元;带线控麦克风"
+        }
+      ],
+      "union": [
+        99,
+        899
+      ],
+      "gap": 400,
+      "gapPct": 404,
+      "conflict": true,
+      "hint": "两条区间不重叠且倍率 5.84×，不可能同时为真，需确认渠道与版本后删掉错的那条"
+    },
+    {
+      "catId": "earphone",
+      "catLabel": "🎧 耳机与耳麦",
+      "brand": "森海塞尔",
+      "model": "Momentum 4",
+      "records": [
+        {
+          "id": "ep25",
+          "name": "森海塞尔 Momentum 4",
+          "price": [
+            1053,
+            1538
+          ],
+          "specs": "自适应主动降噪;60 小时续航;42mm 动圈;蓝牙 5.2"
+        },
+        {
+          "id": "ep216",
+          "name": "森海塞尔 MOMENTUM 4",
+          "price": [
+            1799,
+            2799
+          ],
+          "specs": "头戴无线;约 1799 元（划线 2799 元）"
+        }
+      ],
+      "union": [
+        1053,
+        2799
+      ],
+      "gap": 261,
+      "gapPct": 24.8,
+      "conflict": true,
+      "hint": "两条区间不重叠且倍率 1.77×，不可能同时为真，需确认渠道与版本后删掉错的那条"
+    },
+    {
+      "catId": "earphone",
+      "catLabel": "🎧 耳机与耳麦",
+      "brand": "森海塞尔",
+      "model": "HD660S2",
+      "records": [
+        {
+          "id": "ep26",
+          "name": "森海塞尔 HD660S2",
+          "price": [
+            1999,
+            2499
+          ],
+          "specs": "300Ω;42mm 动圈;开放式"
+        },
+        {
+          "id": "ep217",
+          "name": "森海塞尔 HD 660S2",
+          "price": [
+            2999,
+            4199
+          ],
+          "specs": "300Ω;有线开放监听;约 2999 元（划线 4199 元）"
+        }
+      ],
+      "union": [
+        1999,
+        4199
+      ],
+      "gap": 500,
+      "gapPct": 25,
+      "conflict": true,
+      "hint": "两条区间不重叠且倍率 1.6×，不可能同时为真，需确认渠道与版本后删掉错的那条"
+    },
+    {
+      "catId": "gpu",
+      "catLabel": "🎮 显卡",
+      "brand": "AMD",
+      "model": "RX 9060 XT 16G",
+      "records": [
+        {
+          "id": "g3",
+          "name": "AMD RX 9060 XT 16G",
+          "price": [
+            2600,
+            3600
+          ],
+          "specs": "16GB GDDR6;2K 高画质;FSR4"
+        },
+        {
+          "id": "vg210",
+          "name": "AMD Radeon RX 9060 XT 16G",
+          "price": [
+            4899,
+            4899
+          ],
+          "specs": "16GB GDDR6;128bit;2048 SP;TDP 160W;蓝宝石氮动30cm/合金脉动24cm/瀚铠;4899 元;接口未核到"
+        }
+      ],
+      "union": [
+        2600,
+        4899
+      ],
+      "gap": 1299,
+      "gapPct": 50,
+      "conflict": true,
+      "hint": "两条区间不重叠且倍率 1.58×，不可能同时为真，需确认渠道与版本后删掉错的那条"
+    },
+    {
+      "catId": "earphone",
+      "catLabel": "🎧 耳机与耳麦",
+      "brand": "索尼",
+      "model": "LinkBuds Open",
+      "records": [
+        {
+          "id": "ep15",
+          "name": "索尼 LinkBuds Open",
+          "price": [
+            799,
+            1099
+          ],
+          "specs": "耳挂式;不入耳;长续航;IPX4"
+        },
+        {
+          "id": "ep210",
+          "name": "索尼 LinkBuds Open",
+          "price": [
+            1499,
+            1499
+          ],
+          "specs": "开放式耳挂;约 1499 元"
+        }
+      ],
+      "union": [
+        799,
+        1499
+      ],
+      "gap": 400,
+      "gapPct": 50.1,
+      "conflict": true,
+      "hint": "两条区间不重叠且倍率 1.58×，不可能同时为真，需确认渠道与版本后删掉错的那条"
+    },
+    {
+      "catId": "cpu",
+      "catLabel": "🧠 CPU",
+      "brand": "AMD",
+      "model": "Ryzen 9 9950X3D",
+      "records": [
+        {
+          "id": "u19",
+          "name": "AMD Ryzen 9 9950X3D",
+          "price": [
+            4199,
+            4899
+          ],
+          "specs": "16核32线程;144MB总缓存;170W;AM5"
+        },
+        {
+          "id": "vc208",
+          "name": "AMD Ryzen 9 9950X3D",
+          "price": [
+            6699,
+            6699
+          ],
+          "specs": "16核32线程;TDP 200W;TSMC 4nm;AM5;3D V-Cache"
+        }
+      ],
+      "union": [
+        4199,
+        6699
+      ],
+      "gap": 1800,
+      "gapPct": 42.9,
+      "conflict": true,
+      "hint": "区间不重叠但差距不大（1.47×），大概率是不同渠道报价，确认后保留并集"
+    },
+    {
+      "catId": "ssd",
+      "catLabel": "💾 固态硬盘",
+      "brand": "致态",
+      "model": "TiPlus7100 1TB",
+      "records": [
+        {
+          "id": "sd1",
+          "name": "致态 TiPlus7100 1TB",
+          "price": [
+            850,
+            999
+          ],
+          "specs": "PCIe 4.0×4;1TB;TLC;无独立缓存;HMB;读 7000MB/s;5 年保"
+        },
+        {
+          "id": "vsd201",
+          "name": "致态 TiPlus7100 1TB",
+          "price": [
+            639,
+            639
+          ],
+          "specs": "1TB;PCIe 4.0 x4 / NVMe 2.0;7000/6000MB/s;HMB 无缓 + Xtacking 3.0 TLC;5 年 600TBW;京东自营 639 元"
+        }
+      ],
+      "union": [
+        639,
+        999
+      ],
+      "gap": 211,
+      "gapPct": 33,
+      "conflict": true,
+      "hint": "区间不重叠但差距不大（1.45×），大概率是不同渠道报价，确认后保留并集"
+    },
+    {
+      "catId": "tablet",
+      "catLabel": "📶 平板",
+      "brand": "OPPO",
+      "model": "Pad 6",
+      "records": [
+        {
+          "id": "tb42",
+          "name": "OPPO Pad 6",
+          "price": [
+            2999,
+            3899
+          ],
+          "specs": "天玑 9500s;12G 内存;256G 存储;3K 柔光屏;10420mAh"
+        },
+        {
+          "id": "tb209",
+          "name": "OPPO Pad 6",
+          "price": [
+            3899,
+            6099
+          ],
+          "specs": "天玑 9500s;12G 内存;512G 存储;12.1 英寸 LCD 3000×2120 144Hz;10420mAh;67W"
+        }
+      ],
+      "union": [
+        2999,
+        6099
+      ],
+      "gap": 0,
+      "gapPct": 0,
+      "conflict": true,
+      "hint": "区间不重叠但差距不大（1.45×），大概率是不同渠道报价，确认后保留并集"
+    },
+    {
+      "catId": "laptop",
+      "catLabel": "💻 笔记本电脑",
+      "brand": "华硕",
+      "model": "无畏16 SE 2026",
+      "records": [
+        {
+          "id": "lbx7",
+          "name": "华硕 无畏16 SE 2026",
+          "price": [
+            4299,
+            5799
+          ],
+          "specs": "酷睿 5 320;16G 内存;512G 存储;14 英寸 60Hz 或 16 英寸 144Hz;52.5Wh;约 1.29-1.59kg"
+        },
+        {
+          "id": "lb204",
+          "name": "华硕无畏 16SE 2026",
+          "price": [
+            3600,
+            3824
+          ],
+          "specs": "酷睿 5 320;16 英寸 2.5K 144Hz 高色域;约 1.59kg;国补后 3600-3824 元"
+        }
+      ],
+      "union": [
+        3600,
+        5799
+      ],
+      "gap": 475,
+      "gapPct": 13.2,
+      "conflict": true,
+      "hint": "区间不重叠但差距不大（1.36×），大概率是不同渠道报价，确认后保留并集"
+    },
+    {
+      "catId": "gpu",
+      "catLabel": "🎮 显卡",
+      "brand": "NVIDIA",
+      "model": "RTX 5070 12G",
+      "records": [
+        {
+          "id": "g4",
+          "name": "NVIDIA RTX 5070 12G",
+          "price": [
+            6300,
+            7200
+          ],
+          "specs": "12GB GDDR7;2K 全特效;DLSS4 帧生成"
+        },
+        {
+          "id": "vg205",
+          "name": "NVIDIA RTX 5070 12G",
+          "price": [
+            8599,
+            9399
+          ],
+          "specs": "12GB GDDR7;192bit;基础2.33GHz/加速2.51GHz;6144 CUDA;3×DP + 1×HDMI;TDP 250W;卡长 29-33.4cm;技嘉魔鹰 8599 元"
+        }
+      ],
+      "union": [
+        6300,
+        9399
+      ],
+      "gap": 1399,
+      "gapPct": 22.2,
+      "conflict": true,
+      "hint": "区间不重叠但差距不大（1.33×），大概率是不同渠道报价，确认后保留并集"
+    },
+    {
+      "catId": "earphone",
+      "catLabel": "🎧 耳机与耳麦",
+      "brand": "索尼",
+      "model": "WH-1000XM5",
+      "records": [
+        {
+          "id": "ep21",
+          "name": "索尼 WH-1000XM5",
+          "price": [
+            2099,
+            2999
+          ],
+          "specs": "主动降噪;LDAC;30mm 单元;约 30 小时续航;约 250g"
+        },
+        {
+          "id": "a16",
+          "name": "索尼 WH-1000XM5",
+          "price": [
+            1799,
+            2099
+          ],
+          "specs": "主动降噪;30 小时续航;蓝牙 5.2;LDAC"
+        }
+      ],
+      "union": [
+        1799,
+        2999
+      ],
+      "gap": 0,
+      "gapPct": 0,
+      "conflict": true,
+      "hint": "区间不重叠但差距不大（1.31×），大概率是不同渠道报价，确认后保留并集"
+    },
+    {
+      "catId": "earphone",
+      "catLabel": "🎧 耳机与耳麦",
+      "brand": "索尼",
+      "model": "WH-1000XM6",
+      "records": [
+        {
+          "id": "ep22",
+          "name": "索尼 WH-1000XM6",
+          "price": [
+            2096,
+            2549
+          ],
+          "specs": "主动降噪;30mm 单元;LDAC;蓝牙 5.3;约 30 小时;约 254g"
+        },
+        {
+          "id": "ep211",
+          "name": "索尼 WH-1000XM6",
+          "price": [
+            2298,
+            3499
+          ],
+          "specs": "双芯 QN3 + V2;约 254g;降噪开续航约 30h;蓝牙 5.3;建议零售价 3499 元"
+        }
+      ],
+      "union": [
+        2096,
+        3499
+      ],
+      "gap": -251,
+      "gapPct": -12,
+      "conflict": false,
+      "hint": "两条区间重叠，判为重复录入，合并即可"
+    },
+    {
+      "catId": "gpu",
+      "catLabel": "🎮 显卡",
+      "brand": "NVIDIA",
+      "model": "RTX 5060 8G",
+      "records": [
+        {
+          "id": "g2",
+          "name": "NVIDIA RTX 5060 8G",
+          "price": [
+            2550,
+            3100
+          ],
+          "specs": "8GB GDDR7;2K 中高画质;DLSS4"
+        },
+        {
+          "id": "vg202",
+          "name": "NVIDIA RTX 5060 8G",
+          "price": [
+            3300,
+            3699
+          ],
+          "specs": "8GB GDDR6;Blackwell;行情 3300-3699 元;核心频率/功耗/接口未核到"
+        }
+      ],
+      "union": [
+        2550,
+        3699
+      ],
+      "gap": 200,
+      "gapPct": 7.8,
+      "conflict": true,
+      "hint": "区间不重叠但差距不大（1.24×），大概率是不同渠道报价，确认后保留并集"
+    },
+    {
+      "catId": "gpu",
+      "catLabel": "🎮 显卡",
+      "brand": "AMD",
+      "model": "RX 9060 XT 8G",
+      "records": [
+        {
+          "id": "g24",
+          "name": "AMD RX 9060 XT 8G",
+          "price": [
+            2300,
+            2700
+          ],
+          "specs": "8G GDDR6;128bit;FSR 4;150W"
+        },
+        {
+          "id": "vg209",
+          "name": "AMD Radeon RX 9060 XT 8G",
+          "price": [
+            2729,
+            3390
+          ],
+          "specs": "8GB GDDR6;128bit;2048 SP;TDP 160W;8pin;行情 2729-3390 元;接口/卡长未核到"
+        }
+      ],
+      "union": [
+        2300,
+        3390
+      ],
+      "gap": 29,
+      "gapPct": 1.3,
+      "conflict": true,
+      "hint": "区间不重叠但差距不大（1.22×），大概率是不同渠道报价，确认后保留并集"
+    },
+    {
+      "catId": "gpu",
+      "catLabel": "🎮 显卡",
+      "brand": "NVIDIA",
+      "model": "RTX 5060 Ti 16G",
+      "records": [
+        {
+          "id": "g9",
+          "name": "NVIDIA RTX 5060 Ti 16G",
+          "price": [
+            5000,
+            6000
+          ],
+          "specs": "16GB GDDR7;2K 高画质;DLSS4"
+        },
+        {
+          "id": "vg204",
+          "name": "NVIDIA RTX 5060 Ti 16G",
+          "price": [
+            3100,
+            6156
+          ],
+          "specs": "16GB GDDR7;128bit 448GB/s;基础2407MHz/加速2572MHz;4608 CUDA;3×DP2.1b + 1×HDMI2.1b;TDP 180W;史低 3100 元/七彩虹 6156 元"
+        }
+      ],
+      "union": [
+        3100,
+        6156
+      ],
+      "gap": -1000,
+      "gapPct": -32.3,
+      "conflict": false,
+      "hint": "两条区间重叠，判为重复录入，合并即可"
+    },
+    {
+      "catId": "wearable",
+      "catLabel": "⌚ 智能穿戴与配套",
+      "brand": "小米",
+      "model": "Watch S4 Sport",
+      "records": [
+        {
+          "id": "wr18",
+          "name": "小米 Watch S4 Sport",
+          "price": [
+            1697,
+            2899
+          ],
+          "specs": "双频 GNSS;eSIM;586mAh;高刷 AMOLED;多运动模式"
+        },
+        {
+          "id": "wr214",
+          "name": "小米 Watch S4 Sport",
+          "price": [
+            2464,
+            2899
+          ],
+          "specs": "1.43 英寸 AMOLED;586mAh;eSIM;双频 GNSS;5ATM;49g;电商价 2464-2899 元"
+        }
+      ],
+      "union": [
+        1697,
+        2899
+      ],
+      "gap": -435,
+      "gapPct": -25.6,
+      "conflict": false,
+      "hint": "两条区间重叠，判为重复录入，合并即可"
+    },
+    {
+      "catId": "cpu",
+      "catLabel": "🧠 CPU",
+      "brand": "AMD",
+      "model": "Ryzen 5 7500F",
+      "records": [
+        {
+          "id": "u9",
+          "name": "AMD Ryzen 5 7500F",
+          "price": [
+            900,
+            1000
+          ],
+          "specs": "6核12线程;Zen4;65W;AM5"
+        },
+        {
+          "id": "vc201",
+          "name": "AMD Ryzen 5 7500F",
+          "price": [
+            829,
+            829
+          ],
+          "specs": "6核12线程;5.0GHz;TDP 65W;TSMC 5nm;AM5;无核显"
+        }
+      ],
+      "union": [
+        829,
+        1000
+      ],
+      "gap": 71,
+      "gapPct": 8.6,
+      "conflict": true,
+      "hint": "区间不重叠但差距不大（1.15×），大概率是不同渠道报价，确认后保留并集"
+    },
+    {
+      "catId": "cooler",
+      "catLabel": "❄️ 散热器",
+      "brand": "猫头鹰",
+      "model": "NH-U12A",
+      "records": [
+        {
+          "id": "c16",
+          "name": "猫头鹰 NH-U12A",
+          "price": [
+            599,
+            699
+          ],
+          "specs": "7热管;双 NF-A12x25 风扇;高 158mm;解热 250W"
+        },
+        {
+          "id": "cl4",
+          "name": "猫头鹰 NH-U12A",
+          "price": [
+            699,
+            799
+          ],
+          "specs": "单塔风冷;七铜管;双风扇;6 年质保"
+        }
+      ],
+      "union": [
+        599,
+        799
+      ],
+      "gap": 0,
+      "gapPct": 0,
+      "conflict": true,
+      "hint": "区间不重叠但差距不大（1.15×），大概率是不同渠道报价，确认后保留并集"
+    },
+    {
+      "catId": "earphone",
+      "catLabel": "🎧 耳机与耳麦",
+      "brand": "HyperX",
+      "model": "Cloud III",
+      "records": [
+        {
+          "id": "ep39",
+          "name": "HyperX Cloud III",
+          "price": [
+            599,
+            899
+          ],
+          "specs": "53mm 驱动;记忆棉耳罩;一键静音;专用充电底座"
+        },
+        {
+          "id": "a20",
+          "name": "HyperX Cloud III",
+          "price": [
+            599,
+            699
+          ],
+          "specs": "53mm 单元;可拆卸麦克风;有线;记忆海绵耳罩"
+        }
+      ],
+      "union": [
+        599,
+        899
+      ],
+      "gap": -100,
+      "gapPct": -16.7,
+      "conflict": false,
+      "hint": "两条区间重叠，判为重复录入，合并即可"
+    },
+    {
+      "catId": "gpu",
+      "catLabel": "🎮 显卡",
+      "brand": "NVIDIA",
+      "model": "RTX 5050 8G",
+      "records": [
+        {
+          "id": "g15",
+          "name": "NVIDIA RTX 5050 8G",
+          "price": [
+            2400,
+            3150
+          ],
+          "specs": "8GB GDDR6;DLSS4多帧生成;Blackwell;130W"
+        },
+        {
+          "id": "vg201",
+          "name": "NVIDIA RTX 5050 8G",
+          "price": [
+            2279,
+            2600
+          ],
+          "specs": "8GB GDDR6;128bit;加速 2572MHz;Blackwell;卡长 18.2-28cm 视型号;渠道 2279-2600 元;核心频率/功耗/接口未核到"
+        }
+      ],
+      "union": [
+        2279,
+        3150
+      ],
+      "gap": -200,
+      "gapPct": -8.8,
+      "conflict": false,
+      "hint": "两条区间重叠，判为重复录入，合并即可"
+    },
+    {
+      "catId": "network",
+      "catLabel": "📡 网络设备",
+      "brand": "小米",
+      "model": "BE3600 2.5G 版",
+      "records": [
+        {
+          "id": "n1",
+          "name": "小米 BE3600 2.5G 版",
+          "price": [
+            140,
+            180
+          ],
+          "specs": "WiFi7;高通四核;1×2.5G 口;支持 Mesh"
+        },
+        {
+          "id": "vnw201",
+          "name": "小米路由器 BE3600 2.5G 版",
+          "price": [
+            159,
+            199
+          ],
+          "specs": "Wi-Fi 7 双频;3600Mbps;1×2.5G WAN + 3×千兆 LAN;MT7988B;159-199 元"
+        }
+      ],
+      "union": [
+        140,
+        199
+      ],
+      "gap": -21,
+      "gapPct": -15,
+      "conflict": false,
+      "hint": "两条区间重叠，判为重复录入，合并即可"
+    },
+    {
+      "catId": "ssd",
+      "catLabel": "💾 固态硬盘",
+      "brand": "致态",
+      "model": "TiPro9000 1TB",
+      "records": [
+        {
+          "id": "vd11",
+          "name": "致态 TiPro9000 1TB",
+          "price": [
+            1300,
+            1600
+          ],
+          "specs": "PCIe 5.0×4;1TB;TLC;独立缓存;散热马甲;读 14000MB/s;5 年保"
+        },
+        {
+          "id": "vsd203",
+          "name": "致态 TiPro9000 1TB",
+          "price": [
+            999,
+            1619
+          ],
+          "specs": "1TB;PCIe 5.0;读 14000MB/s(写速未核到);Xtacking TLC;5 年 600TBW;ZOL 999/京东 1619 元"
+        }
+      ],
+      "union": [
+        999,
+        1619
+      ],
+      "gap": -300,
+      "gapPct": -30,
+      "conflict": false,
+      "hint": "两条区间重叠，判为重复录入，合并即可"
+    },
+    {
+      "catId": "cpu",
+      "catLabel": "🧠 CPU",
+      "brand": "AMD",
+      "model": "Ryzen 7 9700X",
+      "records": [
+        {
+          "id": "u6",
+          "name": "AMD Ryzen 7 9700X",
+          "price": [
+            1500,
+            1750
+          ],
+          "specs": "8核16线程;Zen5;65W;AM5"
+        },
+        {
+          "id": "vc205",
+          "name": "AMD Ryzen 7 9700X",
+          "price": [
+            1478,
+            1478
+          ],
+          "specs": "8核16线程;5.5GHz;TDP 65W;TSMC 4nm;AM5;集成核显"
+        }
+      ],
+      "union": [
+        1478,
+        1750
+      ],
+      "gap": 22,
+      "gapPct": 1.5,
+      "conflict": true,
+      "hint": "区间不重叠但差距不大（1.1×），大概率是不同渠道报价，确认后保留并集"
+    },
+    {
+      "catId": "cpu",
+      "catLabel": "🧠 CPU",
+      "brand": "Intel",
+      "model": "Core Ultra 9 285K",
+      "records": [
+        {
+          "id": "u8",
+          "name": "Intel Ultra 9 285K",
+          "price": [
+            4400,
+            4800
+          ],
+          "specs": "24核24线程;Arrow Lake;125W;LGA1851"
+        },
+        {
+          "id": "vc214",
+          "name": "Intel Core Ultra 9 285K",
+          "price": [
+            3699,
+            4699
+          ],
+          "specs": "24核24线程;TDP 125W;LGA1851;京东自营 3699 元"
+        }
+      ],
+      "union": [
+        3699,
+        4800
+      ],
+      "gap": -299,
+      "gapPct": -8.1,
+      "conflict": false,
+      "hint": "两条区间重叠，判为重复录入，合并即可"
+    },
+    {
+      "catId": "cpu",
+      "catLabel": "🧠 CPU",
+      "brand": "AMD",
+      "model": "Ryzen 7 7800X3D",
+      "records": [
+        {
+          "id": "u15",
+          "name": "AMD Ryzen 7 7800X3D",
+          "price": [
+            2050,
+            2499
+          ],
+          "specs": "8核16线程;96MB 3D缓存;120W;AM5"
+        },
+        {
+          "id": "vc209",
+          "name": "AMD Ryzen 7 7800X3D",
+          "price": [
+            2069,
+            2069
+          ],
+          "specs": "8核16线程;TDP 120W;TSMC 4nm;AM5;3D V-Cache"
+        }
+      ],
+      "union": [
+        2050,
+        2499
+      ],
+      "gap": 0,
+      "gapPct": 0,
+      "conflict": false,
+      "hint": "一条是单点价且落在另一条区间内，属写法差异，不是矛盾"
+    },
+    {
+      "catId": "ssd",
+      "catLabel": "💾 固态硬盘",
+      "brand": "三星",
+      "model": "9100 PRO 2TB",
+      "records": [
+        {
+          "id": "sd12",
+          "name": "三星 9100 PRO 2TB",
+          "price": [
+            2900,
+            3500
+          ],
+          "specs": "PCIe 5.0×4;2TB;TLC;独立缓存;散热马甲;读 14800MB/s;5 年保"
+        },
+        {
+          "id": "vsd205",
+          "name": "三星 9100 PRO 2TB",
+          "price": [
+            2813,
+            2999
+          ],
+          "specs": "2TB;PCIe 5.0;14700/13400MB/s;2GB DRAM + TLC;2813-2999 元;质保年限未核到"
+        }
+      ],
+      "union": [
+        2813,
+        3500
+      ],
+      "gap": -99,
+      "gapPct": -3.5,
+      "conflict": false,
+      "hint": "两条区间重叠，判为重复录入，合并即可"
+    },
+    {
+      "catId": "laptop",
+      "catLabel": "💻 笔记本电脑",
+      "brand": "荣耀",
+      "model": "MagicBook Pro 16 2026",
+      "records": [
+        {
+          "id": "lt36",
+          "name": "荣耀 MagicBook Pro 16 2026",
+          "price": [
+            8600,
+            9600
+          ],
+          "specs": "Ultra5 338H;32G 内存;1T SSD;16 英寸 3K 165Hz"
+        },
+        {
+          "id": "lbx8",
+          "name": "荣耀 MagicBook Pro 16 2026",
+          "price": [
+            8999,
+            10999
+          ],
+          "specs": "酷睿 Ultra 5 338H / Ultra 7 358H / Ultra X9 388H;16G/32G 内存;1T 存储;15.3 英寸 3K;92Wh;约 1.66kg"
+        }
+      ],
+      "union": [
+        8600,
+        10999
+      ],
+      "gap": -601,
+      "gapPct": -7,
+      "conflict": false,
+      "hint": "两条区间重叠，判为重复录入，合并即可"
+    },
+    {
+      "catId": "earphone",
+      "catLabel": "🎧 耳机与耳麦",
+      "brand": "华为",
+      "model": "FreeClip 2",
+      "records": [
+        {
+          "id": "ep14",
+          "name": "华为 FreeClip 2",
+          "price": [
+            1299,
+            1699
+          ],
+          "specs": "C 形环;第三代自研芯片;单耳 9 小时;总 38 小时;IPX4-IP57"
+        },
+        {
+          "id": "ep205",
+          "name": "华为 FreeClip 2",
+          "price": [
+            1299,
+            1449
+          ],
+          "specs": "耳夹式;单只 5.1g;IP57;单次 9h/含盒 38h"
+        }
+      ],
+      "union": [
+        1299,
+        1699
+      ],
+      "gap": -150,
+      "gapPct": -11.5,
+      "conflict": false,
+      "hint": "两条区间重叠，判为重复录入，合并即可"
+    },
+    {
+      "catId": "cpu",
+      "catLabel": "🧠 CPU",
+      "brand": "AMD",
+      "model": "Ryzen 7 9800X3D",
+      "records": [
+        {
+          "id": "u7",
+          "name": "AMD Ryzen 7 9800X3D",
+          "price": [
+            2900,
+            3200
+          ],
+          "specs": "8核16线程;Zen5 3D V-Cache;AM5"
+        },
+        {
+          "id": "vc206",
+          "name": "AMD Ryzen 7 9800X3D",
+          "price": [
+            3299,
+            3299
+          ],
+          "specs": "8核16线程;基频 4.7GHz;TDP 120W;TSMC 4nm;AM5;3D V-Cache"
+        }
+      ],
+      "union": [
+        2900,
+        3299
+      ],
+      "gap": 99,
+      "gapPct": 3.4,
+      "conflict": true,
+      "hint": "区间不重叠但差距不大（1.08×），大概率是不同渠道报价，确认后保留并集"
+    },
+    {
+      "catId": "gpu",
+      "catLabel": "🎮 显卡",
+      "brand": "NVIDIA",
+      "model": "RTX 5070 Ti 16G",
+      "records": [
+        {
+          "id": "g6",
+          "name": "NVIDIA RTX 5070 Ti 16G",
+          "price": [
+            8700,
+            10500
+          ],
+          "specs": "16GB GDDR7;4K 入门;NVENC 加速"
+        },
+        {
+          "id": "vg206",
+          "name": "NVIDIA RTX 5070 Ti 16G",
+          "price": [
+            8600,
+            9394
+          ],
+          "specs": "16GB GDDR7;256bit;2.45GHz;8960 CUDA;TDP 300W;行情 9094-9394 元;接口/卡长未核到"
+        }
+      ],
+      "union": [
+        8600,
+        10500
+      ],
+      "gap": -694,
+      "gapPct": -8.1,
+      "conflict": false,
+      "hint": "两条区间重叠，判为重复录入，合并即可"
+    },
+    {
+      "catId": "network",
+      "catLabel": "📡 网络设备",
+      "brand": "小米",
+      "model": "BE7000",
+      "records": [
+        {
+          "id": "n9",
+          "name": "小米 BE7000",
+          "price": [
+            699,
+            899
+          ],
+          "specs": "WiFi7;4×2.5G+1×万兆口;四核;1GB 内存"
+        },
+        {
+          "id": "vnw205",
+          "name": "小米路由器 BE7000",
+          "price": [
+            689,
+            799
+          ],
+          "specs": "Wi-Fi 7 三频;7000Mbps;4×2.5G + USB3.0;高通 Pro 820 四核 A73 1.5GHz;8路FEM;689 元"
+        }
+      ],
+      "union": [
+        689,
+        899
+      ],
+      "gap": -100,
+      "gapPct": -14.5,
+      "conflict": false,
+      "hint": "两条区间重叠，判为重复录入，合并即可"
+    },
+    {
+      "catId": "ssd",
+      "catLabel": "💾 固态硬盘",
+      "brand": "致态",
+      "model": "Ti600 2TB",
+      "records": [
+        {
+          "id": "sd7",
+          "name": "致态 Ti600 2TB",
+          "price": [
+            1550,
+            1850
+          ],
+          "specs": "PCIe 4.0×4;2TB;QLC;无独立缓存;HMB;读 5000MB/s;5 年保"
+        },
+        {
+          "id": "vsd204",
+          "name": "致态 Ti600 2TB",
+          "price": [
+            1699,
+            1889
+          ],
+          "specs": "2TB;PCIe 4.0 / NVMe 2.0;7000/6000MB/s;无缓 QLC;5 年 800TBW;1699-1889 元"
+        }
+      ],
+      "union": [
+        1550,
+        1889
+      ],
+      "gap": -151,
+      "gapPct": -9.7,
+      "conflict": false,
+      "hint": "两条区间重叠，判为重复录入，合并即可"
+    },
+    {
+      "catId": "cooler",
+      "catLabel": "❄️ 散热器",
+      "brand": "Arctic",
+      "model": "LF III 360",
+      "records": [
+        {
+          "id": "c6",
+          "name": "Arctic 液冷 LF III 360",
+          "price": [
+            599,
+            720
+          ],
+          "specs": "38mm 厚排;解热 330W;六年质保"
+        },
+        {
+          "id": "cl5",
+          "name": "Arctic Liquid Freezer III 360",
+          "price": [
+            599,
+            649
+          ],
+          "specs": "360 水冷;满载 40.2dBA / 80.2℃;6 年质保;厚排冷头"
+        }
+      ],
+      "union": [
+        599,
+        720
+      ],
+      "gap": -50,
+      "gapPct": -8.3,
+      "conflict": false,
+      "hint": "两条区间重叠，判为重复录入，合并即可"
+    },
+    {
+      "catId": "input",
+      "catLabel": "⌨️ 键鼠外设",
+      "brand": "狼蛛",
+      "model": "F99",
+      "records": [
+        {
+          "id": "k17",
+          "name": "狼蛛 F99",
+          "price": [
+            299,
+            399
+          ],
+          "specs": "99键;Gasket 结构;三模;热插拔;RGB"
+        },
+        {
+          "id": "ink4",
+          "name": "狼蛛 F99",
+          "price": [
+            259,
+            399
+          ],
+          "specs": "Gasket 结构;PET 声优垫;全键热插拔;手感一致性 90%+;99 配列"
+        }
+      ],
+      "union": [
+        259,
+        399
+      ],
+      "gap": -100,
+      "gapPct": -38.6,
+      "conflict": false,
+      "hint": "两条区间重叠，判为重复录入，合并即可"
+    },
+    {
+      "catId": "phone",
+      "catLabel": "📱 手机",
+      "brand": "华为",
+      "model": "Mate X7",
+      "records": [
+        {
+          "id": "ph42",
+          "name": "华为 Mate X7",
+          "price": [
+            11999,
+            17599
+          ],
+          "specs": "麒麟 9030 Pro;16G 内存;512G 存储;内屏 8 英寸 + 外屏 6.49 英寸;5600mAh;66W/50W 无线"
+        },
+        {
+          "id": "ph218",
+          "name": "华为 Mate X7",
+          "price": [
+            11999,
+            15999
+          ],
+          "specs": "麒麟 9030 Pro;16G 内存;512G 存储;外 6.49 英寸 + 内 8 英寸 OLED LTPO 1-120Hz;5525mAh;66W/50W 无线"
+        }
+      ],
+      "union": [
+        11999,
+        17599
+      ],
+      "gap": -4000,
+      "gapPct": -33.3,
+      "conflict": false,
+      "hint": "两条区间重叠，判为重复录入，合并即可"
+    },
+    {
+      "catId": "gpu",
+      "catLabel": "🎮 显卡",
+      "brand": "NVIDIA",
+      "model": "RTX 5060 Ti 8G",
+      "records": [
+        {
+          "id": "g19",
+          "name": "NVIDIA RTX 5060 Ti 8G",
+          "price": [
+            3600,
+            4200
+          ],
+          "specs": "8G GDDR7;128bit;DLSS 4;双槽"
+        },
+        {
+          "id": "vg203",
+          "name": "NVIDIA RTX 5060 Ti 8G",
+          "price": [
+            3499,
+            3999
+          ],
+          "specs": "8GB GDDR7;Blackwell;行情 3499-3999 元;核心频率/功耗/接口未核到"
+        }
+      ],
+      "union": [
+        3499,
+        4200
+      ],
+      "gap": -399,
+      "gapPct": -11.4,
+      "conflict": false,
+      "hint": "两条区间重叠，判为重复录入，合并即可"
+    },
+    {
+      "catId": "laptop",
+      "catLabel": "💻 笔记本电脑",
+      "brand": "联想",
+      "model": "小新 Air 15 2026",
+      "records": [
+        {
+          "id": "lbx5",
+          "name": "联想 小新 Air 15 2026",
+          "price": [
+            3786,
+            4699
+          ],
+          "specs": "酷睿 5 320;16G 内存;512G 存储;15.3 英寸 120Hz 触控雾面;54.7Wh;约 1.49kg"
+        },
+        {
+          "id": "lb202",
+          "name": "联想小新 Air 15 2026",
+          "price": [
+            3825,
+            4299
+          ],
+          "specs": "酷睿 5 320;15.3 英寸 120Hz 十点触控;硬件级低蓝光;约 1.49kg;活动学生价约 3825 元"
+        }
+      ],
+      "union": [
+        3786,
+        4699
+      ],
+      "gap": -474,
+      "gapPct": -12.5,
+      "conflict": false,
+      "hint": "两条区间重叠，判为重复录入，合并即可"
+    },
+    {
+      "catId": "cpu",
+      "catLabel": "🧠 CPU",
+      "brand": "Intel",
+      "model": "Core Ultra 7 265K",
+      "records": [
+        {
+          "id": "u16",
+          "name": "Intel Core Ultra 7 265K",
+          "price": [
+            1865,
+            1980
+          ],
+          "specs": "20核20线程;30MB L3;125W;LGA1851"
+        },
+        {
+          "id": "vc213",
+          "name": "Intel Core Ultra 7 265K",
+          "price": [
+            1969,
+            1969
+          ],
+          "specs": "20核20线程;TDP 125W;LGA1851"
+        }
+      ],
+      "union": [
+        1865,
+        1980
+      ],
+      "gap": 0,
+      "gapPct": 0,
+      "conflict": false,
+      "hint": "一条是单点价且落在另一条区间内，属写法差异，不是矛盾"
+    },
+    {
+      "catId": "cpu",
+      "catLabel": "🧠 CPU",
+      "brand": "AMD",
+      "model": "Ryzen 5 9600",
+      "records": [
+        {
+          "id": "u31",
+          "name": "AMD Ryzen 5 9600",
+          "price": [
+            1250,
+            1400
+          ],
+          "specs": "6核12线程;Zen5;RDNA2 核显;AM5;65W"
+        },
+        {
+          "id": "vc203",
+          "name": "AMD Ryzen 5 9600",
+          "price": [
+            1349,
+            1349
+          ],
+          "specs": "6核12线程;5.2GHz;TDP 65W;TSMC 4nm;AM5;集成核显"
+        }
+      ],
+      "union": [
+        1250,
+        1400
+      ],
+      "gap": 0,
+      "gapPct": 0,
+      "conflict": false,
+      "hint": "一条是单点价且落在另一条区间内，属写法差异，不是矛盾"
+    },
+    {
+      "catId": "cpu",
+      "catLabel": "🧠 CPU",
+      "brand": "AMD",
+      "model": "Ryzen 5 9600X",
+      "records": [
+        {
+          "id": "u4",
+          "name": "AMD Ryzen 5 9600X",
+          "price": [
+            1200,
+            1350
+          ],
+          "specs": "6核12线程;Zen5;65W;AM5"
+        },
+        {
+          "id": "vc204",
+          "name": "AMD Ryzen 5 9600X",
+          "price": [
+            1169,
+            1348
+          ],
+          "specs": "6核12线程;5.4GHz;TDP 65W;TSMC 4nm;AM5;集成核显"
+        }
+      ],
+      "union": [
+        1169,
+        1350
+      ],
+      "gap": -148,
+      "gapPct": -12.7,
+      "conflict": false,
+      "hint": "两条区间重叠，判为重复录入，合并即可"
+    },
+    {
+      "catId": "gpu",
+      "catLabel": "🎮 显卡",
+      "brand": "NVIDIA",
+      "model": "RTX 5080 16G",
+      "records": [
+        {
+          "id": "g7",
+          "name": "NVIDIA RTX 5080 16G",
+          "price": [
+            12300,
+            16000
+          ],
+          "specs": "16GB GDDR7;4K 高刷;DLSS4"
+        },
+        {
+          "id": "vg207",
+          "name": "NVIDIA RTX 5080 16G",
+          "price": [
+            12500,
+            15988
+          ],
+          "specs": "16GB GDDR7;Blackwell;行情 12500-15988 元;频率/功耗/接口未核到"
+        }
+      ],
+      "union": [
+        12300,
+        16000
+      ],
+      "gap": -3488,
+      "gapPct": -28.4,
+      "conflict": false,
+      "hint": "两条区间重叠，判为重复录入，合并即可"
+    },
+    {
+      "catId": "audio",
+      "catLabel": "🖣 音箱与麦克风",
+      "brand": "漫步者",
+      "model": "S2000MKIII",
+      "records": [
+        {
+          "id": "va8",
+          "name": "漫步者 S2000MKIII",
+          "price": [
+            1599,
+            1899
+          ],
+          "specs": "2.0 声道;5.5 英寸中低音+平板高音;AptX HD;光纤/同轴"
+        },
+        {
+          "id": "au207",
+          "name": "漫步者 S2000MKIII",
+          "price": [
+            1480,
+            1980
+          ],
+          "specs": "120W RMS(高音 15W×2 + 中低 50W×2);平板高音 + 5.5 英寸铝振膜中低;45Hz-40kHz;蓝牙 5.0 aptX HD;双 DSP + 三路 TI TAS5754;信噪比 ≥90dB(A)"
+        }
+      ],
+      "union": [
+        1480,
+        1980
+      ],
+      "gap": -300,
+      "gapPct": -20.3,
+      "conflict": false,
+      "hint": "两条区间重叠，判为重复录入，合并即可"
+    },
+    {
+      "catId": "cpu",
+      "catLabel": "🧠 CPU",
+      "brand": "Intel",
+      "model": "Core Ultra 5 245K",
+      "records": [
+        {
+          "id": "u14",
+          "name": "Intel Core Ultra 5 245K",
+          "price": [
+            1450,
+            1500
+          ],
+          "specs": "14核14线程;睿频5.2GHz;125W;LGA1851"
+        },
+        {
+          "id": "vc216",
+          "name": "Intel Core Ultra 5 245K",
+          "price": [
+            1469,
+            1469
+          ],
+          "specs": "20核20线程;TDP 125W;LGA1851"
+        }
+      ],
+      "union": [
+        1450,
+        1500
+      ],
+      "gap": 0,
+      "gapPct": 0,
+      "conflict": false,
+      "hint": "一条是单点价且落在另一条区间内，属写法差异，不是矛盾"
+    },
+    {
+      "catId": "laptop",
+      "catLabel": "💻 笔记本电脑",
+      "brand": "联想",
+      "model": "小新 Air 13 2026",
+      "records": [
+        {
+          "id": "lbx4",
+          "name": "联想 小新 Air 13 2026",
+          "price": [
+            3994,
+            4699
+          ],
+          "specs": "酷睿 5 320;16G 内存;512G 存储;13.3 英寸 2.5K 120Hz 触控雾面;54.7Wh;约 1.1kg"
+        },
+        {
+          "id": "lb201",
+          "name": "联想小新 Air 13 2026",
+          "price": [
+            3994,
+            4699
+          ],
+          "specs": "酷睿 5 320(Wildcat Lake);16G 内存;512G 存储;13.3 英寸 2560×1600 120Hz 400nit 100% DCI-P3 触控;54.7Wh;约 1.1kg"
+        }
+      ],
+      "union": [
+        3994,
+        4699
+      ],
+      "gap": -705,
+      "gapPct": -17.7,
+      "conflict": false,
+      "hint": "两条区间重叠，判为重复录入，合并即可"
+    },
+    {
+      "catId": "phone",
+      "catLabel": "📱 手机",
+      "brand": "荣耀",
+      "model": "Magic 9",
+      "records": [
+        {
+          "id": "ph23",
+          "name": "荣耀 Magic 9",
+          "price": [
+            4999,
+            5999
+          ],
+          "specs": "第五代骁龙 8 至尊版;12G 内存;256G 存储;6.37 英寸 OLED 120Hz;8000mAh;80W/50W 无线"
+        },
+        {
+          "id": "ph224",
+          "name": "荣耀 Magic9",
+          "price": [
+            4999,
+            5999
+          ],
+          "specs": "第五代骁龙 8 至尊版;12G 内存;256G 存储;6.37 英寸 OLED 120Hz;8000mAh;80W/50W 无线"
+        }
+      ],
+      "union": [
+        4999,
+        5999
+      ],
+      "gap": -1000,
+      "gapPct": -20,
+      "conflict": false,
+      "hint": "两条区间重叠，判为重复录入，合并即可"
+    },
+    {
+      "catId": "phone",
+      "catLabel": "📱 手机",
+      "brand": "荣耀",
+      "model": "Magic 9 Pro Max",
+      "records": [
+        {
+          "id": "ph24",
+          "name": "荣耀 Magic 9 Pro Max",
+          "price": [
+            6499,
+            10999
+          ],
+          "specs": "第六代骁龙 8 超级至尊版;16G 内存;512G 存储;6.8 英寸 OLED 120Hz;8800mAh;100W/80W 无线"
+        },
+        {
+          "id": "ph223",
+          "name": "荣耀 Magic9 Pro Max",
+          "price": [
+            6499,
+            10999
+          ],
+          "specs": "第六代骁龙 8 超级至尊版;16G 内存;512G 存储;6.9 英寸 1.5K 10000nits;8800mAh;100W/80W 无线;阿莱双 2 亿像素"
+        }
+      ],
+      "union": [
+        6499,
+        10999
+      ],
+      "gap": -4500,
+      "gapPct": -69.2,
+      "conflict": false,
+      "hint": "两条区间重叠，判为重复录入，合并即可"
+    },
+    {
+      "catId": "tablet",
+      "catLabel": "📶 平板",
+      "brand": "vivo",
+      "model": "Pad5 Pro",
+      "records": [
+        {
+          "id": "tb44",
+          "name": "vivo Pad5 Pro",
+          "price": [
+            2999,
+            4399
+          ],
+          "specs": "天玑 9400;12G 内存;256G 存储;13 英寸 3.1K 144Hz;12050mAh;66W"
+        },
+        {
+          "id": "tb211",
+          "name": "vivo Pad5 Pro",
+          "price": [
+            2999,
+            4399
+          ],
+          "specs": "天玑 9400;16G 内存;512G 存储;13 英寸 3096×2064 144Hz;12050mAh;66W;柔光版/超轻版可选"
+        }
+      ],
+      "union": [
+        2999,
+        4399
+      ],
+      "gap": -1400,
+      "gapPct": -46.7,
+      "conflict": false,
+      "hint": "两条区间重叠，判为重复录入，合并即可"
+    },
+    {
+      "catId": "earphone",
+      "catLabel": "🎧 耳机与耳麦",
+      "brand": "华为",
+      "model": "FreeBuds 7",
+      "records": [
+        {
+          "id": "ep6",
+          "name": "华为 FreeBuds 7",
+          "price": [
+            949,
+            999
+          ],
+          "specs": "半入耳;HWA 无损 4.6Mbps;蓝牙 6.0;星闪 E2.0;总 42 小时;IPX5"
+        },
+        {
+          "id": "ep203",
+          "name": "华为 FreeBuds 7",
+          "price": [
+            949,
+            999
+          ],
+          "specs": "半入耳;10.8mm 全频单元;降噪带宽 5.5kHz;IP55;单耳 4.3g;单次 8.5h/含盒 42h;蓝牙 6.0"
+        }
+      ],
+      "union": [
+        949,
+        999
+      ],
+      "gap": -50,
+      "gapPct": -5.3,
+      "conflict": false,
+      "hint": "两条区间重叠，判为重复录入，合并即可"
+    },
+    {
+      "catId": "earphone",
+      "catLabel": "🎧 耳机与耳麦",
+      "brand": "雷蛇",
+      "model": "北海巨妖 V4 X",
+      "records": [
+        {
+          "id": "ep41",
+          "name": "雷蛇 北海巨妖 V4 X",
+          "price": [
+            499,
+            599
+          ],
+          "specs": "50mm 驱动;约 285g;耳罩可拆换;7.1 声道"
+        },
+        {
+          "id": "va3",
+          "name": "雷蛇 北海巨妖 V4 X",
+          "price": [
+            499,
+            599
+          ],
+          "specs": "三模;THX 空间音效;伸缩式麦克风;40mm 单元"
+        }
+      ],
+      "union": [
+        499,
+        599
+      ],
+      "gap": -100,
+      "gapPct": -20,
+      "conflict": false,
+      "hint": "两条区间重叠，判为重复录入，合并即可"
+    }
+  ]
+}

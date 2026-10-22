@@ -12,3 +12,5 @@ edgeone.json
 .env
 .env.*
 tests/
+tools/
+reports/

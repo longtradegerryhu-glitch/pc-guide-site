@@ -1,8 +1,12 @@
-/* 审计断言核心逻辑 —— 纯函数，不读文件、不依赖 jsdom
+/* 审计断言核心逻辑 —— 纯函数，不读文件（除共享内核）、不依赖 jsdom
  *
  * 为什么单独抽出来：
  *   断言本身必须可测。如果断言只能读真实数据跑一遍，就无法验证"数据被污染时它会不会 FAIL"。
  *   抽成纯函数后，tests/selftest-mutation.cjs 可以构造污染数据，验证对应断言确实失败。
+ *
+ * 归一化/合并口径不在这里定义，从 js/dup-core.js 读 —— 页面合并卡用的是同一份代码。
+ * 本仓库 package.json 是 type=module，require 一个 .js 会 ERR_REQUIRE_ESM，
+ * 所以用 vm 读取该浏览器脚本，取它挂到 globalThis 上的 PCDup。
  *
  * 输入的 models 结构：{ 品类id: [ {id, brand, model, price:[lo,hi], specs, ...} ] }
  * 输入的 searchProbe：async (query) => { n, main, soft }
@@ -11,13 +15,33 @@
 
 'use strict';
 
-/* ---------- 基线（2026-10-21 / 1209 款 / 21 品类） ---------- */
+const fs = require('fs');
+const vm = require('vm');
+const path = require('path');
+
+const CORE_PATH = path.join(__dirname, '..', '..', 'js', 'dup-core.js');
+const coreCtx = {};
+vm.createContext(coreCtx);
+vm.runInContext(fs.readFileSync(CORE_PATH, 'utf8'), coreCtx);
+const core = coreCtx.PCDup;
+if (!core) throw new Error('js/dup-core.js 未导出 PCDup，口径内核加载失败');
+
+const S = core.S;
+const norm = core.norm;
+const dupKey = core.keyOf;
+
+/* ---------- 基线（2026-10-22 / 1209 款 / 21 品类） ---------- */
 const BASE = {
   totalModels: 1209,
+  /* 原始数据层：库内仍有 49 组重复录入。页面已合并显示，但数据源没动，
+     所以这里维持 49 —— 它的作用是拦住"再往里写重复"，不是描述页面现状。 */
   dupGroups: 49,          // 有重复的型号组数
   dupExtraEntries: 49,    // 重复条目总数（每组超出的条数之和）—— 抓"同组新增第三条"
   maxPerGroup: 2,         // 单个型号最多出现几次 —— 同样抓"同组新增第三条"
-  priceConflict: 21,      // 组内价格区间完全不重叠的组数
+  priceConflict: 17,      // 组内价格区间完全不重叠的组数（旧口径 21 含自比较虚高，见 dupStats 注释）
+  /* 呈现层：合并卡总数与存疑标注数 */
+  mergedCards: 1160,      // 1209 条原始记录合并后应有 1160 张卡
+  mergedDispute: 17,      // 合并卡中标注「价格存疑」的组数，必须等于原始冲突数
   specsInconsistent: 21,  // specs 段数不固定的品类数
   singlePricePct: 10,     // 单点价格（lo==hi）占比上限 %
   specQueries: ['ATX3.1', 'GDDR7', '360水冷'],  // 规格词：主体命中必须 > 0，防"过滤垃圾"误杀
@@ -26,15 +50,6 @@ const BASE = {
 
 const HARD = ['name', 'brand', 'model', 'searchName', 'style', 'specs'];
 const SOFT = ['valueNote', 'compat'];
-const S = x => String(x == null ? '' : x).toLowerCase();
-
-/* 归一化：小写 + 去空白 + 去横线类符号。
-   ⚠ 这是全项目唯一实现。rebuild2.js 的入库查重闸必须 require 这里，
-     不许另写一份 —— 闸与审计口径不一致，审计数字就失去意义。 */
-const norm = x => S(x).replace(/\s+/g, '').replace(/[\-－—_]/g, '');
-
-/* 重复判定的键：品类 + 归一化品牌 + 归一化型号 */
-const dupKey = (cat, it) => cat + '|' + norm(it && it.brand) + '|' + norm(it && it.model);
 
 function allItems(models) {
   const out = [];
@@ -42,7 +57,7 @@ function allItems(models) {
   return out;
 }
 
-/* ---------- 重复型号统计 ---------- */
+/* ---------- 重复型号统计（原始数据层） ---------- */
 function dupStats(models) {
   const m = new Map();
   allItems(models).forEach(({ cat, it }) => {
@@ -56,11 +71,40 @@ function dupStats(models) {
   groups.forEach(([k, v]) => {
     extra += v.length - 1;
     maxPerGroup = Math.max(maxPerGroup, v.length);
-    const overlap = v.every(a => v.every(b => a.price[0] < b.price[1] && b.price[0] < a.price[1]));
-    if (!overlap) priceConflict++;
-    detail.push({ key: k, n: v.length, ids: v.map(x => x.id) });
+    /* 只比较不同记录之间。旧实现用 v.every(a => v.every(b => ...))，把自己和自己也配了一对，
+       单点价（lo===hi）记录必然判成"不重叠"，导致冲突数虚高（实测 21 → 真实 17）。 */
+    let conflict = false;
+    for (let i = 0; i < v.length && !conflict; i++) {
+      for (let j = i + 1; j < v.length; j++) {
+        if (!core.overlaps(v[i].price, v[j].price)) { conflict = true; break; }
+      }
+    }
+    if (conflict) priceConflict++;
+    detail.push({
+      key: k, n: v.length, ids: v.map(x => x.id),
+      ranges: v.map(x => x.price.slice()),
+      brand: v[0].brand, model: v[0].model, catId: k.split('|')[0],
+    });
   });
   return { groups: groups.length, extra, maxPerGroup, priceConflict, detail };
+}
+
+/* ---------- 呈现层统计：走页面同一套 mergeList ---------- */
+function presentedStats(models) {
+  let raw = 0, cards = 0, mergedGroups = 0, dispute = 0, specsDiffer = 0;
+  Object.keys(models).forEach(cat => {
+    const items = models[cat] || [];
+    raw += items.length;
+    const merged = core.mergeList(cat, items);
+    cards += merged.length;
+    merged.forEach(e => {
+      if (!e.merge) return;
+      mergedGroups++;
+      if (e.merge.dispute) dispute++;
+      if (e.merge.specsDiffer) specsDiffer++;
+    });
+  });
+  return { raw, cards, mergedGroups, dispute, specsDiffer };
 }
 
 /* ---------- specs 结构一致性 ---------- */
@@ -85,7 +129,7 @@ function priceStats(models) {
 }
 
 /* ---------- 主检查 ----------
- * 返回 [{ id, name, ok, actual, base }]，调用方决定如何展示与退出码。
+ * 返回 [{ id, name, ok, actual, base, kind }]，调用方决定如何展示与退出码。
  * 只有 ok === false 计为 FAIL。
  */
 async function runChecks({ models, searchProbe, base = BASE }) {
@@ -104,29 +148,41 @@ async function runChecks({ models, searchProbe, base = BASE }) {
       r.soft > 0 && r.main < r.n, r, '0<soft && main<n', 'search');
   }
 
-  /* 2. 重复型号 —— 三个维度同时断言，任何一个退化都会 FAIL */
+  /* 2. 重复型号 —— 原始层三个维度同时断言，任何一个退化都会 FAIL */
   const d = dupStats(models);
-  add('dup:groups', `重复型号组数 <= ${base.dupGroups}`, d.groups <= base.dupGroups, d.groups, base.dupGroups);
-  add('dup:extra', `重复条目总数 <= ${base.dupExtraEntries}（抓同组新增第 3 条）`,
+  add('dup:groups', `原始重复型号组数 <= ${base.dupGroups}`, d.groups <= base.dupGroups, d.groups, base.dupGroups);
+  add('dup:extra', `原始重复条目总数 <= ${base.dupExtraEntries}（抓同组新增第 3 条）`,
     d.extra <= base.dupExtraEntries, d.extra, base.dupExtraEntries);
   add('dup:max', `单型号最多出现 <= ${base.maxPerGroup} 次`, d.maxPerGroup <= base.maxPerGroup,
     d.maxPerGroup, base.maxPerGroup);
   add('dup:price', `价格区间冲突组 <= ${base.priceConflict}`, d.priceConflict <= base.priceConflict,
     d.priceConflict, base.priceConflict);
 
-  /* 3. specs 结构 */
+  /* 3. 呈现层 —— 页面合并卡必须与原始层一致：不多不少、冲突不漏标 */
+  const p2 = presentedStats(models);
+  add('merge:cards', `合并后卡片数 = ${base.mergedCards}（原始 ${p2.raw} − 重复 ${p2.raw - base.mergedCards}）`,
+    p2.cards === base.mergedCards, p2.cards, base.mergedCards);
+  add('merge:dispute', `合并卡标「价格存疑」${base.mergedDispute} 组（冲突不得被吞掉）`,
+    p2.dispute === base.mergedDispute, p2.dispute, base.mergedDispute);
+  add('merge:parity', '合并层判定的冲突组数 = 原始层冲突组数',
+    p2.dispute === d.priceConflict, p2.dispute, d.priceConflict);
+
+  /* 4. specs 结构 */
   const bad = specsInconsistentCount(models);
   add('specs:shape', `specs 段数不固定的品类 <= ${base.specsInconsistent}（schema 迁移后应下降）`,
     bad <= base.specsInconsistent, bad, base.specsInconsistent);
 
-  /* 4. 字段与价格精度 */
+  /* 5. 字段与价格精度 */
   const p = priceStats(models);
   add('total', `型号总数 >= ${base.totalModels}`, p.tot >= base.totalModels, p.tot, base.totalModels);
   add('model:type', 'model 全为字符串', p.numModel === 0, p.numModel, 0);
   add('price:single', `单点价格占比 <= ${base.singlePricePct}%`, p.singlePct <= base.singlePricePct,
     Number(p.singlePct.toFixed(1)), base.singlePricePct + '%');
 
-  return { items, stats: { dup: d, price: p, specsBad: bad } };
+  return { items, stats: { dup: d, presented: p2, price: p, specsBad: bad } };
 }
 
-module.exports = { BASE, dupStats, specsInconsistentCount, priceStats, runChecks, allItems, norm, dupKey, S };
+module.exports = {
+  BASE, dupStats, presentedStats, specsInconsistentCount, priceStats, runChecks,
+  allItems, norm, dupKey, S, core,
+};

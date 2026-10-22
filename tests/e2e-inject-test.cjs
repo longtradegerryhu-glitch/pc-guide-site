@@ -72,7 +72,7 @@ try {
   /* ---------- 污染后必须 FAIL ---------- */
   const dirty = runAudit();
   chk('注入后 exit 1（不许静默通过）', dirty.code === 1, 'exit=' + dirty.code);
-  chk('注入后报出 dup:extra FAIL', /重复条目总数/.test(dirty.out) && /FAIL 重复条目总数/.test(dirty.out),
+  chk('注入后报出 dup:extra FAIL', /原始重复条目总数/.test(dirty.out) && /FAIL 原始重复条目总数/.test(dirty.out),
     (dirty.out.match(/FAIL [^\n]*/g) || []).join(' / '));
   chk('注入后报出 dup:max FAIL', /FAIL 单型号最多出现/.test(dirty.out),
     (dirty.out.match(/FAIL [^\n]*/g) || []).join(' / '));

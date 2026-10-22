@@ -143,6 +143,49 @@ function expectClean(name, items, targetId) {
     expectDetected('单点价格占比上限', r.items, 'price:single');
   }
 
+  console.log('\n== 用例 8：合并层失效（mergeList 不合并，页面会退回 1209 条重复卡）==');
+  {
+    const { core } = require('./lib/checks.cjs');
+    const origin = core.mergeList;
+    core.mergeList = (catId, items) => (items || []).map(it => ({ item: it, merge: null, key: '' }));
+    try {
+      const r = await runChecks({ models: clone(), searchProbe: cleanProbe });
+      expectDetected('合并卡数量断言', r.items, 'merge:cards');
+    } finally { core.mergeList = origin; }
+  }
+
+  console.log('\n== 用例 9：冲突探测失效（冲突被吞成"区间一致"，价格存疑不再标注）==');
+  {
+    /* 9a 真实形态：把一组本来重叠的记录改到区间分离 → 存疑组数应 17→18 */
+    const m = clone();
+    const overlapping = dupStats(m).detail.filter(g => {
+      const v = g.ranges;
+      let bad = false;
+      for (let i = 0; i < v.length && !bad; i++) for (let j = i + 1; j < v.length; j++) {
+        if (!(v[i][0] < v[j][1] && v[j][0] < v[i][1])) { bad = true; break; }
+      }
+      return !bad;
+    })[0];
+    if (!overlapping) { fail++; console.log('  FAIL 找不到可用于改造的重叠组'); }
+    else {
+      const arr = m[overlapping.catId];
+      const idx = arr.findIndex(x => String(x.id) === String(overlapping.ids[1]));
+      arr[idx].price = [arr[idx].price[1] * 5, arr[idx].price[1] * 6];
+      const r = await runChecks({ models: m, searchProbe: cleanProbe });
+      expectDetected('存疑组数随数据变化被抓（' + overlapping.key + '）', r.items, 'merge:dispute');
+    }
+
+    /* 9b 呈现层形态：合并器把 dispute 抹成 false，等于"冲突被吞"，一致性断言必须报错 */
+    const { core } = require('./lib/checks.cjs');
+    const origin = core.mergeList;
+    core.mergeList = (catId, items) => origin(catId, items).map(e =>
+      e.merge ? { item: e.item, key: e.key, merge: Object.assign({}, e.merge, { dispute: false }) } : e);
+    try {
+      const r = await runChecks({ models: clone(), searchProbe: cleanProbe });
+      expectDetected('呈现层与原始层一致性断言', r.items, 'merge:parity');
+    } finally { core.mergeList = origin; }
+  }
+
   console.log(`\n自测结果：PASS ${pass} / FAIL ${fail}`);
   if (fail > 0) console.log('⚠ 有变异未被抓到 —— 断言存在盲区，审计不可信。');
   process.exit(fail > 0 ? 1 : 0);

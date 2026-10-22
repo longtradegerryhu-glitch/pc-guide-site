@@ -7,8 +7,12 @@
   "scripts": {
     "test": "node tests/audit-search.cjs",
     "test:selftest": "node tests/selftest-mutation.cjs",
-    "test:all": "node tests/selftest-mutation.cjs && node tests/audit-search.cjs",
-    "audit:search": "node tests/audit-search.cjs"
+    "test:merge": "node tests/e2e-merge.cjs",
+    "test:e2e": "node tests/e2e-inject-test.cjs",
+    "test:all": "node tests/selftest-mutation.cjs && node tests/audit-search.cjs && node tests/e2e-merge.cjs && node tests/e2e-inject-test.cjs",
+    "audit:search": "node tests/audit-search.cjs",
+    "dup:gate": "node tools/dedup-gate.cjs",
+    "dup:review": "node tools/dup-review.cjs"
   },
   "devDependencies": {
     "jsdom": "^26.0.0"
