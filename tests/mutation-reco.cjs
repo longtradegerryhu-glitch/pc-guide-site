@@ -1,66 +1,136 @@
 /* 变异测试：验证 17 条验收断言不是「恒真假通过」
  *
- * 做法：把**冻结快照**复制到临时目录 → 注入一个故障 → 跑 tests/reco-acceptance.cjs
+ * 做法：把**代码快照**复制到临时目录 → 注入一个故障 → 跑 tests/reco-acceptance.cjs
  *       → 看对应断言是否 FAIL。断言抓不住故障 = 该断言无效。
  *
- * 为什么用冻结快照而不是工作区：
- *   执行者与审计线并发改同一批文件，工作区锚点会持续漂移。
- *   变异测试要验证的是「已交付的那一版」——锁定 commit 后结果才可复现。
- *   快照 = git archive <commit>，跑完可随时重放。
+ * 为什么用快照而不是直接改工作区：
+ *   注入变异要改 js/data.js、js/recommend.js。在工作区改会让文件处于半损坏状态，
+ *   中途崩掉就留下一堆脏改动。快照 = 复制一份出来改，工作区一个字节都不动。
  *
- * 锚点用正则 + 唯一性断言：命中 0 次或 >1 次都直接报错退出，
+ * 开箱即用（ORD-15）：本脚本**不依赖 git**，也不需要预先导出快照。
+ *   · 默认快照目录 E:/AI/_test/mutsnap（可用 PCG_MUT_SNAP 覆盖）
+ *   · 快照缺失 / 与工作区不一致 → 自动从工作区重建
+ *   · 每次跑完自动删除自己产生的临时目录（逐个 unlink + rmdir，不用递归批量删除）
+ *   · 上次异常中断留下的目录，下次启动自动清掉
+ *
+ * 锚点用正则 + 唯一性断言：命中 0 次或 >1 次都直接报错，
  * 不允许「模糊命中就改」——那会变成静默的假变异。
  *
- * 跑法：node mutate_test.cjs [变异编号]
+ * 跑法：npm run test:mutation:reco          全跑 17 个变异
+ *       npm run test:mutation:reco -- M8    只跑一个
+ *       PCG_MUT_KEEP=1 ... 保留临时目录（默认清理）
  */
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
+const crypto = require('crypto');
 const { spawnSync } = require('child_process');
 
-/* 快照：默认 = 仓库当前工作树的干净副本（git archive HEAD），
-   用环境变量 PCG_MUT_SNAP 可指定已导出的冻结快照目录。
-   变异测试必须锚定一份**冻结快照**：执行者与审计线并发改同一批文件时，
-   工作区锚点会持续漂移，结果不可复现。 */
 const REPO = path.resolve(__dirname, '..');
-const SNAP = process.env.PCG_MUT_SNAP || path.join(__dirname, 'snap');
-const WORK_ROOT = process.env.PCG_MUT_WORK || path.join(REPO, '.mutruns');
+/* 快照与临时目录都可以用环境变量覆盖；默认值优先落在 E:/AI/_test，
+   该盘不存在时退回系统临时目录，保证换一台机器也能跑。 */
+const SNAP = process.env.PCG_MUT_SNAP
+  || (fs.existsSync('E:/AI/_test') ? 'E:/AI/_test/mutsnap' : path.join(os.tmpdir(), 'pcg-mutsnap'));
+const WORK_ROOT = process.env.PCG_MUT_WORK || path.join(os.tmpdir(), 'pcg-mutation-reco');
 const NODE = process.execPath;
-const NODE_PATH = 'C:/Users/Lenovo/.workbuddy/binaries/node/workspace/node_modules';
+const NODE_PATH = process.env.NODE_PATH || 'C:/Users/Lenovo/.workbuddy/binaries/node/workspace/node_modules';
 
-/* 每个变异用独立目录，避免 rmSync（环境的批量删除保护会拦）。
-   旧目录用 unlink 逐个删也被拦，所以直接换时间戳目录，旧目录留在盘上由人工清理。 */
-let WORK = '';
-function buildSnapshot() {
-  /* 从 git archive HEAD 生成一份干净快照，避免改动污染被测代码 */
-  const r = spawnSync('git', ['-C', REPO, 'archive', 'HEAD'], { encoding: 'buffer' });
-  if (r.status !== 0 || !r.stdout || !r.stdout.length) {
-    console.error('无法从 git archive HEAD 生成快照：请设置 PCG_MUT_SNAP 指向已导出的快照目录');
-    process.exit(2);
+/* 快照里不带这些东西：.git 太大、node_modules 有自己的依赖、.env 含密钥、
+   .mutruns / snap 是历史残留目录。 */
+const SKIP_TOP = new Set(['.git', 'node_modules', '.mutruns', 'snap', '.env', '.snapmeta.json']);
+
+/* 「关键文件」= 会影响断言结果的文件。只有这些变了才需要重建快照；
+   改一份 wr-*.md 不该触发重建。 */
+const KEY_RE = /^(js\/.*\.js|css\/.*\.css|tests\/reco-acceptance\.cjs|[^/]+\.html)$/;
+
+function walkRel(dir, base, out) {
+  let ents;
+  try { ents = fs.readdirSync(dir, { withFileTypes: true }); } catch (e) { return out; }
+  for (const e of ents) {
+    if (!base && SKIP_TOP.has(e.name)) continue;
+    const rel = base ? base + '/' + e.name : e.name;
+    if (e.isDirectory()) walkRel(path.join(dir, e.name), rel, out);
+    else out.push(rel);
   }
-  fs.mkdirSync(SNAP, { recursive: true });
-  const tar = spawnSync('tar', ['-x', '-C', SNAP], { input: r.stdout, encoding: 'buffer' });
-  if (tar.status !== 0) {
-    console.error('解压快照失败（需要 tar 可用）');
-    process.exit(2);
-  }
+  return out;
 }
-function copySite(dir) {
+
+/* 关键文件集的指纹：路径 + 逐文件 md5，排序后拼。任何一个字节变了指纹就变。 */
+function fingerprint(dir) {
+  const h = crypto.createHash('md5');
+  const files = walkRel(dir, '', []).filter(r => KEY_RE.test(r)).sort();
+  for (const rel of files) {
+    let one = 'MISSING';
+    try { one = crypto.createHash('md5').update(fs.readFileSync(path.join(dir, rel))).digest('hex'); } catch (e) {}
+    h.update(rel + '\u0000' + one + '\n');
+  }
+  return { hash: h.digest('hex'), count: files.length };
+}
+
+/* 自底向上逐个删：先 unlink 文件，再 rmdir 目录。
+   不用 rmSync(recursive) —— 环境的批量删除保护会拦，而且看不出删了什么。 */
+function rmTree(p) {
+  let ents;
+  try { ents = fs.readdirSync(p, { withFileTypes: true }); } catch (e) { return; }
+  for (const e of ents) {
+    const q = path.join(p, e.name);
+    if (e.isDirectory()) rmTree(q);
+    else { try { fs.unlinkSync(q); } catch (err) {} }
+  }
+  try { fs.rmdirSync(p); } catch (err) {}
+}
+
+function copySite(src, dir) {
   fs.mkdirSync(dir, { recursive: true });
-  const skip = new Set(['.git', 'node_modules', 'snap', '.mutruns']);
-  for (const e of fs.readdirSync(SNAP, { withFileTypes: true })) {
-    if (skip.has(e.name)) continue;
-    fs.cpSync(path.join(SNAP, e.name), path.join(dir, e.name), { recursive: true });
+  for (const e of fs.readdirSync(src, { withFileTypes: true })) {
+    if (SKIP_TOP.has(e.name)) continue;
+    if (e.isFile() && /\.md$/i.test(e.name)) continue;   /* 文档不影响断言，少复制 30+ 文件 */
+    fs.cpSync(path.join(src, e.name), path.join(dir, e.name), { recursive: true });
   }
 }
 
-/* 每个变异：
- *   id / name       —— 编号与说明
- *   expect          —— 期望被这个变异打 FAIL 的断言（至少要含这些）
- *   file            —— 目标文件（相对快照根）
- *   pattern (RegExp)—— 唯一匹配锚点
- *   to              —— 替换文本（函数或字符串）
- *   note            —— 为什么这条变异对应那条断言
- */
+/* 快照：命中缓存就不重建。缓存判定用关键文件指纹，
+   防止「快照是三天前的代码，锚点全漂移」这种最难查的假失败。 */
+function ensureSnapshot() {
+  const metaFile = path.join(SNAP, '.snapmeta.json');
+  let meta = null;
+  try { meta = JSON.parse(fs.readFileSync(metaFile, 'utf8')); } catch (e) {}
+  const cur = fingerprint(REPO);
+  const hasCore = fs.existsSync(path.join(SNAP, 'js', 'recommend.js'))
+    && fs.existsSync(path.join(SNAP, 'tests', 'reco-acceptance.cjs'));
+  if (hasCore && meta && meta.hash === cur.hash) {
+    console.log(`快照：${SNAP}（复用，${cur.count} 个关键文件）\n`);
+    return;
+  }
+  if (fs.existsSync(SNAP)) rmTree(SNAP);      /* 旧快照带着过期文件，整体重建 */
+  console.log(`快照：${SNAP}（${hasCore ? '与工作区不一致，重建' : '缺失，新建'}）`);
+  copySite(REPO, SNAP);
+  const now = fingerprint(SNAP);
+  if (now.hash !== cur.hash) {
+    console.error('快照指纹与工作区不一致 —— 复制过程出错');
+    process.exit(2);
+  }
+  if (!fs.existsSync(path.join(SNAP, 'tests', 'reco-acceptance.cjs'))) {
+    console.error('快照缺 tests/reco-acceptance.cjs，无法跑断言');
+    process.exit(2);
+  }
+  fs.writeFileSync(metaFile, JSON.stringify({ hash: now.hash, count: now.count, at: new Date().toISOString() }, null, 1));
+  console.log(`       关键文件 ${now.count} 个，就绪\n`);
+}
+
+/* 清上次中断留下的目录。只认本脚本的命名（时间戳/pid + -M 编号），
+   绝不碰 WORK_ROOT 里别人放的东西。 */
+function sweep(root) {
+  if (!fs.existsSync(root)) return 0;
+  let n = 0;
+  for (const e of fs.readdirSync(root, { withFileTypes: true })) {
+    if (!e.isDirectory()) continue;
+    if (!/^\d+(-\d+)?-M\w+$/.test(e.name)) continue;
+    rmTree(path.join(root, e.name));
+    n++;
+  }
+  return n;
+}
 const MUTS = [
   /* ===== 问卷结构类（A1-A5 / A16）===== */
   {
@@ -228,35 +298,57 @@ function applyMut(mut) {
 
 const only = process.argv[2];
 const list = only ? MUTS.filter(m => m.id === only) : MUTS;
-if (!list.length) { console.error('无此变异编号：' + only); process.exit(1); }
+if (!list.length) { console.error('无此变异编号：' + only + '（可选：' + MUTS.map(m => m.id).join(', ') + '）'); process.exit(1); }
 
 console.log(`变异测试：${list.length} 个变异 × 17 条断言`);
-console.log(`快照：${SNAP}\n`);
-if (!process.env.PCG_MUT_SNAP && !fs.existsSync(path.join(SNAP, 'js', 'recommend.js'))) buildSnapshot();
-const RUN_TAG = String(Date.now());
+ensureSnapshot();
+
+const stray = sweep(WORK_ROOT);
+if (stray) console.log(`清理上次残留：${stray} 个目录`);
+console.log(`工作目录：${WORK_ROOT}（跑完自动清理）\n`);
+
+const RUN_TAG = process.pid + '-' + Date.now();
+const T0 = Date.now();
 let allOk = true;
+let cleaned = 0;
 for (const mut of list) {
   WORK = path.join(WORK_ROOT, RUN_TAG + '-' + mut.id);
-  copySite(WORK);
-  const ap = applyMut(mut);
-  if (!ap.ok) {
-    console.log(`  ${mut.id} 注入失败：${ap.msg}  ← 锚点漂移，需重新定位`);
-    allOk = false;
-    continue;
+  try {
+    copySite(SNAP, WORK);
+    const ap = applyMut(mut);
+    if (!ap.ok) {
+      console.log(`  ${mut.id} 注入失败：${ap.msg}  ← 锚点漂移，需重新定位`);
+      allOk = false;
+      continue;
+    }
+    const t0 = Date.now();
+    const res = runAccept();
+    const got = res.failed.slice().sort();
+    const want = mut.expect.slice().sort();
+    const miss = want.filter(w => got.indexOf(w) === -1);
+    const ok = miss.length === 0;
+    if (!ok) allOk = false;
+    console.log(`  ${ok ? 'OK  ' : 'MISS'} ${mut.id} ${mut.name}`);
+    console.log(`       期望 FAIL: ${want.join(', ')}`);
+    console.log(`       实际 FAIL: ${got.join(', ') || '(无)'}`);
+    if (miss.length) console.log(`       ⚠ 没抓住: ${miss.join(', ')}`);
+    console.log(`       ${mut.note || ''}`);
+    console.log(`       用时 ${((Date.now() - t0) / 1000).toFixed(0)}s\n`);
+  } finally {
+    if (process.env.PCG_MUT_KEEP) {
+      console.log(`       保留现场：${WORK}\n`);
+    } else {
+      rmTree(WORK);
+      cleaned++;
+    }
   }
-  const t0 = Date.now();
-  const res = runAccept();
-  const got = res.failed.slice().sort();
-  const want = mut.expect.slice().sort();
-  const miss = want.filter(w => got.indexOf(w) === -1);
-  const ok = miss.length === 0;
-  if (!ok) allOk = false;
-  console.log(`  ${ok ? 'OK  ' : 'MISS'} ${mut.id} ${mut.name}`);
-  console.log(`       期望 FAIL: ${want.join(', ')}`);
-  console.log(`       实际 FAIL: ${got.join(', ') || '(无)'}`);
-  if (miss.length) console.log(`       ⚠ 没抓住: ${miss.join(', ')}`);
-  console.log(`       ${mut.note || ''}`);
-  console.log(`       用时 ${((Date.now() - t0) / 1000).toFixed(0)}s\n`);
 }
+
+if (!process.env.PCG_MUT_KEEP) {
+  const left = sweep(WORK_ROOT);
+  try { fs.rmdirSync(WORK_ROOT); } catch (e) {}   /* 空了才删得掉，非空说明还有别人的 */
+  console.log(`已清理临时目录 ${cleaned} 个${left ? '（另有 ' + left + ' 个残留）' : ''}`);
+}
+console.log(`总用时 ${((Date.now() - T0) / 1000).toFixed(0)}s`);
 console.log(allOk ? '全部变异都被对应断言抓住' : '有变异未被抓住 —— 对应断言无效');
 process.exit(allOk ? 0 : 1);

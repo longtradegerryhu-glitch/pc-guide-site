@@ -1,6 +1,7 @@
 /* 智能推荐整改 · 独立验收断言（ORD-12）
  *
- * 跑法：npm run test:reco
+ * 跑法：npm run audit:gate   （审计闸，独立于 npm run test:all —— ORD-15 §3）
+ *       或 npm run test:reco（同名别名）
  *       或 NODE_PATH="C:/Users/Lenovo/.workbuddy/binaries/node/workspace/node_modules" node tests/reco-acceptance.cjs
  * 退出码：0 全 PASS / 1 有 FAIL / 2 环境缺失
  *
@@ -13,6 +14,7 @@
  *   —— 不看实现者的自述，不做裸字段匹配。
  *
  * 【独立性声明 —— 由审计方（独立核验方）编写】
+ *   本文件由审计方编写，执行者不得修改断言，修改需审计方复核。（ORD-15 §3 明写）
  *   本文件是 ORD-12 的**独立验收断言**，作者是审计方，不是实现者。
  *   实现者负责接线（挂 package.json / 接进 test:all）与修复被 FAIL 的实现，
  *   但**不得修改本文件内容** —— 改动需经审计方复核，并在 commit 里写明改了什么。

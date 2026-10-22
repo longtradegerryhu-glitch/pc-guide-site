@@ -1,0 +1,130 @@
+{
+ "note": "wr 引用一致性闸的历史欠账。新增缺失不在基线内 → 闸门 FAIL。",
+ "entries": {
+  "f1e0426cd4a381ee1a3b94d6c261bb2914240a92 wr-20261022-reco-reader.md": {
+   "name": "wr-20261022-reco-reader.md",
+   "date": "2026-10-22",
+   "why": "有 FEEDBACK 归档可回溯，待总控决定是否补写"
+  },
+  "96363cd4697ba93a074c0b6cf7402738e65575a3 wr-20261022-specs-r1.md": {
+   "name": "wr-20261022-specs-r1.md",
+   "date": "2026-10-22",
+   "why": "有 FEEDBACK 归档可回溯，待总控决定是否补写"
+  },
+  "9759e97e800724c8bb672258da8a701bed068174 wr-20261022-dup-ord08.md": {
+   "name": "wr-20261022-dup-ord08.md",
+   "date": "2026-10-22",
+   "why": "有 FEEDBACK 归档可回溯，待总控决定是否补写"
+  },
+  "908f425f6e2b4e40eb730ce262e476bb0eaeec52 wr-20261022-specs-schema.md": {
+   "name": "wr-20261022-specs-schema.md",
+   "date": "2026-10-22",
+   "why": "有 FEEDBACK 归档可回溯，待总控决定是否补写"
+  },
+  "3f2157f3dbb87b8145137a35babe8eb85bfd23e3 wr-20261022-merge-dup.md": {
+   "name": "wr-20261022-merge-dup.md",
+   "date": "2026-10-22",
+   "why": "有 FEEDBACK 归档可回溯，待总控决定是否补写"
+  },
+  "8ad659dabe9b33293c95fbd317e897df4865b2f6 wr-20261022-dup-gate.md": {
+   "name": "wr-20261022-dup-gate.md",
+   "date": "2026-10-22",
+   "why": "有 FEEDBACK 归档可回溯，待总控决定是否补写"
+  },
+  "db4017f6263f96432435f009f12e18de3dc7d126 wr-20261022-audit2.md": {
+   "name": "wr-20261022-audit2.md",
+   "date": "2026-10-22",
+   "why": "有 FEEDBACK 归档可回溯，待总控决定是否补写"
+  },
+  "06b54a35e0254094e538d2e3fe6aea0c1607b9b5 wr-20261021-state.md": {
+   "name": "wr-20261021-state.md",
+   "date": "2026-10-21",
+   "why": "有 FEEDBACK 归档可回溯，待总控决定是否补写"
+  },
+  "8c3651e9fb1ecdf48b7e2850bed02bdc02d78dc5 wr-20261021-audit-gate.md": {
+   "name": "wr-20261021-audit-gate.md",
+   "date": "2026-10-21",
+   "why": "有 FEEDBACK 归档可回溯，待总控决定是否补写"
+  },
+  "1739703a89638846bfbc8d63fd197e4f3577de61 wr-20261024b.md": {
+   "name": "wr-20261024b.md",
+   "date": "2026-10-21",
+   "why": "有 FEEDBACK 归档可回溯，待总控决定是否补写"
+  },
+  "2e127bc9a3f90373537467f4833935ce220ebd61 wr-20261024.md": {
+   "name": "wr-20261024.md",
+   "date": "2026-10-21",
+   "why": "有 FEEDBACK 归档可回溯，待总控决定是否补写"
+  },
+  "ca351e7411e6f6e636f8daae58d6fd23c43e90ee wr-20261023b.md": {
+   "name": "wr-20261023b.md",
+   "date": "2026-10-21",
+   "why": "有 FEEDBACK 归档可回溯，待总控决定是否补写"
+  },
+  "de253830bc15e9fb0605cbb7dfb82e04b9eb28c8 wr-20261023.md": {
+   "name": "wr-20261023.md",
+   "date": "2026-10-21",
+   "why": "有 FEEDBACK 归档可回溯，待总控决定是否补写"
+  },
+  "3d6f4f2c0c6145ae38446fc216c80c3ae509f38c wr-20261022.md": {
+   "name": "wr-20261022.md",
+   "date": "2026-10-21",
+   "why": "有 FEEDBACK 归档可回溯，待总控决定是否补写"
+  },
+  "a9ac6fc6974db4b307a5a32fa0516faf54edc24a wr-20261021-simplify-accessories-ui.md": {
+   "name": "wr-20261021-simplify-accessories-ui.md",
+   "date": "2026-10-21",
+   "why": "有 FEEDBACK 归档可回溯，待总控决定是否补写"
+  },
+  "4d8c3f14d36bdd21d5224fe3fd206e10428d861e wr-20261019-perf-split-models.md": {
+   "name": "wr-20261019-perf-split-models.md",
+   "date": "2026-10-19",
+   "why": "补写材料已不可考（不在当前仓库与 FEEDBACK 归档中），补写＝编造"
+  },
+  "9f31be1a7b350bae016f20168bb81b9b5a6b9753 wr-20261013-expand-q4.md": {
+   "name": "wr-20261013-expand-q4.md",
+   "date": "2026-10-13",
+   "why": "补写材料已不可考（不在当前仓库与 FEEDBACK 归档中），补写＝编造"
+  },
+  "28802ca954d147ad4fb1a8a80f5ce221392e7b39 wr-20261013-data-audit.md": {
+   "name": "wr-20261013-data-audit.md",
+   "date": "2026-10-13",
+   "why": "补写材料已不可考（不在当前仓库与 FEEDBACK 归档中），补写＝编造"
+  },
+  "915706a2effa58ef993d5e28c7d603820b2aeed4 wr-20261013-fix-css-dup.md": {
+   "name": "wr-20261013-fix-css-dup.md",
+   "date": "2026-10-13",
+   "why": "补写材料已不可考（不在当前仓库与 FEEDBACK 归档中），补写＝编造"
+  },
+  "f5af09b7da2a90ecaea414b4983362e3d9366eb8 wr-20261013-device-partition.md": {
+   "name": "wr-20261013-device-partition.md",
+   "date": "2026-10-13",
+   "why": "补写材料已不可考（不在当前仓库与 FEEDBACK 归档中），补写＝编造"
+  },
+  "582e1210eb038f705ab6753f9750581d2ab63612 wr-20261013-mobile-expansion.md": {
+   "name": "wr-20261013-mobile-expansion.md",
+   "date": "2026-10-13",
+   "why": "补写材料已不可考（不在当前仓库与 FEEDBACK 归档中），补写＝编造"
+  },
+  "50b97abe79ce1086f379023bce6ed6ed2e87b5ac wr-20261011-laptop-ultra.md": {
+   "name": "wr-20261011-laptop-ultra.md",
+   "date": "2026-10-11",
+   "why": "补写材料已不可考（不在当前仓库与 FEEDBACK 归档中），补写＝编造"
+  },
+  "c2899fc73636275b779748aea2fea9a218606d6e wr-20261011-laptop-budget.md": {
+   "name": "wr-20261011-laptop-budget.md",
+   "date": "2026-10-11",
+   "why": "补写材料已不可考（不在当前仓库与 FEEDBACK 归档中），补写＝编造"
+  },
+  "8b3d04bf17f8a1fbb222323cc85a1dd8387b872a wr-20261011-laptop.md": {
+   "name": "wr-20261011-laptop.md",
+   "date": "2026-10-11",
+   "why": "补写材料已不可考（不在当前仓库与 FEEDBACK 归档中），补写＝编造"
+  },
+  "45e358fd2cba7cdb0e2a69af20a7964eacd787de wr-20261011-ai-fallback.md": {
+   "name": "wr-20261011-ai-fallback.md",
+   "date": "2026-10-11",
+   "why": "补写材料已不可考（不在当前仓库与 FEEDBACK 归档中），补写＝编造"
+  }
+ }
+}

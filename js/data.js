@@ -6,6 +6,18 @@
  * =========================================================== */
 window.PC_DATA = {
   updated: "2026-10 参考",
+  /* 各品类价格最近核验月份（YYYY-MM）。季度核验脚本按这份表判断哪些品类到期重核；
+     缺键 = 从未核验，核验脚本必须报错而不是静默跳过（2026-10-22 ORD-15 新建）。
+     与 updated 的关系：updated 是给用户看的展示文案，本字段是机器读的核验账本，
+     两者的月份必须一致，改一处就要改另一处。 */
+  categoryUpdated: {
+    cpu:        "2026-10", mobo:       "2026-10", ram:        "2026-10", gpu:        "2026-10",
+    ssd:        "2026-10", psu:        "2026-10", case:       "2026-10", cooler:     "2026-10",
+    monitor:    "2026-10", input:      "2026-10", network:    "2026-10", stand:      "2026-10",
+    dock:       "2026-10", laptop:     "2026-10", phone:      "2026-10", charger:    "2026-10",
+    mobileacc:  "2026-10", tablet:     "2026-10", earphone:   "2026-10", audio:      "2026-10",
+    wearable:   "2026-10",
+  },
   /* 移动形态的价格说明：手机/平板用户不需要读 DDR5 与显卡的行情 */
   noteMobile: "价格区间为 2026-10 联网核验参考行情（人民币，核验日 2026-10-09）。2026 下半年存储涨价同样传导到手机与平板：同配置普遍比去年同期贵 8–15%，大容量版本涨得更明显。机构口径：IDC 预计高价持续到 2027 全年。本站仅作参考行情，购前请按『查实时价』按钮跳电商看当天价。",
 
@@ -746,7 +758,7 @@ window.PC_DATA = {
           when: { form: ["desktop", "laptop", "both"] } },
         { id: "stand",   label: "支架", desc: "已有支架/升降桌", parts: ["支架", "笔记本支架"],
           when: { form: ["desktop", "laptop", "both"] } },
-        { id: "dock",    label: "拓展坞", desc: "已有扩展坞", parts: ["拓展坞", "扩展埂"],
+        { id: "dock",    label: "拓展坞", desc: "已有扩展坞", parts: ["拓展坞"],
           when: { form: ["laptop", "both"] } },
 
         { id: "charger",   label: "充电器", desc: "已有快充头", parts: ["充电器"],
@@ -797,7 +809,7 @@ window.PC_DATA = {
           parts: ["支架", "笔记本支架"],
           when: { form: ["desktop", "laptop", "both"] } },
         { id: "dock",  label: "拓展坞", desc: "给笔记本扩接口",
-          parts: ["拓展坞", "扩展埂"],
+          parts: ["拓展坞"],
           when: { form: ["laptop", "both"] } },
 
         { id: "p_body",   label: "手机本体", desc: "换机主要看它", parts: ["手机"],
@@ -819,7 +831,7 @@ window.PC_DATA = {
           when: { form: ["tablet"] } },
         { id: "t_protect", label: "保护膜", desc: "护屏", parts: ["保护膜"],
           when: { form: ["tablet"] } },
-        { id: "t_dock",   label: "拓展坞", desc: "外接屏与外设", parts: ["拓展坞", "扩展埂"],
+        { id: "t_dock",   label: "拓展坞", desc: "外接屏与外设", parts: ["拓展坞"],
           when: { form: ["tablet"] } },
         { id: "t_audio",  label: "耳机", desc: "听感", parts: ["耳机/音箱", "耳机"],
           when: { form: ["tablet"] } }

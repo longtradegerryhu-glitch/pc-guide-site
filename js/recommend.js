@@ -809,7 +809,32 @@
       ? '<div class="res-skip-note res-focus-miss">你勾的重点项（' + esc((priNames.length ? priNames : pri).join(" / ")) +
         "）在这套组合里没有对应部件，所以没有置顶，下面按整体优先排列。换一套方案或取消这几项勾选即可。</div>"
       : "";
-    return missTip + '<div class="fp-list">' + body + "</div>";
+    /* 部分落空必须逐项点名（ORD-15 §4）：勾了「耳机与穿戴」而方案只有手机与散热电源时，
+       用户看到手机被置顶，会以为耳机也一并处理过了。只报缺失的那几项，已落地的绝不报。
+       用独立 class res-focus-partial，不带 res-focus-miss —— A7 的明示判定不许被这里放水。 */
+    var focusQ = (D.quiz || []).filter(function (x) { return x.id === "focus"; })[0];
+    var pickedOpts = [];
+    ((focusQ && focusQ.options) || []).forEach(function (o) {
+      if (pri.indexOf(o.id) > -1) pickedOpts.push({ label: o.label, parts: o.parts || [] });
+    });
+    var landed = [];
+    rows.forEach(function (r) { landed.push(r.part); if (r.srcPart) landed.push(r.srcPart); });
+    var missLabels = [];
+    pickedOpts.forEach(function (o) {
+      var hit = o.parts.some(function (p) { return landed.indexOf(p) > -1; });
+      if (!hit) missLabels.push(o.label);
+    });
+    /* 代替者取真正被置顶的部件（不含落空项），最多列三个，多了读不下去 */
+    var altNames = [];
+    hotRows.forEach(function (r) {
+      if (altNames.indexOf(r.part) === -1) altNames.push(r.part);
+    });
+    var partialTip = (missLabels.length && hotHits)
+      ? '<div class="res-skip-note res-focus-partial">你勾的「' + esc(missLabels.join(" / ")) +
+        "」这套方案里没有对应部件，已按「" + esc((altNames.length ? altNames.slice(0, 3) : ["整体优先"]).join(" / ")) +
+        "」代替。想补上就换一套方案，或取消这几项勾选。</div>"
+      : "";
+    return missTip + partialTip + '<div class="fp-list">' + body + "</div>";
   }
 
   /* 方案简述卡：名称 + 档位 + 参考预算 + 适合人群 + 一句话说明 */
