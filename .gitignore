@@ -8,3 +8,6 @@ _smoke_out.txt
 node_modules/
 .env
 .env.local
+# 变异测试产物（快照与运行目录不入库）
+.mutruns/
+tests/snap/

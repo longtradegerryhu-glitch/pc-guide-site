@@ -10,6 +10,7 @@
     "test:merge": "node tests/e2e-merge.cjs",
     "test:e2e": "node tests/e2e-inject-test.cjs",
     "test:reco": "node tests/reco-acceptance.cjs",
+    "test:mutation:reco": "node tests/mutation-reco.cjs",
     "test:all": "node tests/selftest-mutation.cjs && node tests/audit-search.cjs && node tests/e2e-merge.cjs && node tests/e2e-inject-test.cjs && node tests/reco-acceptance.cjs",
     "audit:search": "node tests/audit-search.cjs",
     "dup:gate": "node tools/dedup-gate.cjs",
