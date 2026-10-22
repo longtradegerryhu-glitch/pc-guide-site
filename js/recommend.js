@@ -1204,7 +1204,36 @@
       return false;
     }
 
-    function matchRank(item, catId, toks) {
+    /* 「这个词在库里有结构化字段能精确表达」的判定集合。
+       有了它才能把「主体规格」和「顺带提及」分开：
+       搜「M.2」时 57 块主板的 specs 里都写着「1×M.2」（说的是插槽），
+       44 块 M.2 固态的 specsObj.form 才是「这件东西本身就是 M.2」。
+       两者原来都算字段命中，于是主板全部排在固态前面。
+       只对「库里真有结构化表述」的词生效：ATX3.1 / GDDR7 这类没有结构化字段，
+       行为与原来完全一致，不会被误伤。 */
+    var structTokCache = {};
+    function structTokens(toks) {
+      var key = toks.join("\u0000");
+      if (structTokCache[key]) return structTokCache[key];
+      var set = {};
+      toks.forEach(function (t) {
+        for (var c = 0; c < D.categories.length && !set[t]; c++) {
+          var items = D.categories[c].items;
+          for (var i = 0; i < items.length; i++) {
+            if (specObjHit(items[i], D.categories[c].id, t)) { set[t] = 1; break; }
+          }
+        }
+      });
+      structTokCache[key] = set;
+      return set;
+    }
+
+    /* 返回 { rank, struct }：
+       rank   = 命中层级（1 字段 / 2 型号品牌 / 3 软文本 / 0 不命中）
+       struct = 有几个词是靠结构化字段命中的（不是靠自由文本顺带提到）
+       分层排序时 struct 是第二关键字：用户搜规格词，主体本身就是该规格的型号
+       必须排在「规格里提到它」的型号前面。 */
+    function matchInfo(item, catId, toks, structSet) {
       var spec = (String(item.specs || "") + " " + specsObjText(item)).toLowerCase();
       var idHay = [item.name, item.brand, item.model, item.searchName, item.style]
         .filter(Boolean).join(" ").toLowerCase();
@@ -1214,26 +1243,39 @@
         var alts = NEED[t];
         return !!(alts && alts.some(function (a) { return hay.indexOf(a) > -1; }));
       }
-      var rank = 0;
+      var so = structSet || {};
+      var rank = 0, struct = 0;
       for (var i = 0; i < toks.length; i++) {
         var t = toks[i], lv = 0;
         var asCat = ALIAS[t];
         if (asCat) {
           /* 品类词只按所属品类判定，避免命中别的品类里「提及」它的型号 */
-          if (asCat !== catId) return 0;
+          if (asCat !== catId) return { rank: 0, struct: 0 };
           lv = 2;
-        } else if (spec.indexOf(t) > -1 || anyAlt(spec, t) || specObjHit(item, catId, t)) {
+        } else if (specObjHit(item, catId, t)) {
           lv = 1;
+          struct++;
+        } else if (spec.indexOf(t) > -1 || anyAlt(spec, t)) {
+          /* 这个词在别处有结构化表述、这里只是自由文本顺带提到 → 降一层。
+             主板「1×M.2 插槽」不等于 M.2 固态，不该占据主体层。
+             例外：身份字段（名称/型号）里就带着这个词 —— 那等于「它本身就是这个」，
+             「海备思 M.2 硬盘盒拓展坞」不该被当成顺带提及。 */
+          var byName = idHay.indexOf(t) > -1 || anyAlt(idHay, t);
+          lv = (so[t] && !byName) ? 2 : 1;
         } else if (idHay.indexOf(t) > -1 || anyAlt(idHay, t)) {
           lv = 2;
         } else if (soft.indexOf(t) > -1 || anyAlt(soft, t)) {
           lv = 3;
         } else {
-          return 0;
+          return { rank: 0, struct: 0 };
         }
         if (lv > rank) rank = lv;
       }
-      return rank;
+      return { rank: rank, struct: struct };
+    }
+
+    function matchRank(item, catId, toks, structSet) {
+      return matchInfo(item, catId, toks, structSet).rank;
     }
 
     /* 命中关键词高亮，单字不高亮以免整页都是标记 */
@@ -1299,18 +1341,26 @@
     var DupCore = window.PCDup || null;
 
     function mergeEntries(list) {
-      if (!DupCore) return list.map(function (o) { return { cat: o.cat, item: o.item, merge: null }; });
+      /* rank / struct 必须跟着合并卡一起传下去：分组顺序要用它们判断
+         「这一组有没有结构化字段命中」。丢掉的话 groupStruct 永远是 0，
+         搜「M.2」的分组顺序又会退回品类顺序（主板在前）。
+         分组取组内第一条（合并保留 order，第一条就是该组最靠前的条目）。 */
+      if (!DupCore) {
+        return list.map(function (o) {
+          return { cat: o.cat, item: o.item, merge: null, rank: o.rank, struct: o.struct };
+        });
+      }
       var order = [], bucket = {};
       list.forEach(function (o) {
         var k = DupCore.keyOf(o.cat.id, o.item);
-        if (!bucket[k]) { bucket[k] = { cat: o.cat, items: [] }; order.push(k); }
+        if (!bucket[k]) { bucket[k] = { cat: o.cat, items: [], rank: o.rank, struct: o.struct }; order.push(k); }
         bucket[k].items.push(o.item);
       });
       return order.map(function (k) {
         var b = bucket[k];
-        if (b.items.length === 1) return { cat: b.cat, item: b.items[0], merge: null };
+        if (b.items.length === 1) return { cat: b.cat, item: b.items[0], merge: null, rank: b.rank, struct: b.struct };
         var m = DupCore.mergeGroup(b.cat.id, b.items);
-        return { cat: b.cat, item: m.item, merge: m };
+        return { cat: b.cat, item: m.item, merge: m, rank: b.rank, struct: b.struct };
       });
     }
 
@@ -1334,11 +1384,12 @@
         segment: function (q) { return segmentQuery(q); },
         rank: function (q) {
           var toks = q ? segmentQuery(q) : null;
+          var so = toks ? structTokens(toks) : null;
           var out = [];
           D.categories.forEach(function (cat) {
             cat.items.forEach(function (item) {
-              var rk = toks ? matchRank(item, cat.id, toks) : 0;
-              if (rk) out.push({ cat: cat.id, id: item.id, name: item.name, rank: rk });
+              var mi = toks ? matchInfo(item, cat.id, toks, so) : { rank: 0, struct: 0 };
+              if (mi.rank) out.push({ cat: cat.id, id: item.id, name: item.name, rank: mi.rank, struct: mi.struct });
             });
           });
           return out;
@@ -1349,6 +1400,7 @@
     function collect() {
       var list = [];
       var toks = state.q ? segmentQuery(state.q) : null;
+      var so = toks ? structTokens(toks) : null;
       D.categories.forEach(function (cat) {
         if (state.device !== "all" && cat.device !== state.device) return;
         if (state.cat !== "all" && cat.id !== state.cat) return;
@@ -1357,18 +1409,21 @@
           if (state.look !== "all" && lookOf(item) !== state.look) return;
           if (state.brand !== "all" && item.brand !== state.brand) return;
           if (!matchesBudget(item, state.budget)) return;
-          var rk = 0;
+          var mi = { rank: 0, struct: 0 };
           if (toks) {
-            rk = matchRank(item, cat.id, toks);
-            if (!rk) return;
+            mi = matchInfo(item, cat.id, toks, so);
+            if (!mi.rank) return;
           }
-          list.push({ cat: cat, item: item, rank: rk });
+          list.push({ cat: cat, item: item, rank: mi.rank, struct: mi.struct });
         });
       });
       /* 有查询时按命中层级升序（字段 → 型号 → 软文本）。同层保持原顺序，
          否则每次输入一个字符卡片就会互相跳位。无查询时全是 0，跳过排序。 */
       if (toks && list.length) {
-        list.sort(function (a, b) { return a.rank - b.rank; });
+        /* 先按命中层级，再按「结构化字段命中数」降序：
+           ORD-17 的验收要求是「结构化命中的品类排在仅靠原串文本命中的品类之前」，
+           只排 rank 做不到 —— 主板和固态同属字段层，主板在品类顺序里靠前。 */
+        list.sort(function (a, b) { return (a.rank - b.rank) || (b.struct - a.struct); });
       }
       return mergeEntries(list);
     }
@@ -1642,6 +1697,17 @@
       var list = collect();
       var toks = state.q ? tokens(state.q) : null;
 
+      /* 分组顺序也要让位给「结构化字段命中」。原来分组顺序写死在 D.categories 里，
+         collect() 排得再对也没用：搜「M.2」时 mobo 整组排在 ssd 组前面，
+         用户第一眼看到的 8 张卡全是主板 —— 这就是 ORD-17 缺陷 2 的现场。
+         只提升「有结构化命中」的组，其余组维持品类顺序：
+         对「5070 Ti」这类没有结构化字段的查询，分组顺序一个字节都不变，
+         不会因为顺手改了排序把别的搜索的观感也一起改掉。 */
+      var groupStruct = {};
+      list.forEach(function (o) {
+        if (o.struct > (groupStruct[o.cat.id] || 0)) groupStruct[o.cat.id] = o.struct;
+      });
+
       if (state.sort === "ratingDesc") {
         list.sort(function (a, b) { return b.item.rating - a.item.rating; });
       } else if (state.sort === "gradeDesc") {
@@ -1672,6 +1738,7 @@
         var sub = list.filter(function (o) { return o.cat.id === cat.id; });
         if (sub.length) groups.push({ cat: cat, items: sub });
       });
+      groups.sort(function (a, b) { return (groupStruct[b.cat.id] || 0) - (groupStruct[a.cat.id] || 0); });
 
       /* 所有分组直接渲染，不折叠。条件变化时重置每组已加载条数 */
       var sig = state.device + "|" + state.cat + "|" + state.scene + "|" +

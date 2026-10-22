@@ -219,6 +219,53 @@ async function runChecks({ models, searchProbe, base = BASE, plans, partCat, cat
     add('quiz:optparts', '问卷选项的 parts 每项都在 PART_CAT 内', true, '未提供 quiz，跳过', '0 个未映射部件名');
   }
 
+  /* 第三道闸：quiz 选项的 parts 是「配置单行名」，不是品类。
+     skipPartsOf() 的返回值直接拿去和 plan.parts 的行名做精确比较
+     （js/recommend.js 的 `skipParts.indexOf(part) > -1`），
+     所以真实契约是「命中某套方案的实际行名」，PART_CAT 只是它的超集。
+     上一道闸拿 PART_CAT 当参照表，漏掉了「在 PART_CAT 内、但没有任何方案叫这个名字」这一类：
+       existing/audio: 音箱  → PART_CAT 有（→audio），plans 行名里只有 音频 / 耳机 / 耳机/音箱
+       existing/watch: 手环  → PART_CAT 有（→wearable），plans 行名里只有 手表
+     后果不是报错，是「已有件跳过」永久失效：用户在问卷里勾了「已有音频 / 已有手表」，
+     系统照样给他推音频和手表，且因为同一数组里前一项已经命中，症状被完全掩盖。
+     （2026-10-22 审计点名 4 处，本轮清掉最后 2 处。） */
+  if (quiz && quiz.length && plans && plans.length) {
+    const rows = new Set();
+    plans.forEach(pl => (pl.parts || []).forEach(r => rows.add(r[0])));
+    const rowList = [...rows];
+    const dead = [];
+    quiz.forEach(q => (q.options || []).forEach(o => (o.parts || []).forEach(pn => {
+      if (rows.has(pn)) return;
+      /* 拼写可疑的顺带给候选：包含关系能捞到「音箱 → 耳机/音箱」这类近义/误写 */
+      const near = rowList.filter(r => r.indexOf(pn) > -1 || pn.indexOf(r) > -1);
+      dead.push(q.id + '/' + o.id + ':' + pn + (near.length ? '（疑似「' + near.join('」「') + '」）' : ''));
+    })));
+    add('quiz:partrow', '问卷选项的 parts 每项都是某套方案的配置单行名（skipPartsOf 的真实契约）',
+      dead.length === 0,
+      dead.length ? JSON.stringify(dead.slice(0, 8)) : '0 个悬挂行名（方案行名全集 ' + rowList.length + ' 个）',
+      '0 个悬挂行名');
+  } else {
+    add('quiz:partrow', '问卷选项的 parts 每项都是某套方案的配置单行名（skipPartsOf 的真实契约）',
+      true, '未提供 plans/quiz，跳过', '0 个悬挂行名');
+  }
+
+  /* planPartTargets 的第二道静默 return：`if (!nums || !nums.length) return;`
+     行价写成「一千一百元」，该件就拿不到目标价，配件区默默退回默认档、不报错。
+     当前真实数据命中 0 处（属潜在缺口），但这类「静默跳过」查起来最贵，闸门成本极低。 */
+  if (plans && plans.length) {
+    const noNum = [];
+    plans.forEach(pl => (pl.parts || []).forEach(r => {
+      if (!/\d/.test(String(r[2] == null ? '' : r[2]))) noNum.push((pl.id || pl.name) + ':' + r[0] + '=' + r[2]);
+    }));
+    add('plans:price-num', '配置单每行价格文本都含阿拉伯数字（否则该件拿不到目标价）',
+      noNum.length === 0,
+      noNum.length ? JSON.stringify(noNum.slice(0, 8)) : '0 行无数字价格',
+      '0 行无数字价格');
+  } else {
+    add('plans:price-num', '配置单每行价格文本都含阿拉伯数字（否则该件拿不到目标价）',
+      true, '未提供 plans，跳过', '0 行无数字价格');
+  }
+
   return { items, stats: { dup: d, presented: p2, price: p, specsBad: bad } };
 }
 

@@ -2,6 +2,13 @@
  *
  * 判据来自 ORD-14 的 A1~A4 / A6。A5（其余闸全绿）由 npm run test:all 承担，本文件不重复跑。
  *
+ * ORD-17 修正两处（A1 原来只验了 ssd 那一侧）：
+ *   A1c  原来是「rank=1 且 cat=ssd 的条数 === rank=1 的 ssd 条数」，恒真。
+ *        改为盯「rank=1 的非 ssd 品类 ≤ 4 条」——搜 M.2 时 57 块主板靠 specs 里的
+ *        「1×M.2 插槽」抢占了主体层，正是这条要拦的。
+ *   A1d  新增用户视角：首屏前 8 张卡里 ssd 至少 6 张。分组顺序写死品类顺序时，
+ *        条目口径排对了用户看到的还是主板。
+ *
  * 为什么要读 window.PCRecoDiag 而不是只数 DOM：
  *   页面有 49 组重复合并（1209 条 → 1160 张卡），搜「M.2」时 44 块 M.2 固态里
  *   有几块被并进一张卡，数 DOM 只会得到 43，A1 会被判成失败 —— 而代码其实是对的。
@@ -100,6 +107,7 @@ function loadSchema() {
 
   if (!jsdom) {
     sk('A1 搜「M.2」主体命中 44', '无 jsdom');
+    sk('A1d 搜「M.2」首屏前 8 张卡 ssd ≥ 6', '无 jsdom');
     sk('A2 搜「SATA」命中 6', '无 jsdom');
     sk('A3 搜「机械硬盘」命中 3', '无 jsdom');
     sk('软层未丢（5070 Ti）', '无 jsdom');
@@ -135,9 +143,15 @@ function loadSchema() {
   ok('A1a 搜「M.2」ssd 主体命中 44', r1main.length === 44, '实测 ' + r1main.length);
   ok('A1b 这 44 条覆盖率 44/44', r1main.filter(x => m2Ids.has(x.id)).length === 44,
     '未覆盖 ' + r1main.filter(x => !m2Ids.has(x.id)).map(x => x.id).join(','));
-  ok('A1c ssd 主体命中全在 ssd（不串品类）',
-    r1.filter(x => x.rank === 1 && x.cat === 'ssd').length === r1main.length,
-    'rank=1 的品类分布 ' + JSON.stringify(byCat(r1.filter(x => x.rank === 1))));
+  /* A1c 原来写的是「rank=1 且 cat=ssd 的条数 === rank=1 的 ssd 条数」—— 恒真，等于没断言。
+     ORD-17 实测：搜 M.2 时 rank=1 里还有 57 块主板（specs 写着「1×M.2 插槽」）+ 1 个 M.2 硬盘盒，
+     用户第一眼看到的主板比固态还多。改判为「rank=1 的非 ssd 品类不得多于 4 条」，
+     盯住的是「主体层被别的品类占满」这个真实症状，而不是自己和自己比。 */
+  const r1rank1 = r1.filter(x => x.rank === 1);
+  const r1dist = byCat(r1rank1);
+  const r1non = r1rank1.filter(x => x.cat !== 'ssd').length;
+  ok('A1c 搜「M.2」rank=1 里非 ssd 品类 ≤ 4 条', r1non <= 4,
+    'rank=1 品类分布 ' + JSON.stringify(r1dist) + '，非 ssd ' + r1non + ' 条');
 
   /* A2：SATA */
   const r2 = q('SATA').filter(x => x.cat === 'ssd' && x.rank === 1);
@@ -173,6 +187,29 @@ function loadSchema() {
 
   /* ---------- 卡片口径（用户实际看到多少张） ---------- */
   const el = D.getElementById('accSearch');
+
+  /* A1d：真正的用户视角 —— 首屏前 8 张卡是什么。
+     条目口径排对了不等于用户看到的就是对的：分组顺序原来写死在 D.categories 里，
+     搜「M.2」时 mobo 组整组排在 ssd 组前面，前 8 张卡全是主板（ORD-17 缺陷 2 的现场）。
+     这条断言盯的正是「用户第一眼看到的东西」。 */
+  async function firstCards(term, n) {
+    el.value = term;
+    el.dispatchEvent(new W.Event('input', { bubbles: true }));
+    await sleep(500);
+    return [...D.querySelectorAll('.acc-card')].slice(0, n).map(c => {
+      const g = c.closest('.acc-group');
+      return {
+        cat: g ? g.getAttribute('data-cat') : '?',
+        name: (c.querySelector('.acc-name') || {}).textContent || ''
+      };
+    });
+  }
+  const f8 = await firstCards('M.2', 8);
+  const f8d = byCat(f8);
+  ok('A1d 搜「M.2」首屏前 8 张卡里 ssd ≥ 6 张', (f8d.ssd || 0) >= 6,
+    '前 8 张品类分布 ' + JSON.stringify(f8d));
+  console.log('     前 8 张：' + f8.map(x => x.cat + '/' + x.name).join(' | '));
+
   async function cards(term) {
     el.value = term;
     el.dispatchEvent(new W.Event('input', { bubbles: true }));

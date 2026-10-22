@@ -1,4 +1,9 @@
-/* 变异测试：验证 17 条验收断言不是「恒真假通过」
+/* 变异测试：验证验收断言不是「恒真假通过」
+ *
+ * 两个出口：
+ *   · 默认 → tests/reco-acceptance.cjs（审计线的 17 条验收断言，按 A1~A16 取 FAIL）
+ *   · runner:'audit' → tests/audit-search.cjs（数据契约闸，按 GATEFAIL 行取闸 id）
+ *     凡是闸门新增，都必须在这里有对应变异 —— 否则只有「一次性注入验证」没有常驻回归。
  *
  * 做法：把**代码快照**复制到临时目录 → 注入一个故障 → 跑 tests/reco-acceptance.cjs
  *       → 看对应断言是否 FAIL。断言抓不住故障 = 该断言无效。
@@ -16,7 +21,7 @@
  * 锚点用正则 + 唯一性断言：命中 0 次或 >1 次都直接报错，
  * 不允许「模糊命中就改」——那会变成静默的假变异。
  *
- * 跑法：npm run test:mutation:reco          全跑 17 个变异
+ * 跑法：npm run test:mutation:reco          全跑 22 个变异
  *       npm run test:mutation:reco -- M8    只跑一个
  *       PCG_MUT_KEEP=1 ... 保留临时目录（默认清理）
  */
@@ -262,6 +267,48 @@ const MUTS = [
     pattern: /(使用强度真实影响目标价位[^\n]*\n\s*)var targetScale = intensity === "light" \? 0\.85 : intensity === "heavy" \? 1\.12 : 1;/,
     to: (m) => m.replace(/var targetScale = intensity[^;]*;/, 'var targetScale = 1;'),
     note: 'intensity 改变不改结果 → A15 逐题对照实验应 FAIL'
+  },
+
+  /* ===== 闸门类（ORD-17）=====
+     数据契约闸在 tests/audit-search.cjs 里（逻辑在 lib/checks.cjs），不在 reco-acceptance 里，
+     所以这些变异走 runner:'audit'，按 GATEFAIL 行取闸 id。
+     审计要求：新闸必须有常驻回归，否则只有「一次性注入验证」—— 下次改坏了没人知道。
+     另外两道闸（plans:partcat / plans:partcat-target）拦的是两种不同的错，
+     必须分别注入才能各验各的：闸 1 管行名，闸 2 管取值指向。 */
+  {
+    id: 'M16', name: '配置单行名「内存」从 PART_CAT 里被删',
+    expect: ['plans:partcat'], runner: 'audit', file: 'js/recommend.js',
+    pattern: /"主板": "mobo", "内存": "ram", "硬盘": "ssd",/,
+    to: () => '"主板": "mobo", "硬盘": "ssd",',
+    note: '行名映射不到 → planPartTargets 第一道静默 return → plans:partcat 应 FAIL'
+  },
+  {
+    id: 'M17', name: 'PART_CAT 新增一条指向不存在品类的映射',
+    expect: ['plans:partcat-target'], runner: 'audit', file: 'js/recommend.js',
+    pattern: /"CPU": "cpu", /,
+    to: () => '"CPU": "cpu", "内存条": "ramx", ',
+    note: '取值悬空 → plans:partcat-target 应 FAIL（行名闸对这一条不管用，必须分开注）'
+  },
+  {
+    id: 'M18', name: 'quiz 选项 parts 回填「音箱」（在 PART_CAT 内、不在方案行名里）',
+    expect: ['quiz:partrow'], runner: 'audit', file: 'js/data.js',
+    pattern: /\{ id: "audio",   label: "音频", desc: "已有耳机音箱", parts: \["音频", "耳机\/音箱", "耳机"\],/,
+    to: (m) => m.replace('"耳机"],', '"耳机", "音箱"],'),
+    note: '只有行名闸抓得到：quiz:optparts 仍 PASS（音箱在 PART_CAT 里）—— 这就是上一版闸漏判的那类'
+  },
+  {
+    id: 'M19', name: 'quiz 选项 parts 写错别字「扩展埂」',
+    expect: ['quiz:optparts', 'quiz:partrow'], runner: 'audit', file: 'js/data.js',
+    pattern: /\{ id: "dock",    label: "拓展坞", desc: "已有扩展坞", parts: \["拓展坞"\],/,
+    to: (m) => m.replace('["拓展坞"]', '["拓展坞", "扩展埂"]'),
+    note: '既不在 PART_CAT 也不在行名里 → 两道闸都应 FAIL'
+  },
+  {
+    id: 'M20', name: '配置单行价格文本写成中文数字（无阿拉伯数字）',
+    expect: ['plans:price-num'], runner: 'audit', file: 'js/data.js',
+    pattern: /\["CPU", "AMD R5 8500G（核显）", "¥900-1300",/,
+    to: (m) => m.replace('"¥900-1300"', '"¥九百到一千三"'),
+    note: 'planPartTargets 第二道静默 return → 该件拿不到目标价 → plans:price-num 应 FAIL'
   }
 ];
 
@@ -274,6 +321,22 @@ function runAccept() {
   const failed = [];
   out.split('\n').forEach(l => {
     const m = l.match(/^\s*FAIL\s+(A\d+)\s/);
+    if (m) failed.push(m[1]);
+  });
+  return { failed, out, status: r.status };
+}
+
+/* 数据契约闸的出口：audit-search 的 FAIL 行是中文名，不适合做键，
+   所以打开 PCG_GATE_IDS 让它额外吐 `GATEFAIL <闸 id>`。 */
+function runAudit() {
+  const r = spawnSync(NODE, [path.join(WORK, 'tests', 'audit-search.cjs')], {
+    env: Object.assign({}, process.env, { NODE_PATH, PCG_GATE_IDS: '1' }),
+    encoding: 'utf8', cwd: WORK, timeout: 900000
+  });
+  const out = (r.stdout || '') + (r.stderr || '');
+  const failed = [];
+  out.split('\n').forEach(l => {
+    const m = l.match(/^\s*GATEFAIL\s+(\S+)/);
     if (m) failed.push(m[1]);
   });
   return { failed, out, status: r.status };
@@ -300,7 +363,10 @@ const only = process.argv[2];
 const list = only ? MUTS.filter(m => m.id === only) : MUTS;
 if (!list.length) { console.error('无此变异编号：' + only + '（可选：' + MUTS.map(m => m.id).join(', ') + '）'); process.exit(1); }
 
-console.log(`变异测试：${list.length} 个变异 × 17 条断言`);
+const nReco = list.filter(m => m.runner !== 'audit').length;
+const nAudit = list.length - nReco;
+console.log(`变异测试：${list.length} 个变异（${nReco} 个打 reco-acceptance 的验收断言`
+  + (nAudit ? `，${nAudit} 个打 audit-search 的数据契约闸` : '') + '）');
 ensureSnapshot();
 
 const stray = sweep(WORK_ROOT);
@@ -322,7 +388,7 @@ for (const mut of list) {
       continue;
     }
     const t0 = Date.now();
-    const res = runAccept();
+    const res = mut.runner === 'audit' ? runAudit() : runAccept();
     const got = res.failed.slice().sort();
     const want = mut.expect.slice().sort();
     const miss = want.filter(w => got.indexOf(w) === -1);

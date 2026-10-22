@@ -190,7 +190,13 @@ async function makeUiProbe(jsdomModule) {
       return;
     }
     if (it.ok) { pass++; console.log(`  PASS ${it.name}`); }
-    else { fail++; console.log(`  FAIL ${it.name} :: ${JSON.stringify(it.actual)}（基线 ${JSON.stringify(it.base)}）`); }
+    else {
+      fail++;
+      console.log(`  FAIL ${it.name} :: ${JSON.stringify(it.actual)}（基线 ${JSON.stringify(it.base)}）`);
+      /* 机器可读出口：变异脚本要按「哪一道闸 FAIL」判对应关系，
+         而上面的中文名不适合做键。只在显式开启时输出，不改变人读的报告。 */
+      if (process.env.PCG_GATE_IDS) console.log(`  GATEFAIL ${it.id}`);
+    }
   });
 
   /* 同一型号出现 3 次及以上：为去重提供可执行清单 */
