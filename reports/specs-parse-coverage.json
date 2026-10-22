@@ -300,17 +300,31 @@
   "req": 0,
   "softOnly": 7
  },
+ "ssd.kind": {
+  "hit": 53,
+  "total": 53,
+  "pct": 100,
+  "req": 1,
+  "softOnly": 0
+ },
  "ssd.form": {
+  "hit": 53,
+  "total": 53,
+  "pct": 100,
+  "req": 1,
+  "softOnly": 0
+ },
+ "ssd.iface": {
+  "hit": 53,
+  "total": 53,
+  "pct": 100,
+  "req": 1,
+  "softOnly": 0
+ },
+ "ssd.ifaceVer": {
   "hit": 43,
   "total": 53,
   "pct": 81.1,
-  "req": 1,
-  "softOnly": 8
- },
- "ssd.ifaceVer": {
-  "hit": 40,
-  "total": 53,
-  "pct": 75.5,
   "req": 1,
   "softOnly": 0
  },

@@ -77,8 +77,10 @@ const R = {
   ssd: {
     /* 关键字段：specs 里几乎没有，靠型号/接口推断 —— 这正是 ORD-06 点名的缺失 */
     /* 推断而非明文：PCIe×4 的消费级固态就是 M.2（U.2/AIC 极罕见且会写明 U.2） */
-    form:     [/SATA/i, /U\.2/i, /mSATA/i, /M\.2/i, /PCIe\s*[\d.]+\s*[×x]\s*\d/i, /移动固态|便携|USB\s*[\d.]*/i],
-    ifaceVer: [/PCIe\s*([\d.]+)\s*[×x]\s*\d/i, /SATA\s*([\d.]+)/i],
+    kind:     [/3\.5\s*英寸/i, /\d{4}\s*rpm/i, /移动固态|便携/i, /TLC|QLC|MLC/i, /PCIe|NVMe/i],
+    form:     [/U\.2/i, /mSATA/i, /M\.2/i, /3\.5\s*英寸/i, /2\.5\s*英寸/i, /SATA/i, /PCIe\s*[\d.]+\s*[×x]\s*\d/i, /PCIe\s*[\d.]+/i, /移动固态|便携|USB\s*[\d.]*/i],
+    iface:    [/SATA/i, /USB\s*[\d.]*/i, /PCIe|NVMe/i],
+    ifaceVer: [/PCIe\s*([\d.]+)\s*[×x]\s*\d/i, /SATA\s*([\d.]+)/i, /USB\s*([\d.]+)/i],
     capacity: [/(\d+)\s*TB/i, /(\d+)\s*GB/i],
     nand:     [/TLC/i, /QLC/i, /MLC/i],
     dram:     [/无独立缓存/, /独立缓存/, /\bHMB\b/i, /无缓/, /有缓/],
@@ -324,7 +326,11 @@ const L = [];
 L.push('# specs 解析覆盖率（dry-run 实测）');
 L.push('');
 L.push('> `node tools/schema-dryrun.cjs` 生成。只读，未改动任何数据。');
-L.push('> 定义见 `js/specs-schema.js`（258 字段 / 126 必填 / 227 标 derive / 31 标 manual）。');
+const _sm = SCH.summary();
+const _tf = _sm.reduce((a, r) => a + r.fields, 0);
+const _tr = _sm.reduce((a, r) => a + r.required, 0);
+const _td = _sm.reduce((a, r) => a + r.derive, 0);
+L.push('> 定义见 `js/specs-schema.js`（' + _tf + ' 字段 / ' + _tr + ' 必填 / ' + _td + ' 标 derive / ' + (_tf - _td) + ' 标 manual）。');
 L.push('');
 L.push('**口径**：「硬命中」= 该字段在 `specs` 的某个分号片段里能抓到；「仅软文本」= specs 抓不到但 valueNote/compat/name 里有（说明字段真实存在，只是没写进硬规格）。');
 L.push('');

@@ -86,8 +86,12 @@
        按型号/接口推断实际 44 款是 M.2、6 款 SATA、3 款移动固态。
        搜「M.2」当前只召回 24 款固态，漏 20 款。接口/形态是必填硬字段。 */
     ssd: { label: '固态硬盘', fields: [
-      { k: 'form',      n: '形态',     t: 'enum', r: 1, ex: 'M.2', d: 'derive', e: ['M.2', 'SATA', 'U.2', 'mSATA'], s: ['m.2', 'sata固态', 'u.2'] },
-      { k: 'ifaceVer',  n: '接口版本', t: 'enum', r: 1, ex: 'PCIe 4.0×4', d: 'derive', e: ['PCIe 5.0×4', 'PCIe 4.0×4', 'PCIe 3.0×4', 'SATA 3.0'], s: ['pcie4', 'nvme', 'pcie5'] },
+      /* 品类内实测混入 3 块 3.5 英寸机械盘（紫盘/酷狼/Exos），无 kind 会被强标 SATA 与固态并列 */
+      { k: 'kind',      n: '类型',     t: 'enum', r: 1, ex: 'SSD', d: 'derive', e: ['SSD', 'HDD', '移动固态'], s: ['固态', '机械硬盘', '移动固态'] },
+      /* 形态与接口必须分开：SATA 是接口，M.2/U.2 是形态，混在一个字段里会把 3.5 寸机械盘标成 SATA 形态 */
+      { k: 'form',      n: '形态',     t: 'enum', r: 1, ex: 'M.2', d: 'derive', e: ['M.2', '2.5 英寸', '3.5 英寸', 'U.2', 'mSATA', '便携'], s: ['m.2', '2280', '2230', '2.5英寸', '3.5英寸', 'u.2'] },
+      { k: 'iface',     n: '接口',     t: 'enum', r: 1, ex: 'NVMe (PCIe)', d: 'derive', e: ['NVMe (PCIe)', 'SATA', 'USB'], s: ['sata', 'nvme', 'm.2', 'usb'] },
+      { k: 'ifaceVer',  n: '接口版本', t: 'enum', r: 1, ex: 'PCIe 4.0×4', d: 'derive', e: ['PCIe 5.0×4', 'PCIe 4.0×4', 'PCIe 3.0×4', 'SATA 3.0', 'USB 3.2 Gen2'], s: ['pcie4', 'nvme', 'pcie5'] },
       { k: 'capacity',  n: '容量',     t: 'num',  u: 'GB',  r: 1, ex: '2000', d: 'derive', s: ['1tb', '2tb'] },
       { k: 'length',    n: '长度',     t: 'num',  u: 'mm',  r: 0, ex: '80',   d: 'manual', e: undefined, s: ['2280', '2230'] },
       { k: 'nand',      n: '闪存类型', t: 'enum', r: 1, ex: 'TLC', d: 'derive', e: ['TLC', 'QLC', 'MLC'], s: ['tlc', 'qlc'] },
