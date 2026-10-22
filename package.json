@@ -13,6 +13,7 @@
     "test:mutation:reco": "node tests/mutation-reco.cjs",
     "test:all": "node tests/selftest-mutation.cjs && node tests/audit-search.cjs && node tests/e2e-merge.cjs && node tests/e2e-inject-test.cjs && node tests/reco-acceptance.cjs",
     "audit:search": "node tests/audit-search.cjs",
+    "spec:matrix": "node tools/spec-word-matrix.cjs",
     "dup:gate": "node tools/dedup-gate.cjs",
     "dup:gate:strict": "node tools/dedup-gate.cjs --strict",
     "dup:review": "node tools/dup-review.cjs",
