@@ -1779,3 +1779,27 @@ button.btn-primary { border: 0; }
   .ai-entry-card { flex-direction: column; align-items: stretch; }
   .ai-entry-card > .btn { text-align: center; }
 }
+
+/* ===== ORD-11：配置单单一价源 / 跳过说明 / 三态标记 / 非重点折叠 ===== */
+.spec-model { display: block; font-weight: 600; }
+.spec-orig { display: block; font-size: 11.5px; color: var(--color-text-soft); margin-top: 2px; }
+.spec-skip { color: var(--color-text-soft); text-decoration: line-through; }
+.spec-row-skip td { opacity: .7; }
+.spec-row-skip .spec-price { color: var(--color-text-soft); font-weight: 600; }
+
+/* 跳过的件必须说明：静默消失会被当成功能坏了 */
+.res-skip-note { font-size: 13px; line-height: 1.7; padding: 10px 12px; margin: 10px 0 0; border-radius: 10px;
+  color: var(--color-text); background: var(--color-bg-alt); border-left: 3px solid var(--color-primary); }
+.res-skip-warn { border-left-color: var(--color-text-soft); }
+
+/* 三态标记靠边框区分，不引入新色值：浅色/暗色主题都成立 */
+.anchor-badge.anchor-cand { background: transparent; border: 1px dashed var(--color-primary); }
+.anchor-badge.anchor-tier { background: transparent; border: 1px solid var(--color-primary); }
+.fp-alt-badge { color: var(--color-text-soft); background: var(--color-bg-alt); border: 1px solid var(--color-border); }
+.fp-why-alt { color: var(--color-text-soft); border-left: 2px solid var(--color-border); padding-left: 8px; }
+
+/* 非重点件折叠：仍在页面上，只是不占首屏 */
+.fp-more { margin-top: 10px; border: 1px solid var(--color-border); border-radius: 12px; padding: 10px 12px; background: var(--color-bg); }
+.fp-more > summary { cursor: pointer; font-size: 13px; font-weight: 600; color: var(--color-text); }
+.fp-more[open] > summary { margin-bottom: 10px; }
+.fp-list-sub { margin-top: 0; }

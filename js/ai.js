@@ -205,7 +205,7 @@
         if (/未就绪|凭据|不可用|繁忙/.test(msg)) {
           bubble.innerHTML += '<br><br>AI 服务暂时不可用，可以先从这些入口找答案：' +
             '<br>· <a class="ai-link" href="/accessories.html">配件与榜单</a>（21 类 1209 款型号，可按品类/价位筛选）' +
-            '<br>· <a class="ai-link" href="/smart.html">智能推荐</a>（6 题快速推荐 / 10 题深度测评）' +
+            '<br>· <a class="ai-link" href="/smart.html">智能推荐</a>（6 项快速推荐 / 9-10 题深度测评，先选设备）' +
             '<br>· <a class="ai-link" href="/plans.html">搭配计划</a>（6 档整机方案）' +
             '<br>· <a class="ai-link" href="/guide.html">使用指南</a> · <a class="ai-link" href="/faq.html">常见问题</a>';
         }

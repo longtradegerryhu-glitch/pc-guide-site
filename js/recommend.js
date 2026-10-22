@@ -217,31 +217,84 @@
   }
 
   /* 全套配置单表格：结果页主角，快速推荐与深度测评共用。
-     返回 { html, parts, total }，total 为按行累加的价区间。 */
-  function specTableHtml(plan) {
-    if (!plan) return { html: "", parts: 0, total: [0, 0] };
-    var lo = 0, hi = 0;
-    var rows = (plan.parts || []).map(function (r) {
-      var nums = String(r[2] || "").match(/\d+/g);
-      if (nums) {
-        lo += parseInt(nums[0], 10);
-        hi += nums.length > 1 ? parseInt(nums[1], 10) : parseInt(nums[0], 10);
+     返回 { html, parts, total, skipped }。
+     opts.rows = fullPartRows 的结果：有型号库命中就用型号库 price，
+     plan.parts 里的字符串价降级为「无型号库时的兜底」——
+     两套价源正是配置单与配件区价格对不上的根因。 */
+  function specTableHtml(plan, opts) {
+    if (!plan) return { html: "", parts: 0, total: [0, 0], skipped: [] };
+    opts = opts || {};
+    var rows = opts.rows || [];
+    var skipped = rows.skipped || [];
+    var bySrc = {};
+    rows.forEach(function (r) {
+      var k = r.srcPart || r.part;
+      if (!bySrc[k]) bySrc[k] = [];
+      bySrc[k].push(r);
+    });
+    var skipMap = {};
+    skipped.forEach(function (s) { skipMap[s.part] = s; });
+
+    var lo = 0, hi = 0, libRows = 0, tplRows = 0;
+    var body = (plan.parts || []).map(function (r) {
+      var part = r[0], config = String(r[1] || ""), priceText = String(r[2] || "");
+      if (skipMap[part]) {
+        return '<tr class="spec-row-skip"><td class="spec-part">' + esc(part) + "</td>" +
+          '<td><span class="spec-skip">已跳过（你已有）：' + esc(config) + "</span></td>" +
+          '<td class="spec-price">—</td></tr>';
       }
-      return '<tr><td class="spec-part">' + esc(r[0]) + "</td><td>" + esc(r[1]) + "</td>" +
-             '<td class="spec-price">' + esc(r[2]) + "</td></tr>";
+      var picked = bySrc[part] || [];
+      var libPrice = null, names = [];
+      picked.forEach(function (x) {
+        var it = x.pick && x.pick.item;
+        if (!it || !it.price) return;
+        libPrice = libPrice
+          ? [libPrice[0] + it.price[0], libPrice[1] + it.price[1]]
+          : [it.price[0], it.price[1]];
+        names.push(it.name);
+      });
+      var cfgCell, priceCell;
+      if (libPrice) {
+        cfgCell = '<span class="spec-model">' + esc(names.join(" + ")) + "</span>" +
+          '<span class="spec-orig">配置单原选：' + esc(config) + "</span>";
+        priceCell = fmtPrice(libPrice);
+        lo += libPrice[0]; hi += libPrice[1]; libRows++;
+      } else {
+        cfgCell = esc(config);
+        priceCell = esc(priceText);
+        var nums = String(priceText).match(/\d+/g);
+        if (nums) {
+          lo += parseInt(nums[0], 10);
+          hi += nums.length > 1 ? parseInt(nums[1], 10) : parseInt(nums[0], 10);
+          tplRows++;
+        }
+      }
+      return '<tr><td class="spec-part">' + esc(part) + "</td><td>" + cfgCell + "</td>" +
+        '<td class="spec-price">' + priceCell + "</td></tr>";
     }).join("");
+
+    var counted = (plan.parts || []).length - skipped.length;
     var html =
       '<div class="smart-spec reveal in">' +
-        '<h3 class="smart-spec-title">全套配置单（' + (plan.parts || []).length + ' 个部件）</h3>' +
+        '<h3 class="smart-spec-title">全套配置单（' + counted + " 个部件" +
+          (skipped.length ? "，已跳过 " + skipped.length + " 项" : "") + "）</h3>" +
         '<div class="smart-spec-scroll"><table class="smart-spec-table">' +
         "<thead><tr><th>部件</th><th>配置</th><th>参考价</th></tr></thead><tbody>" +
-        rows +
-        '<tr class="spec-total"><td>合计</td><td>按各部件区间累加，不含优惠</td>' +
+        body +
+        '<tr class="spec-total"><td>合计</td><td>按各行参考价累加，不含优惠</td>' +
         '<td class="spec-price">¥' + lo.toLocaleString() + " - ¥" + hi.toLocaleString() + "</td></tr>" +
         "</tbody></table></div>" +
-        '<p class="smart-spec-tip">合计按各行参考价累加，所以比方案卡片预算略宽：每行都挑高配就超、都挑低配就省。照单买法：把每行配置复制到京东/淘宝搜索比价下单；不会装机可以约京东上门装机（约 100-200 元），或到「使用指南」照步骤自己装。</p>' +
+        '<p class="smart-spec-tip">' + specTip(libRows, tplRows, skipped.length) + "</p>" +
       "</div>";
-    return { html: html, parts: (plan.parts || []).length, total: [lo, hi] };
+    return { html: html, parts: counted, total: [lo, hi], skipped: skipped };
+  }
+
+  /* 表格底注：把"价格从哪来"说清，用户才能判断该不该信这一行 */
+  function specTip(libRows, tplRows, skippedN) {
+    var s = "表内每个部件的价格取自下方配件区同一型号的报价，两处必然一致；";
+    if (tplRows) s += "其中 " + tplRows + " 个部件站内没有独立型号库，价格是配置单的档位参考价；";
+    if (skippedN) s += "已按你已有的 " + skippedN + " 项跳过，合计已相应减去；";
+    return s + "合计按各行参考价累加，所以比方案卡片预算略宽：每行都挑高配就超、都挑低配就省。照单买法：把每行配置复制到京东/淘宝搜索比价下单。";
   }
 
   /* ---- 通用部件挑选：快速推荐与深度测评共用，保证两处口径一致 ---- */
@@ -287,14 +340,113 @@
     });
   }
 
+  /* 严格同款：型号串必须完整出现在配置单行里。
+     宽松版 matchAnchors 会拿"120se"这类去 hay 里找，把 PS120 SE 认成 PA120 SE 的同款；
+     挑选时可以宽容（找不到就用相近的），但**贴标必须严格**，否则标记在撒谎。 */
+  function matchAnchorsStrict(items, rowText) {
+    if (!rowText) return [];
+    var sq = function (s) { return String(s).replace(/\s+/g, "").toLowerCase(); };
+    var rowSq = sq(rowText);
+    return items.filter(function (it) {
+      var mSq = sq(it.model || "");
+      var full = sq((it.brand || "") + (it.model || ""));
+      if (mSq.length >= 4 && rowSq.indexOf(mSq) !== -1) return true;
+      if (full.length >= 5 && rowSq.indexOf(full) !== -1) return true;
+      return false;
+    });
+  }
+
+  /* 三态判定：
+     exact    —— 配置单点名这一件，且型号完整命中
+     candidate—— 配置单是二选一（"RTX 5060 Ti / RX 9060 XT"），命中其中一支
+     chipset  —— 配置单只写芯片组/系列（B760M / B650M），配件给的是该档位的具体型号
+     alt      —— 型号不一致，只能是同档位替代 */
+  function anchorState(item, rowText) {
+    if (!item || !rowText) return "alt";
+    var sq = function (s) { return String(s).replace(/\s+/g, "").toLowerCase(); };
+    var rowSq = sq(rowText);
+    var mSq = sq(item.model || "");
+    var full = sq((item.brand || "") + (item.model || ""));
+    var same = (mSq.length >= 4 && rowSq.indexOf(mSq) !== -1) ||
+               (full.length >= 5 && rowSq.indexOf(full) !== -1);
+    var hasAlt = /[\/+＋]/.test(rowText);
+    if (same) return hasAlt ? "candidate" : "exact";
+    var segs = String(rowText).split(/[\/+＋、（(]/).map(sq)
+      .filter(function (s) { return s.length >= 3; });
+    if (segs.some(function (s) { return mSq.indexOf(s) !== -1 || full.indexOf(s) !== -1; })) return "chipset";
+    return "alt";
+  }
+
+    var MOBILE_LOOK_KW = {
+      p_white: ["白"], p_black: ["黑"], p_bright: ["亮", "彩"],
+      p_slim: ["薄", "轻"], t_white: ["白"], t_gray: ["灰"],
+      t_color: ["彩"], t_slim: ["薄", "轻"]
+    };
+    /* 「最看重什么」如果只用来做同档内微调，用户改变它时结果往往一模一样。
+       真正能兑现偏好的做法是调这一类部件的目标价位：在意静音就多花在散热与机箱上，
+       在意颜值就多花在机箱上，在意人体工学就多花在屏幕和键鼠上。 */
+    function buildTargetScale(pref, exp, look) {
+      var map = {};
+      if (pref === "quiet") { map.cooler = 1.25; map.case = 1.25; map.psu = 1.15; }
+      else if (pref === "rgb") { map.case = 1.3; map.cooler = 1.25; }
+      else if (pref === "ergo") { map.monitor = 1.3; map.input = 1.3; map.stand = 1.25; }
+      else if (pref === "value") { map.cpu = 0.9; map.gpu = 0.9; map.ssd = 0.9; }
+      else if (pref === "p_battery") { map.phone = 1.15; }
+      else if (pref === "p_camera") { map.phone = 1.35; }
+      else if (pref === "p_perf") { map.phone = 1.25; }
+      else if (pref === "p_hand") { map.phone = 1.1; }
+      else if (pref === "t_screen") { map.tablet = 1.3; }
+      else if (pref === "t_ink") { map.tablet = 1.1; map.mobileacc = 1.5; }
+      else if (pref === "t_battery") { map.tablet = 1.15; }
+      else if (pref === "t_perf") { map.tablet = 1.25; }
+      if (exp === "pro") { map.cooler = (map.cooler || 1) * 1.2; }
+      else if (exp === "new") { map.cooler = (map.cooler || 1) * 0.9; }
+      if (look && look !== "any" && look !== "all") { map.case = (map.case || 1) * 1.2; }
+      return function (cid) { return map[cid] || 1; };
+    }
+
+    function buildBias(pref, exp, lifespan, look) {
+      var kw = [];
+      if (pref === "quiet" || pref === "p_perf") kw = ["静音", "低噪", "安静", "风扇"];
+      else if (pref === "rgb") kw = ["灯", "RGB", "幻彩"];
+      else if (pref === "ergo") kw = ["人体工学", "护腕", "护眼", "升降"];
+      else if (pref === "p_battery" || pref === "t_battery") kw = ["续航", "mAh", "电池"];
+      else if (pref === "p_camera") kw = ["摄像", "主摄", "长焦", "影像", "像素"];
+      else if (pref === "p_hand") kw = ["轻", "薄", "手感", "克"];
+      else if (pref === "t_screen") kw = ["Hz", "分辨率", "色域", "2K", "OLED"];
+      else if (pref === "t_ink") kw = ["压感", "延迟", "笔"];
+      if (MOBILE_LOOK_KW[look]) kw = kw.concat(MOBILE_LOOK_KW[look]);
+      if (exp === "new") kw = kw.concat(["开箱", "免驱", "一体"]);
+      if (exp === "pro") kw = kw.concat(["旗舰", "堆料"]);
+      if (lifespan === "y5") kw = kw.concat(["5 年", "质保", "年保"]);
+      var wantValue = pref === "value" || pref === "p_value" || pref === "t_value";
+      return function (it) {
+        var hay = String((it.style || "") + " " + (it.valueNote || "") + " " + (it.specs || ""));
+        var hit = 0;
+        kw.forEach(function (k) { if (k && hay.indexOf(k) > -1) hit++; });
+        if (look && look !== "any" && !MOBILE_LOOK_KW[look] && lookOf(it) === look) hit += 2;
+        if (wantValue) {
+          if (it.valueGrade === "S") hit += 2;
+          else if (it.valueGrade === "A") hit += 1;
+        }
+        return hit;
+      };
+    }
+
   /* 挑 top1 + 2 备选：配置单同款置顶，其余按价位距离 + 等级排序 */
-  function pickOne(items, target, rowText, allItems, minAnchorMid) {
+  function pickOne(items, target, rowText, allItems, minAnchorMid, bias) {
     if (!items.length) return null;
     var win = items.filter(function (it) {
       var m = mid(it.price);
       return m >= target * 0.6 && m <= target * 1.5;
     });
     var pool = win.length ? win : items;
+    /* 偏好只在价位窗口内决定"同类里挑哪件"：
+       静音/颜值这类偏好把 360 水冷换成百元风冷，是比不挑更糟的错。 */
+    if (bias) {
+      var liked = pool.filter(function (it) { return bias(it) > 0; });
+      if (liked.length) pool = liked;
+    }
     var ranked = pool.slice().sort(function (a, b) {
       var da = Math.abs(mid(a.price) - target), db = Math.abs(mid(b.price) - target);
       if (da !== db) return da - db;
@@ -302,7 +454,10 @@
       return d !== 0 ? d : b.rating - a.rating;
     });
     /* 同款要在「全量品类库」里找：候选池已被用途/价位过滤，可能把配置单点名的那件挤掉了 */
-    var anchors = matchAnchors(allItems && allItems.length ? allItems : items, rowText);
+    var lib = allItems && allItems.length ? allItems : items;
+    /* 先找严格同款；一件都没有才退回宽松匹配（此时不再算"同款"） */
+    var strict = matchAnchorsStrict(lib, rowText);
+    var anchors = strict.length ? strict : matchAnchors(lib, rowText);
     var top = null, isAnchor = false;
     var anchorTop = anchors.length ? anchors.slice().sort(function (a, b) {
       return Math.abs(mid(a.price) - target) - Math.abs(mid(b.price) - target);
@@ -316,7 +471,8 @@
     }
     if (!top) return null;
     var alts = ranked.filter(function (it) { return it.id !== top.id; }).slice(0, 2);
-    return { item: top, anchor: isAnchor, alts: alts };
+    /* 标记由严格判定给出，不再跟着"是不是 anchorTop"走 */
+    return { item: top, anchor: isAnchor, state: anchorState(top, rowText), alts: alts };
   }
 
   /* 散热器形态由配置单决定（360 水冷 ≠ 下压风冷），用途标签对它没意义；
@@ -359,11 +515,19 @@
      有型号库的类目走型号匹配，没有的走 partCatalog 档位直选。 */
   function fullPartRows(plan, opts) {
     opts = opts || {};
+    /* 已算过就复用：配置单表格与配件区必须是同一份结果，否则价格又会分叉 */
+    if (opts.rows) return opts.rows;
     var uses = opts.uses || [];
+    var skipParts = opts.skipParts || [];
+    var bias = typeof opts.bias === "function" ? opts.bias : null;
+    var targetScale = opts.targetScale || 1;
+    var scaleOf = typeof opts.scaleOf === "function" ? opts.scaleOf : null;
+    var lookPref = opts.look || "";
     var targets = planPartTargets(plan);
     var base = mid(plan.price || [0, 0]);
     var budgetCap = opts.budgetCap || 0;
     var out = [];
+    var skipped = [];
 
     /* 用途只作软过滤：过滤后若覆盖不到配置单价位，就退回全库。
        否则「办公」场景会把配置单里的 360 水冷降成百元风冷、5070 降成入门卡。 */
@@ -382,10 +546,15 @@
 
     (plan.parts || []).forEach(function (r) {
       var part = r[0], config = String(r[1] || ""), priceText = String(r[2] || "");
+      /* 已有件按"配置单行"跳过。按品类跳会连坐：charger 里同时装着充电器/数据线/移动电源 */
+      if (skipParts.indexOf(part) > -1) {
+        skipped.push({ part: part, config: config, priceText: priceText });
+        return;
+      }
       var cid = PART_CAT[part] || null;
       var cat = null;
       if (cid) D.categories.forEach(function (c) { if (c.id === cid) cat = c; });
-      var target = targets[cid] || base * 0.03;
+      var target = (targets[cid] || base * 0.03) * targetScale * (scaleOf ? scaleOf(cid) : 1);
       if (PART_SPLIT[part]) target = target / PART_SPLIT[part];
       /* 笔记本本体按预算选档：配置单行价只是模板，不该锁死选择 */
       var minAnchorMid;
@@ -405,10 +574,10 @@
         var kbSet = comboItem.filter(function (it) { return (it.style || "").indexOf("键盘") !== -1; });
         var msSet = comboItem.filter(function (it) { return (it.style || "").indexOf("鼠标") !== -1; });
         var segs = config.split(/[+＋]/);
-        var kbPick = pickOne(kbSet.length ? kbSet : comboItem, target * 0.55, segs[0] || "", cat.items);
-        var msPick = pickOne(msSet.length ? msSet : comboItem, target * 0.45, segs[1] || "", cat.items);
-        if (kbPick) out.push({ part: "键盘", icon: "⌨️", config: config, priceText: priceText, cat: cat, pick: kbPick, textPick: null });
-        if (msPick) out.push({ part: "鼠标", icon: "🖱️", config: config, priceText: priceText, cat: cat, pick: msPick, textPick: null });
+        var kbPick = pickOne(kbSet.length ? kbSet : comboItem, target * 0.55, segs[0] || "", cat.items, undefined, bias);
+        var msPick = pickOne(msSet.length ? msSet : comboItem, target * 0.45, segs[1] || "", cat.items, undefined, bias);
+        if (kbPick) out.push({ part: "键盘", srcPart: part, icon: "⌨️", config: config, priceText: priceText, cat: cat, pick: kbPick, textPick: null });
+        if (msPick) out.push({ part: "鼠标", srcPart: part, icon: "🖱️", config: config, priceText: priceText, cat: cat, pick: msPick, textPick: null });
         return;
       }
 
@@ -422,38 +591,80 @@
         }
         /* 散热按冷排规格选，不走用途软过滤：软过滤会把它整档降下来 */
         var pool = cid === "cooler" ? coolerForm(items, config) : narrow(items, target);
-        pick = pickOne(pool, target, config, cat.items, minAnchorMid);
+        /* 颜值偏好要压过"配置单同款"：用户明确说喜欢白色，配置单模板却点名海景房时，
+           照模板推海景房再标"同款"，等于把这个回答当没听见。
+           该风格有现货时，同款匹配也只在风格内找；没现货才退回全量。 */
+        var anchorPool = cat.items;
+        /* 只对外观看得见、同档能换的品类应用颜值偏好。
+           显卡/CPU 也带风格标注，但把显卡按"白色"换掉等于按颜色换性能档，是错的。 */
+        var LOOK_CATS = { case: 1, monitor: 1, input: 1, stand: 1, audio: 1, dock: 1 };
+        if (lookPref && lookPref !== "any" && lookPref !== "all" && LOOK_CATS[cid]) {
+          var styledAll = cat.items.filter(function (it) { return lookOf(it) === lookPref; });
+          if (styledAll.length) {
+            anchorPool = styledAll;
+            var styledPool = pool.filter(function (it) { return lookOf(it) === lookPref; });
+            if (styledPool.length) pool = styledPool;
+          }
+        }
+        pick = pickOne(pool, target, config, anchorPool, minAnchorMid, bias);
+        /* 这一类有型号库但这一档挑不出东西时，退回档位直选：
+           直接 filter 掉会让配置单少一行却不作声，用户以为是漏了。 */
+        if (!pick) textPick = catalogPick(part, target) || { name: config, price: [0, 0], alts: [] };
       } else {
-        textPick = catalogPick(part, target);
+        textPick = catalogPick(part, target) || { name: config, price: [0, 0], alts: [] };
       }
-      out.push({ part: part, config: config, priceText: priceText, cat: cat, pick: pick, textPick: textPick });
+      out.push({ part: part, srcPart: part, config: config, priceText: priceText, cat: cat, pick: pick, textPick: textPick });
     });
-    return out.filter(function (r) { return r.pick || r.textPick; });
+    var finalRows = out.filter(function (r) { return r.pick || r.textPick; });
+    // filter 会返回新数组，跳过的行要挂回去供配置单表格使用
+    finalRows.skipped = skipped;
+    return finalRows;
   }
 
-  /* 全套部件推荐渲染：每行 = 部件 + 推荐型号 + 参考价 + 说明 + 备选（点备选去搜同型号） */
+  /* 全套部件推荐渲染：每行 = 部件 + 推荐型号 + 参考价 + 说明 + 备选（点备选去搜同型号）
+     重点件置顶并展开；非重点件放进折叠区（仍在页面上，只是不占首屏）。
+     只有真传了 priority 才折叠 —— 快速推荐没有"重点"概念，必须全展开。 */
   function fullPartsHtml(plan, opts) {
     if (!plan) return "";
     opts = opts || {};
     var pri = opts.priority || [];
+    var collapsible = pri.length > 0;
     var rows = fullPartRows(plan, opts);
     if (!rows.length) return "";
     rows.forEach(function (r) {
-      r.hot = pri.indexOf(r.cat ? r.cat.id : "") > -1 || pri.indexOf(r.part) > -1;
+      var keys = [r.srcPart, r.part, r.cat ? r.cat.id : ""];
+      r.hot = !collapsible || keys.some(function (k) { return k && pri.indexOf(k) > -1; });
     });
-    rows.sort(function (a, b) { return (b.hot ? 1 : 0) - (a.hot ? 1 : 0); });
-    var body = rows.map(function (r) {
+    /* 标记必须属实：同款 / 候选之一 / 档位具体型号 / 同档位替代，不能一律写"同款" */
+    function badgeOf(r) {
+      var st = r.pick && r.pick.state;
+      if (!st) return "";
+      if (st === "exact") return '<span class="anchor-badge">配置单同款</span>';
+      if (st === "candidate") return '<span class="anchor-badge anchor-cand">配置单候选之一</span>';
+      if (st === "chipset") return '<span class="anchor-badge anchor-tier">配置单档位的具体型号</span>';
+      return '<span class="fp-badge fp-alt-badge">同档位替代</span>';
+    }
+    function rowHtml(r) {
       var it = r.pick && r.pick.item;
       var icon = r.icon || (r.cat ? r.cat.icon : "🔧");
       // 有型号库的给具体型号；没有的（主板/内存/硬盘/机箱）直接展示配置单原选
       var name = it ? it.name : r.config;
       var priceTxt = it ? fmtPrice(it.price) : r.priceText;
-      var badges = r.hot ? '<span class="fp-badge">升级重点</span>' : "";
-      if (r.pick && r.pick.anchor) badges += '<span class="anchor-badge">配置单同款</span>';
+      var badges = (r.hot && collapsible ? '<span class="fp-badge">升级重点</span>' : "") + badgeOf(r);
       if (!it && r.textPick) badges += '<span class="fp-badge fp-cat-badge">配置单原选</span>';
-      var why = it && it.valueNote
-        ? '<p class="fp-why">' + esc(it.valueNote) + "</p>"
-        : '<p class="fp-why">这一类没有独立的型号库，上面就是配置单的原选；同价位档位参考「' + esc(r.textPick.name) + '（¥' + r.textPick.price[0] + '）」。装机时以主板接口与机箱限高为准。</p>';
+      var why = "";
+      if (!it) {
+        why = '<p class="fp-why">这一类没有独立的型号库，上面就是配置单的原选；同价位档位参考「' +
+          esc(r.textPick.name) + '（¥' + r.textPick.price[0] + '）」。装机时以主板接口与机箱限高为准。</p>';
+      } else {
+        if (r.pick.state === "alt") {
+          // 型号不一致就必须说清差在哪，否则用户会以为这就是配置单写的那件
+          why += '<p class="fp-why fp-why-alt">配置单这一行写的是「' + esc(r.config) +
+            "」，站内没有完全对得上的型号，此处给同档位的 " + esc(it.name) +
+            "（" + fmtPrice(it.price) + "）。想更接近原选，点下面备选。</p>";
+        }
+        if (it.valueNote) why += '<p class="fp-why">' + esc(it.valueNote) + "</p>";
+      }
       var cands = it
         ? (r.pick.alts || []).map(function (a) { return { label: a.name, q: a.searchName || a.name, price: fmtPrice(a.price) }; })
         : ((r.textPick && r.textPick.alts) || []).map(function (a) { return { label: a.n, q: a.n, price: "¥" + a.p }; });
@@ -463,14 +674,23 @@
               esc(c.label) + " " + c.price + "</a>";
           }).join("") + "</div>"
         : "";
-      return '<div class="fp-row' + (r.hot ? " fp-hot" : "") + '">' +
+      return '<div class="fp-row' + (r.hot && collapsible ? " fp-hot" : "") + '"' +
+        (it ? ' data-model="' + esc(it.model || "") + '"' : "") + '>' +
         '<div class="fp-head"><span class="fp-cat">' + icon + " " + esc(r.part) + "</span>" + badges + "</div>" +
         '<div class="fp-body"><span class="fp-name">' + esc(name) + "</span>" +
         '<span class="fp-price">' + priceTxt + "</span></div>" +
         why + alts +
         (it ? productImageLink(it) : "") +
       "</div>";
-    }).join("");
+    }
+    var hotRows = rows.filter(function (r) { return r.hot; });
+    var restRows = rows.filter(function (r) { return !r.hot; });
+    var body = hotRows.map(rowHtml).join("");
+    if (restRows.length) {
+      body += '<details class="fp-more"><summary>其余 ' + restRows.length +
+        ' 个部件（不是这次的重点，点开看）</summary><div class="fp-list fp-list-sub">' +
+        restRows.map(rowHtml).join("") + "</div></details>";
+    }
     return '<div class="fp-list">' + body + "</div>";
   }
 
@@ -1534,9 +1754,45 @@
     var answers = {}; // { qid: [optionIds] }
     var steps = D.quiz;
 
+    /* 题目与选项都可以带 when:{form:[...]}；没有 when 视为全形态适用。
+       第 1 题（设备）未选时只渲染第 1 题 —— 连"要不要问装机经验"都还不成立。 */
+    function fitsWhen(node, form) {
+      if (!node || !node.when || !node.when.form) return true;
+      return !!form && node.when.form.indexOf(form) > -1;
+    }
+    function currentForm() {
+      return (answers.form && answers.form[0]) || null;
+    }
+    function visibleSteps() {
+      var form = currentForm();
+      if (!form) return steps.filter(function (q) { return !q.when; });
+      return steps.filter(function (q) { return fitsWhen(q, form); });
+    }
+    function optionsOf(q, form) {
+      return q.options.filter(function (o) { return fitsWhen(o, form); });
+    }
+    function titleOf(q, form) {
+      if (typeof q.title === "string") return q.title;
+      return (form && q.title[form]) || q.title["default"] || "";
+    }
+    /* 换形态后，旧答案里属于其它形态的选项必须清掉；
+       否则提交时带着用户看不见的脏答案，推荐会被不存在的选择带偏。 */
+    function pruneAnswers(form) {
+      steps.forEach(function (q) {
+        if (!fitsWhen(q, form)) { delete answers[q.id]; return; }
+        if (!answers[q.id]) return;
+        var keep = {};
+        optionsOf(q, form).forEach(function (o) { keep[o.id] = 1; });
+        answers[q.id] = answers[q.id].filter(function (id) { return keep[id]; });
+        if (!answers[q.id].length) delete answers[q.id];
+      });
+    }
+
     function render() {
-      box.innerHTML = steps.map(function (q, qi) {
-        var opts = q.options.map(function (o) {
+      var form = currentForm();
+      var vis = visibleSteps();
+      box.innerHTML = vis.map(function (q, qi) {
+        var opts = optionsOf(q, form).map(function (o) {
           var sel = answers[q.id] && answers[q.id].indexOf(o.id) > -1 ? " selected" : "";
           return (
             '<button class="q-opt' + sel + '" data-q="' + q.id + '" data-o="' + o.id + '">' +
@@ -1545,10 +1801,11 @@
             "</button>"
           );
         }).join("");
-        var stepBadge = '<span class="q-step">' + (qi + 1) + "/" + steps.length + "</span>";
+        // 编号跟着可见题目数实时重算：手机 9 题、台式 10 题
+        var stepBadge = '<span class="q-step">' + (qi + 1) + "/" + vis.length + "</span>";
         return (
           '<div class="quiz-step" data-step="' + q.id + '">' +
-            '<div class="q-title">' + stepBadge + " " + termify(q.title) + "</div>" +
+            '<div class="q-title">' + stepBadge + " " + termify(titleOf(q, form)) + "</div>" +
             '<div class="q-opts" data-multi="' + (q.multi ? "1" : "0") + '">' + opts + "</div>" +
           "</div>"
         );
@@ -1562,11 +1819,18 @@
           var multi = b.parentNode.getAttribute("data-multi") === "1";
           if (!answers[qid]) answers[qid] = [];
           if (multi) {
-            var i = answers[qid].indexOf(oid);
-            if (i > -1) answers[qid].splice(i, 1); else answers[qid].push(oid);
+            // 「都没有」与其它项互斥，同勾会让"跳过清单"自相矛盾
+            if (oid === "none") {
+              answers[qid] = ["none"];
+            } else {
+              answers[qid] = answers[qid].filter(function (x) { return x !== "none"; });
+              var i = answers[qid].indexOf(oid);
+              if (i > -1) answers[qid].splice(i, 1); else answers[qid].push(oid);
+            }
           } else {
             answers[qid] = [oid];
           }
+          if (qid === "form") pruneAnswers(oid);
           render();
         });
       });
@@ -1579,10 +1843,71 @@
       return answers[qid] || [];
     }
 
+    function isMobileForm(form) {
+      return form === "phone" || form === "tablet";
+    }
+
+    /* 选项查表：形态相关的 id（p_photo / t_draw）要映射回方案池的四种用途，
+       不能直接把新 id 丢给 pickPlan —— 那里的 uses 只有 office/game/create/portable。 */
+    function optionOf(qid, oid) {
+      var q = steps.filter(function (x) { return x.id === qid; })[0];
+      if (!q) return null;
+      return q.options.filter(function (o) { return o.id === oid; })[0] || null;
+    }
+    function canonicalUses(rawIds) {
+      var out = [];
+      rawIds.forEach(function (id) {
+        var opt = optionOf("use", id);
+        var mapped = (opt && opt.use) ||
+          (["office", "game", "create", "portable"].indexOf(id) > -1 ? [id] : []);
+        mapped.forEach(function (u) { if (out.indexOf(u) === -1) out.push(u); });
+      });
+      return out;
+    }
+    /* 已有件 → 配置单行名。按"行"跳过而不是按品类跳过：
+       charger 类里同时装着充电器/数据线/移动电源，按品类跳会连带删掉没勾的那几件。 */
+    function skipPartsOf(rawIds) {
+      var out = [];
+      rawIds.forEach(function (id) {
+        var opt = optionOf("existing", id);
+        ((opt && opt.parts) || []).forEach(function (p) {
+          if (out.indexOf(p) === -1) out.push(p);
+        });
+      });
+      return out;
+    }
+    function labelOfOption(qid, oid) {
+      var opt = optionOf(qid, oid);
+      return (opt && opt.label) || oid;
+    }
+    function partsOfOption(qid, oid) {
+      var opt = optionOf(qid, oid);
+      return (opt && opt.parts) || [];
+    }
+    function defaultPrefOf(form) {
+      return isMobileForm(form) ? (form === "tablet" ? "t_value" : "p_value") : "value";
+    }
+    function defaultLookOf(form) {
+      return form === "tablet" ? "t_any" : form === "phone" ? "p_any" : "any";
+    }
+
+    /* 偏好打分：只决定"同类里挑哪件"，绝不越过价位窗口。
+       把 360 水冷换成百元风冷是另一种错，所以偏好只在窗口内做筛选。 */
+
     // 取避坑条目（HTML 渲染与文本导出共用）
-    function pitfallItems(uses) {
+    function pitfallItems(uses, form) {
       var map = (window.PC_DATA && window.PC_DATA.pitfalls) || {};
       var keys = [];
+      /* 手机/平板只给移动向避坑：装机、显卡、DDR4 那一套对它们是噪音，
+         而"问题必须始终对这个人成立"同样适用于结果页里的建议。 */
+      if (isMobileForm(form)) {
+        keys.push(form === "tablet" ? "tablet" : "mobile");
+        var seenM = {}, itemsM = [];
+        keys.forEach(function (k) {
+          (map[k] || []).forEach(function (x) { if (x && !seenM[x]) { seenM[x] = 1; itemsM.push(x); } });
+        });
+        return itemsM;
+      }
       if (Array.isArray(uses)) {
         uses.forEach(function (u) { if (u && u !== "all") keys.push(u); });
         keys.push("common");
@@ -1600,8 +1925,13 @@
       return items;
     }
 
-    function pitfallsHTML(uses) {
-      var items = pitfallItems(uses);
+    function pitfallsHTML(uses, form, exp) {
+      var items = pitfallItems(uses, form);
+      /* 经验这一题不改型号（配置单同款优先），但必须改变"接下来怎么做"：
+         纯新手多一条装机顺序提示，老玩家不占版面。 */
+      if (exp === "new" && !isMobileForm(form)) {
+        items = items.concat(["第一次自己装机：先把 CPU、内存、散热装到主板上再进机箱，最后接电源线；不确定就走「使用指南」的装机步骤，或约京东上门装机（约 100-200 元）。"]);
+      }
       if (!items.length) return "";
       return '<div class="res-section"><span class="res-label">避坑提示：这几处最容易翻车</span>' +
         '<div class="look-pitfalls">' +
@@ -1610,41 +1940,74 @@
     }
 
     function generate() {
-      var use = answerOf("use");
+      var form = answerOf("form")[0] || "";
+      if (!form) {
+        box.innerHTML = '<div class="empty-box">请先在第 1 题选择你要的设备，后面的题目会跟着变化。</div>';
+        render();
+        return;
+      }
+      /* 用途答案是形态内 id（p_photo / t_draw），先映射回方案池的四种用途，
+         否则 pickPlan 一个方案都拿不到。 */
+      var rawUse = answerOf("use");
+      var use = canonicalUses(rawUse);
       var budget = answerOf("budget")[0] || "b6000";
-      var form = answerOf("form")[0] || "desktop";
-      var pref = answerOf("pref")[0] || "value";
-      var look = answerOf("look")[0] || "any";
-      var style = (look && look !== "any") ? styleOf(look) : null;
+      var pref = answerOf("pref")[0] || defaultPrefOf(form);
+      var look = answerOf("look")[0] || defaultLookOf(form);
+      var style = styleOf(look);
       var intensity = answerOf("intensity")[0] || "mid";
       var lifespan = answerOf("lifespan")[0] || "y3";
-      var exp = answerOf("exp")[0] || "some";
-      var existing = answerOf("existing");
-      var focus = answerOf("focus");
+      // 手机/平板不答装机经验，默认空串，画像里就不显示这一项
+      var exp = answerOf("exp")[0] || "";
+      var rawExisting = answerOf("existing");
+      var rawFocus = answerOf("focus");
 
       if (!use.length) {
-        box.innerHTML = '<div class="empty-box">请至少选择一项「主要用途」再生成方案。</div>';
+        box.innerHTML = '<div class="empty-box">请至少选择一项用途再生成方案。</div>';
         render(); // 恢复可交互
         return;
       }
+      /* 已有件 → 配置单行名。按行跳过而不是按品类跳过：
+         charger 类里同时装着充电器 / 数据线 / 移动电源，按品类跳会连带删掉没勾的那几件。 */
+      var skipParts = skipPartsOf(rawExisting);
+      var skipLabels = rawExisting.filter(function (id) { return id !== "none"; })
+        .map(function (id) { return labelOfOption("existing", id); });
+
+      var focus = rawFocus.slice();
       if (!focus.length) {
-        // 未选升级重点时按用途推断默认
+        // 未选重点时按用途推断默认
         if (use.indexOf("portable") > -1) focus = ["stand", "dock", "cooler"];
         else if (use.indexOf("game") > -1) focus = ["monitor", "input", "cooler"];
         else if (use.indexOf("create") > -1) focus = ["monitor", "input", "audio"];
         else focus = ["monitor", "stand", "input"];
       }
-      // 智能跳过已拥有的外设（选了"都没有"除外）
-      if (existing.indexOf("none") === -1 && existing.length) {
-        focus = focus.filter(function (c) { return existing.indexOf(c) === -1; });
-      }
-      // 「整机核心件」展开为具体类别，用于把对应部件排到推荐最前
+      // 「整机核心件」展开为具体类别；形态内的选项（p_body 等）展开为配置单行名
       var focusIds = focus.slice();
       if (focusIds.indexOf("core") > -1) {
         focusIds = focusIds.concat(["cpu", "gpu", "mobo", "ram", "ssd", "psu", "case", "cooler"]);
       }
+      focus.forEach(function (fid) {
+        partsOfOption("focus", fid).forEach(function (pn) {
+          if (focusIds.indexOf(pn) === -1) focusIds.push(pn);
+        });
+      });
+      /* 已勾"有这件"又把它设成"重点配好" → 必须点明，不能只做一半 */
+      var focusConflict = [];
+      focus.forEach(function (fid) {
+        var fParts = partsOfOption("focus", fid);
+        if (fParts.some(function (pn) { return skipParts.indexOf(pn) > -1; })) {
+          focusConflict.push(labelOfOption("focus", fid));
+        }
+      });
 
       var budgetCap = MOBILE_BUDGET_AXIS[form] ? mobileBudgetCap(form, budget) : budgetOrder[budget];
+      var bias = buildBias(pref, exp, lifespan, look);
+      // 使用强度真实影响目标价位：轻度往下收，重度往上放
+      var targetScale = intensity === "light" ? 0.85 : intensity === "heavy" ? 1.12 : 1;
+      var partOpts = {
+        uses: use, priority: focusIds, budgetCap: budgetCap,
+        skipParts: skipParts, bias: bias, targetScale: targetScale,
+        scaleOf: buildTargetScale(pref, exp, look), look: look
+      };
 
       // 1) 基础整机方案（年限/强度参与匹配）
       var plan = pickPlan(use, form, budgetCap, lifespan, intensity);
@@ -1674,9 +2037,15 @@
         return [lo, hi];
       }
       var curPlan = plan;
+      var curRows = [];
       // 导出文本也用全套部件，避免导出结果只剩外设
       function partRowsToPicks(pl) {
-        return fullPartRows(pl, { uses: use, priority: focusIds, budgetCap: budgetCap }).map(function (r) {
+        // 每次重算：否则切到第二套方案会复用上一套的行
+        partOpts.rows = null;
+        curRows = pl ? fullPartRows(pl, partOpts) : [];
+        // 配置单表格复用同一份型号结果，价格与配件区必然一致（单一价源）
+        partOpts.rows = curRows;
+        return curRows.map(function (r) {
           var it = r.pick && r.pick.item;
           return {
             cat: { name: r.part, icon: r.cat ? r.cat.icon : "🔧" },
@@ -1702,15 +2071,12 @@
       // 4) 需求画像（强度/年限/经验/已有外设）
       var intLabel = { light: "轻度使用", mid: "中度使用", heavy: "重度使用" }[intensity] || "";
       var lifeLabel = { y1: "短期过渡", y3: "主流 3 年", y5: "战未来 5 年+" }[lifespan] || "";
-      var expLabel = { new: "纯新手", some: "会折腾", pro: "老玩家" }[exp] || "";
-      var existLabels = { monitor: "🖥️", input: "⌨️", audio: "🎧", stand: "🛠️", cooler: "❄️" };
-      var existTxt = existing.indexOf("none") > -1 || !existing.length
-        ? "外设从零开始"
-        : "已有" + existing.map(function (c) { return existLabels[c] || c; }).join(" ");
+      var expLabel = exp ? ({ new: "纯新手", some: "会折腾", pro: "老玩家" }[exp] || "") : "";
+      var existTxt = !skipLabels.length ? "全部从零开始配" : "已有" + skipLabels.join(" / ");
       var profile =
         '<span class="tag-pill">' + esc(intLabel) + "</span>" +
         '<span class="tag-pill">' + esc(lifeLabel) + "</span>" +
-        '<span class="tag-pill">' + esc(expLabel) + "</span>" +
+        (expLabel ? '<span class="tag-pill">' + esc(expLabel) + "</span>" : "") +
         '<span class="tag-pill">' + esc(existTxt) + "</span>";
       if (look && look !== "any" && styleOf(look)) {
         profile += '<span class="tag-pill">' + esc(styleOf(look).name) + "</span>";
@@ -1765,7 +2131,7 @@
           "</div>" +
           planSetTabsHtml(sets, mainSetIdx) +
           '<div id="quizSetBody"></div>' +
-          pitfallsHTML(use) +
+          pitfallsHTML(use, form, exp) +
           '<div class="res-actions">' +
             '<button class="btn btn-ghost q-copy">复制方案文本</button>' +
             '<button class="btn btn-ghost q-reset">重新测评</button>' +
@@ -1781,15 +2147,30 @@
         if (!quizBody) return;
         var warn = budgetWarnHtml(p, budgetCap, sets.length > si + 1,
           use.indexOf("office") > -1 ? "office" : use[0], form, si > 0);
+        var spec = p ? specTableHtml(p, { rows: curRows }) : { html: "", total: [0, 0] };
+        /* 跳过的件必须有说明：静默消失会被当成功能坏了 */
+        var skipTip = (curRows.skipped && curRows.skipped.length)
+          ? '<div class="res-skip-note">已按你的实际情况跳过 ' + curRows.skipped.length + " 项（" +
+              curRows.skipped.map(function (x) { return esc(x.part); }).join("、") +
+              "），合计已相应减去。" +
+              (skipLabels.length ? "你勾选的是：" + esc(skipLabels.join(" / ")) + "。" : "") +
+            "</div>"
+          : "";
+        var conflictTip = (focusConflict.length && skipTip)
+          ? '<div class="res-skip-note res-skip-warn">你把「' + esc(focusConflict.join(" / ")) +
+              "」同时标成了重点配好，但它在已勾选的已有件里，已按跳过处理。想要新的就先取消已有件。</div>"
+          : "";
         quizBody.innerHTML =
           warn +
           (p ? planBriefHtml(p) : '<div class="res-plan">未匹配到整机方案，请参考「搭配计划」板块。</div>') +
-          (p ? specTableHtml(p).html : "") +
+          skipTip + conflictTip +
+          spec.html +
           '<div class="res-section"><span class="res-label">每个部件买什么型号（整机件 + 外设全覆盖，升级重点已置顶）</span>' +
-            (p ? (fullPartsHtml(p, { uses: use, priority: focusIds, budgetCap: budgetCap }) || '<div class="empty-box">未匹配到可推荐的部件型号，请参考上方配置单。</div>') : "") +
+            (p ? (fullPartsHtml(p, partOpts) || '<div class="empty-box">未匹配到可推荐的部件型号，请参考上方配置单。</div>') : "") +
           "</div>" +
-          '<div class="res-total">整体投入参考：<b>' + fmtPrice(p ? specTableHtml(p).total : [0, 0]) + "</b>（按配置单各行参考价累加，不含优惠）</div>" +
-          '<div class="res-note">' + esc(D.note) + "。方案为规则推荐，购机前请复核接口兼容性与电商实时价。</div>";
+          '<div class="res-total">整体投入参考：<b>' + fmtPrice(spec.total) + "</b>（按配置单各行参考价累加，不含优惠；与上方配件同型号同价）</div>" +
+          '<div class="res-note">' + esc(isMobileForm(form) && D.noteMobile ? D.noteMobile : D.note) +
+            "。方案为规则推荐，购机前请复核接口兼容性与电商实时价。</div>";
       }
       bindPlanSetTabs(box, renderQuizSet);
       renderQuizSet(mainSetIdx);
@@ -1811,9 +2192,10 @@
           }).filter(Boolean),
           style: (look && look !== "any") ? styleOf(look) : null,
           plan: curPlan,
+          form: form,
           picks: curPicks,
           // 配置单本身已含这些部件，整体投入直接取配置单合计，避免重复计价
-          total: curPlan ? specTableHtml(curPlan).total : [0, 0]
+          total: curPlan ? specTableHtml(curPlan, { rows: curRows }).total : [0, 0]
         }), copyBtn);
       });
 
@@ -1852,7 +2234,7 @@
       }
       L.push(sep);
       L.push("整体投入参考：" + fmtPrice(ctx.total) + "（按配置单各行参考价累加，不含优惠）");
-      var ps = pitfallItems(ctx.use);
+      var ps = pitfallItems(ctx.use, ctx.form);
       if (ps.length) {
         L.push("");
         L.push("避坑提醒：");
@@ -2389,7 +2771,7 @@
       if (!state.form) missing.push("设备形态");
       if (missing.length) {
         hintEl.className = "smart-hint";
-        hintEl.textContent = "还差 " + missing.join("、") + " 没选（共 3 项必答）。第 4-6 题可以跳过，不选就按主流默认给。";
+        hintEl.textContent = "还差 " + missing.join("、") + " 没选（共 3 项必答）。第 4-6 题可以跳过，不选就按主流默认给；勾了「已有显示器」会把显示器从配置单里去掉，合计同步减少。";
       } else {
         hintEl.className = "smart-hint ready";
         hintEl.textContent = "必答 3 项已选好，点「生成推荐」出方案。第 4-6 题可跳过。";
@@ -2408,6 +2790,9 @@
     }
     updateHint();
 
+    /* 方案匹配：预算、用途、形态三者都参与，"不超预算"优先。
+       旧实现只看区间中心距离，于是 ① 上限允许到 1.15 倍，超预算也算命中
+       ② 办公与游戏都落到同一套（因为那套的 uses 同时写着两个用途）。 */
     function matchPlan() {
       // state.budget 是档位 id，先换算成真实预算
       var opt = budgetOpts.filter(function (o) { return o.id === state.budget; })[0];
@@ -2418,34 +2803,30 @@
       }[state.budget] || "b6000");
       var pool = D.plans.filter(function (pl) {
         if (!formFit(pl, state.form)) return false;
-        if (state.use && pl.uses.indexOf(state.use) === -1) return false;
+        if (state.use && state.use !== "all" && pl.uses.indexOf(state.use) === -1) return false;
         return true;
       });
       if (!pool.length) {
         pool = D.plans.filter(function (pl) { return formFit(pl, state.form); });
       }
-      var hit = pool.filter(function (pl) { return b >= pl.price[0] * 0.85 && b <= pl.price[1] * 1.15; });
-      if (hit.length) {
-        return {
-          plan: hit.reduce(function (best, pl) {
-            var db = Math.abs(mid(pl.price) - b), dBest = Math.abs(mid(best.price) - b);
-            if (db !== dBest) return db < dBest ? pl : best;
-            /* 距离并列时取更高一档：预算拉满不该在并列里掉到低档 */
-            return mid(pl.price) > mid(best.price) ? pl : best;
-          }),
-          fit: "exact",
-          budget: b,
-          pool: pool
-        };
+      function scoreOf(pl) {
+        var s;
+        if (pl.price[0] <= b) {
+          // 起步价在预算内：吃到的预算越多越好；上限远超预算要扣
+          s = 40 + Math.min(40, (pl.price[0] / b) * 45);
+          if (pl.price[1] > b * 1.35) s -= 15;
+        } else {
+          // 起步就超预算：差得越多越靠后
+          s = 10 - Math.min(30, ((pl.price[0] - b) / b) * 30);
+        }
+        // 用途专门度：只服务这一个用途的方案更贴题，办公与游戏因此分开
+        if (state.use && state.use !== "all" && pl.uses.length === 1 && pl.uses[0] === state.use) s += 8;
+        return s;
       }
-      // 预算够不到候选方案时取最接近的，标记让 UI 提示
+      var best = pool.reduce(function (a, pl) { return scoreOf(pl) > scoreOf(a) ? pl : a; }, pool[0]);
       return {
-        plan: pool.reduce(function (best, pl) {
-          var db = Math.abs(mid(pl.price) - b), dBest = Math.abs(mid(best.price) - b);
-          if (db !== dBest) return db < dBest ? pl : best;
-          return mid(pl.price) > mid(best.price) ? pl : best;
-        }),
-        fit: "nearest",
+        plan: best,
+        fit: (b >= best.price[0] * 0.85 && b <= best.price[1] * 1.15) ? "exact" : "nearest",
         budget: b,
         pool: pool
       };
@@ -2536,7 +2917,13 @@
       var m = matchPlan();
       var use = state.use === "portable" ? null : state.use;
       var intensity = state.intensity || "mid";
-      var needMonitor = state.monitor !== "have";
+      /* 第 5 题「已有显示器」现在真的生效：按配置单行跳过，合计同步减去。
+         旧实现只拿它去过滤一份没被使用的推荐列表，结果页照样算钱。 */
+      var skipParts = state.monitor === "have" ? ["显示器", "外接显示器"] : [];
+      var skipLabels = state.monitor === "have" ? ["显示器"] : [];
+      var lookPref = (state.look && state.look !== "all") ? state.look : "any";
+      var bias = buildBias("all", "", "", lookPref);
+      var targetScale = intensity === "light" ? 0.85 : intensity === "heavy" ? 1.12 : 1;
       // 主推 + 相邻两档：同用途整机方案按整机价排序，取主推前后各一档
       var desk = (m.pool || [m.plan]).filter(function (pl) { return pl.id !== "mobile"; });
       if (!desk.length) desk = [m.plan];
@@ -2554,7 +2941,12 @@
       function cardHtml(o, cur) {
         var it = cur.item;
         var grade = it.valueGrade ? '<span class="grade grade-' + it.valueGrade + '">' + it.valueGrade + "</span>" : "";
-        var anchorBadge = cur.anchor ? '<span class="anchor-badge">配置单同款</span>' : "";
+        var st = cur.state;
+        var anchorBadge = st === "exact" ? '<span class="anchor-badge">配置单同款</span>'
+          : st === "candidate" ? '<span class="anchor-badge anchor-cand">配置单候选之一</span>'
+          : st === "chipset" ? '<span class="anchor-badge anchor-tier">配置单档位的具体型号</span>'
+          : st === "alt" ? '<span class="fp-badge fp-alt-badge">同档位替代</span>'
+          : "";
         var altsHtml = (cur.alts && cur.alts.length)
           ? '<div class="smart-alts">备选：' + cur.alts.map(function (a, ai) {
               return '<button type="button" class="smart-alt-chip" data-alt="' + ai + '">' + esc(a.model) + "</button>";
@@ -2587,7 +2979,7 @@
             var chosen = cur.alts[ai];
             var newAlts = cur.alts.slice();
             newAlts.splice(ai, 1, cur.item);
-            renderSlot(picks, i, { item: chosen, anchor: false, alts: newAlts });
+            renderSlot(picks, i, { item: chosen, anchor: false, state: "alt", alts: newAlts });
           });
         });
       }
@@ -2595,14 +2987,31 @@
         var s = sets[si];
         var body = document.getElementById("smartSetBody");
         if (!body) return;
+        // 每次切换方案都新建 opts：复用上一套的 rows 会让两套结果串味
+        var opts = {
+          uses: use ? [use] : [], priority: [], budgetCap: m.budget,
+          skipParts: skipParts, bias: bias, targetScale: targetScale,
+          scaleOf: buildTargetScale("all", "", lookPref), look: lookPref
+        };
+        var rows = fullPartRows(s.plan, opts);
+        opts.rows = rows;
+        var spec = specTableHtml(s.plan, { rows: rows });
+        var skipTip = (rows.skipped && rows.skipped.length)
+          ? '<div class="res-skip-note">已按你勾选的「' + esc(skipLabels.join(" / ")) +
+              "」跳过 " + rows.skipped.length + " 个部件（" +
+              rows.skipped.map(function (x) { return esc(x.part); }).join("、") +
+              "），合计已相应减去。</div>"
+          : "";
         body.innerHTML =
           (s.main ? warnHtml : "") +
           planBriefHtml(s.plan) +
-          specTableHtml(s.plan).html +
+          skipTip +
+          spec.html +
           '<h3 class="smart-sub-title reveal in">每个部件买什么型号</h3>' +
-          '<p class="smart-sub-title-note">按配置单顺序逐项给型号与备选，整机件和外设都在内。带「配置单同款」的就是上表里的型号，其余是同一档次的备选；主板、内存、硬盘、机箱没有独立型号库，按配置单档位直选。</p>' +
-          fullPartsHtml(s.plan, { uses: use ? [use] : [], budgetCap: m.budget }) +
-          '<p class="smart-note">' + esc(D.note) + "</p>";
+          '<p class="smart-sub-title-note">按配置单顺序逐项给型号与备选，整机件和外设都在内。标「配置单同款」的是配置单点名且型号完全一致的；标「配置单候选之一」的说明配置单写的是二选一；标「同档位替代」的表示库里没有完全对得上的型号，已在上方写明差异。主板、内存、硬盘、机箱没有独立型号库，按配置单档位直选。</p>' +
+          fullPartsHtml(s.plan, opts) +
+          '<div class="res-total">整体投入参考：<b>' + fmtPrice(spec.total) + "</b>（按配置单各行参考价累加，与上方配件同型号同价）</div>" +
+          '<p class="smart-note">' + esc((state.form === "phone" || state.form === "tablet") && D.noteMobile ? D.noteMobile : D.note) + "</p>";
       }
       wrap.innerHTML =
         '<div class="smart-res-head reveal in">' +

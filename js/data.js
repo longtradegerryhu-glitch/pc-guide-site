@@ -6,6 +6,9 @@
  * =========================================================== */
 window.PC_DATA = {
   updated: "2026-10 参考",
+  /* 移动形态的价格说明：手机/平板用户不需要读 DDR5 与显卡的行情 */
+  noteMobile: "价格区间为 2026-10 联网核验参考行情（人民币，核验日 2026-10-09）。2026 下半年存储涨价同样传导到手机与平板：同配置普遍比去年同期贵 8–15%，大容量版本涨得更明显。机构口径：IDC 预计高价持续到 2027 全年。本站仅作参考行情，购前请按『查实时价』按钮跳电商看当天价。",
+
   note: "价格区间为 2026-10 联网核验参考行情（人民币，核验日 2026-10-09）。2026 下半年 DRAM/GPU/SSD 仍处涨价周期：DDR5 16G 单条 700–1800、32G 套条 2800–4000、RTX 5070 6000–6500、RTX 5070 Ti 8000 起、RTX 5080 11100–15000、1TB NVMe 850–950（去年 410，+130%）；CPU/电源/外设相对平稳，主板 9 月起跟涨约 10%。机构口径：IDC 预计高价持续到 2027 全年，明显回落要等 2028 及以后。本站仅作参考行情，购前请按『查实时价』按钮跳电商看当天价",
 
   /* ---------- 适合人群画像 ---------- */
@@ -391,7 +394,7 @@ window.PC_DATA = {
         ["平板", "小米平板 7 Ultra / 小米平板 6 Pro / 乐观 Y700 2026", "¥3599-5200", "要手写与绘画选 7 Ultra，要大屏娱乐选 6 Pro，要小屏手游选 Y700 2026"],
         ["手写笔", "小米 触控笔 2 / 购笔倾角手写笔", "¥200-600", "平板能做多少事，实际取决于有没有手写笔"],
         ["平板键盘", "外接蓝牙键盘 / 罗技 Keys-To-Go 2", "¥230-300", "键盘是平板从娱乐变生产的分水岭，需要打字就必配"],
-        ["扩展埂", "绿联 Type-C 7 合 1 扩展埂", "¥130-200", "接键盘、鼠标与 HDMI 输出，平板接外设的关键件"],
+        ["拓展坞", "绿联 Type-C 7 合 1 拓展坞", "¥130-200", "接键盘、鼠标与 HDMI 输出，平板接外设的关键件"],
         ["保护膜", "邦克仕 类纸膜", "¥30-60", "手写量大时纸感膜对手腕压力与笔尖阻力的改善最明显"],
         ["耳机/音箱", "半入耳无线耳机", "¥150-300", "娱乐场景用的是内置扬声器，耳机用于通勤与库室"]
       ],
@@ -556,28 +559,10 @@ window.PC_DATA = {
 
   /* ---------- 个性化测评问题（预算 6 档，与 plans.budget 对齐） ---------- */
   quiz: [
+    /* 第 1 题：设备形态。必须排最前 —— 后面每一题的存在与选项都由它决定。
+       总控实测过各形态方案里真实存在的部件，第 9/10 题的选项只从那份清单取。 */
     {
-      id: "use", title: "你的主要用途是？（可多选）", multi: true,
-      options: [
-        { id: "office",   label: "办公学习", desc: "文档/表格/网课" },
-        { id: "game",     label: "游戏电竞", desc: "3A/FPS/MOBA" },
-        { id: "create",   label: "内容创作", desc: "剪辑/设计/AI" },
-        { id: "portable", label: "移动便携", desc: "笔记本随行" }
-      ]
-    },
-    {
-      id: "budget", title: "整机预算大概在？", multi: false,
-      options: [
-        { id: "b3000",  label: "5500 元以内",   desc: "核显办公/学习（涨价后）" },
-        { id: "b4500",  label: "5500-8500 元",  desc: "独显入门" },
-        { id: "b6000",  label: "8500-13000 元", desc: "主流游戏（涨价后）" },
-        { id: "b8500",  label: "13000-18500 元", desc: "高帧游戏" },
-        { id: "b12000", label: "18500-30000 元", desc: "创作旗舰" },
-        { id: "b20000", label: "30000 元以上",  desc: "旗舰顶配（选手机/平板时按需上探）" }
-      ]
-    },
-    {
-      id: "form", title: "你想要哪种设备？", multi: false,
+      id: "form", title: "你想用哪种设备？", multi: false,
       options: [
         { id: "desktop", label: "台式机", desc: "性能优先" },
         { id: "laptop",  label: "笔记本", desc: "便携优先" },
@@ -586,72 +571,258 @@ window.PC_DATA = {
         { id: "both",    label: "多台互补", desc: "按需组合" }
       ]
     },
+    /* 第 2 题：用途。选项按形态切换；use 映射到方案池的 office/game/create/portable，
+       多元素表示该选项同时落进多个池（如"社交聊天"既属日常也属随身），
+       否则不同用途会推出同一套方案。 */
+    {
+      id: "use", title: "主要用途是？（可多选）", multi: true,
+      options: [
+        { id: "office",   label: "办公学习", desc: "文档/表格/网课", use: ["office"],
+          when: { form: ["desktop", "laptop", "both"] } },
+        { id: "game",     label: "游戏电竞", desc: "3A/FPS/MOBA", use: ["game"],
+          when: { form: ["desktop", "laptop", "both"] } },
+        { id: "create",   label: "内容创作", desc: "剪辑/设计/AI", use: ["create"],
+          when: { form: ["desktop", "laptop", "both"] } },
+        { id: "portable", label: "移动便携", desc: "笔记本随行", use: ["portable"],
+          when: { form: ["desktop", "laptop", "both"] } },
+
+        { id: "p_office", label: "办公网课", desc: "文档/网课/会议", use: ["office"],
+          when: { form: ["phone"] } },
+        { id: "p_social", label: "社交聊天", desc: "微信/社交/短视频", use: ["office", "portable"],
+          when: { form: ["phone"] } },
+        { id: "p_media",  label: "影音娱乐", desc: "追剧/听歌/刷视频", use: ["portable"],
+          when: { form: ["phone"] } },
+        { id: "p_photo",  label: "拍照记录", desc: "拍照/拍视频", use: ["create"],
+          when: { form: ["phone"] } },
+        { id: "p_game",   label: "游戏手游", desc: "手游/高帧", use: ["game"],
+          when: { form: ["phone"] } },
+
+        { id: "t_office", label: "办公网课", desc: "文档/网课/会议", use: ["office"],
+          when: { form: ["tablet"] } },
+        { id: "t_media",  label: "影音娱乐", desc: "追剧/刷视频", use: ["portable"],
+          when: { form: ["tablet"] } },
+        { id: "t_note",   label: "笔记手写", desc: "课堂/会议记录", use: ["office", "create"],
+          when: { form: ["tablet"] } },
+        { id: "t_draw",   label: "绘图设计", desc: "绘画/修图", use: ["create"],
+          when: { form: ["tablet"] } },
+        { id: "t_binge",  label: "追剧游戏", desc: "看剧 + 手游", use: ["game", "portable"],
+          when: { form: ["tablet"] } }
+      ]
+    },
+    /* 第 3 题：预算。移动形态是"总投入"（含配件），电脑形态是"整机" */
+    {
+      id: "budget", multi: false,
+      title: { default: "整机预算大概在？", phone: "总投入预算大概在？", tablet: "总投入预算大概在？" },
+      options: [
+        { id: "b3000",  label: "5500 元以内",   desc: "核显办公/学习（涨价后）" },
+        { id: "b4500",  label: "5500-8500 元",  desc: "独显入门" },
+        { id: "b6000",  label: "8500-13000 元", desc: "主流游戏（涨价后）" },
+        { id: "b8500",  label: "13000-18500 元", desc: "高帧游戏" },
+        { id: "b12000", label: "18500-30000 元", desc: "创作旗舰" },
+        { id: "b20000", label: "30000 元以上",  desc: "旗舰顶配" }
+      ]
+    },
+    /* 第 4 题：最看重什么。手机看续航/拍照，电脑看静音/人体工学 */
     {
       id: "pref", title: "你最看重什么？", multi: false,
       options: [
-        { id: "value", label: "性价比", desc: "花小钱办大事" },
-        { id: "quiet", label: "静音散热", desc: "低噪音强散热" },
-        { id: "rgb",   label: "颜值灯效", desc: "灯光酷炫好看" },
-        { id: "ergo",  label: "人体工学", desc: "久坐舒适健康" }
+        { id: "value", label: "性价比", desc: "花小钱办大事",
+          when: { form: ["desktop", "laptop", "both"] } },
+        { id: "quiet", label: "静音散热", desc: "低噪音强散热",
+          when: { form: ["desktop", "laptop", "both"] } },
+        { id: "rgb",   label: "颜值灯效", desc: "灯光酷炫好看",
+          when: { form: ["desktop", "laptop", "both"] } },
+        { id: "ergo",  label: "人体工学", desc: "久坐舒适健康",
+          when: { form: ["desktop", "laptop", "both"] } },
+
+        { id: "p_value",   label: "性价比", desc: "同价位配置更足",
+          when: { form: ["phone"] } },
+        { id: "p_battery", label: "续航", desc: "一天不用找充电器",
+          when: { form: ["phone"] } },
+        { id: "p_camera",  label: "拍照", desc: "主摄/长焦素质",
+          when: { form: ["phone"] } },
+        { id: "p_perf",    label: "性能", desc: "游戏与多任务",
+          when: { form: ["phone"] } },
+        { id: "p_hand",    label: "手感外观", desc: "轻薄与配色",
+          when: { form: ["phone"] } },
+
+        { id: "t_value",  label: "性价比", desc: "同价位配置更足",
+          when: { form: ["tablet"] } },
+        { id: "t_screen", label: "屏幕素质", desc: "分辨率/刷新/色准",
+          when: { form: ["tablet"] } },
+        { id: "t_battery", label: "续航", desc: "整天空闲不掉电",
+          when: { form: ["tablet"] } },
+        { id: "t_ink",    label: "手写体验", desc: "延迟/压感/笔迹",
+          when: { form: ["tablet"] } },
+        { id: "t_perf",   label: "性能", desc: "绘图与游戏",
+          when: { form: ["tablet"] } }
       ]
     },
+    /* 第 5 题：颜值风格。海景房/RGB/木质是机箱概念，移动形态不出现 */
     {
       id: "look", title: "你更偏爱哪种颜值风格？", multi: false,
       options: [
-        { id: "any",     label: "不在意", desc: "性能优先" },
-        { id: "white",   label: "白色简约", desc: "干净通透" },
-        { id: "seaview", label: "海景房", desc: "四面透明、把硬件秀出来的机箱" },
-        { id: "rgb",     label: "RGB 电竞", desc: "氛围灯效" },
-        { id: "business",label: "商务黑", desc: "沉稳专业" },
-        { id: "wood",    label: "复古木质", desc: "温润质感" },
-        { id: "portable",label: "便携简洁", desc: "清爽随行" }
+        { id: "any",      label: "不在意", desc: "性能优先",
+          when: { form: ["desktop", "laptop", "both"] } },
+        { id: "white",    label: "白色简约", desc: "干净通透",
+          when: { form: ["desktop", "laptop", "both"] } },
+        { id: "seaview",  label: "海景房", desc: "四面透明、把硬件秀出来的机箱",
+          when: { form: ["desktop"] } },
+        { id: "rgb",      label: "RGB 电竞", desc: "氛围灯效",
+          when: { form: ["desktop"] } },
+        { id: "business", label: "商务黑", desc: "沉稳专业",
+          when: { form: ["desktop", "laptop", "both"] } },
+        { id: "wood",     label: "复古木质", desc: "温润质感",
+          when: { form: ["desktop"] } },
+        { id: "portable", label: "便携简洁", desc: "清爽随行",
+          when: { form: ["laptop", "both"] } },
+
+        { id: "p_any",   label: "不在意", desc: "好看就买",
+          when: { form: ["phone"] } },
+        { id: "p_white", label: "简约白", desc: "干净耐看",
+          when: { form: ["phone"] } },
+        { id: "p_black", label: "商务黑", desc: "沉稳专业",
+          when: { form: ["phone"] } },
+        { id: "p_bright", label: "时尚亮色", desc: "彩壳更有辨识度",
+          when: { form: ["phone"] } },
+        { id: "p_slim",  label: "轻薄手感", desc: "单手握得住",
+          when: { form: ["phone"] } },
+
+        { id: "t_any",   label: "不在意", desc: "够用就好",
+          when: { form: ["tablet"] } },
+        { id: "t_white", label: "简约白", desc: "干净耐看",
+          when: { form: ["tablet"] } },
+        { id: "t_gray",  label: "商务灰", desc: "低调专业",
+          when: { form: ["tablet"] } },
+        { id: "t_color", label: "彩色个性", desc: "背板有辨识度",
+          when: { form: ["tablet"] } },
+        { id: "t_slim",  label: "轻薄手感", desc: "单手持握",
+          when: { form: ["tablet"] } }
       ]
     },
+    /* 第 6 题：使用强度。全形态通用，只影响目标价位上浮/下调 */
     {
       id: "intensity", title: "每天使用强度大概？", multi: false,
       options: [
-        { id: "light", label: "轻度（<2 小时）", desc: "偶尔办公/轻娱乐" },
-        { id: "mid",   label: "中度（2-6 小时）", desc: "重度办公 + 日常游戏" },
-        { id: "heavy", label: "重度（6 小时+）", desc: "游戏/创作/长期渲染" }
+        { id: "light", label: "轻度（<2 小时）", desc: "偶尔用/轻娱乐" },
+        { id: "mid",   label: "中度（2-6 小时）", desc: "日常主力 + 偶尔游戏" },
+        { id: "heavy", label: "重度（6 小时+）", desc: "长时间游戏/创作/渲染" }
       ]
     },
+    /* 第 7 题：年限。用"设备"而不是"电脑"，手机/平板形态下也成立 */
     {
-      id: "lifespan", title: "这台电脑打算用多久？", multi: false,
+      id: "lifespan", title: "这台设备打算用多久？", multi: false,
       options: [
-        { id: "y1", label: "1 年内", desc: "过渡期/学生短期" },
+        { id: "y1", label: "1 年内", desc: "过渡期/短期" },
         { id: "y3", label: "3 年左右", desc: "主流更新节奏" },
         { id: "y5", label: "5 年+", desc: "一次到位战未来" }
       ]
     },
+    /* 第 8 题：装机经验。只有自己装电脑的形态才问；手机/平板整题移除 */
     {
       id: "exp", title: "你以前装过或折腾过电脑吗？", multi: false,
+      when: { form: ["desktop", "laptop", "both"] },
       options: [
         { id: "new",  label: "纯新手", desc: "希望省心、少折腾" },
         { id: "some", label: "会折腾", desc: "能自己装机排错" },
         { id: "pro",  label: "老玩家", desc: "追求极致与细节" }
       ]
     },
+    /* 第 9 题：已有件。parts 是配置单里的行名白名单，
+       用来精确跳过那一行 —— 按类别跳会连带删掉同类的其他件
+       （charger 类里同时装着充电器/数据线/移动电源）。 */
     {
-      id: "existing", title: "你已经有哪些外设？（可多选）", multi: true,
+      id: "existing", title: "你已经有哪些了？（可多选）", multi: true,
       options: [
-        { id: "monitor", label: "显示器", desc: "已有屏幕" },
-        { id: "input",   label: "⌨️ 键鼠", desc: "已有键盘鼠标" },
-        { id: "audio",   label: "音频", desc: "已有耳机音箱" },
-        { id: "stand",   label: "支架", desc: "已有支架/升降桌" },
-        { id: "cooler",  label: "散热器", desc: "已有散热方案" },
-        { id: "none",    label: "都没有", desc: "从零开始配" }
+        { id: "monitor", label: "显示器", desc: "已有屏幕", parts: ["显示器", "外接显示器"],
+          when: { form: ["desktop"] } },
+        { id: "monitor", label: "外接显示器", desc: "已有屏幕", parts: ["外接显示器", "显示器"],
+          when: { form: ["laptop", "both"] } },
+        { id: "input",   label: "键鼠", desc: "已有键盘鼠标", parts: ["键鼠", "便携键鼠"],
+          when: { form: ["desktop", "laptop", "both"] } },
+        { id: "audio",   label: "音频", desc: "已有耳机音箱", parts: ["音频", "耳机/音箱", "耳机", "音箱"],
+          when: { form: ["desktop", "laptop", "both"] } },
+        { id: "cooler",  label: "散热器", desc: "已有散热方案", parts: ["散热", "笔记本散热"],
+          when: { form: ["desktop", "laptop", "both"] } },
+        { id: "stand",   label: "支架", desc: "已有支架/升降桌", parts: ["支架", "笔记本支架"],
+          when: { form: ["desktop", "laptop", "both"] } },
+        { id: "dock",    label: "拓展坞", desc: "已有扩展坞", parts: ["拓展坞", "扩展埂"],
+          when: { form: ["laptop", "both"] } },
+
+        { id: "charger",   label: "充电器", desc: "已有快充头", parts: ["充电器"],
+          when: { form: ["phone", "tablet"] } },
+        { id: "cable",     label: "数据线", desc: "已有数据线", parts: ["数据线"],
+          when: { form: ["phone", "tablet"] } },
+        { id: "p_earphone", label: "耳机", desc: "已有耳机", parts: ["耳机", "耳机/音箱"],
+          when: { form: ["phone", "tablet"] } },
+        { id: "powerbank", label: "移动电源", desc: "已有充电宝", parts: ["移动电源"],
+          when: { form: ["phone"] } },
+        { id: "phonecase", label: "手机壳", desc: "已有手机壳", parts: ["手机壳"],
+          when: { form: ["phone"] } },
+        { id: "watch",     label: "手表/手环", desc: "已有穿戴设备", parts: ["手表", "手环"],
+          when: { form: ["phone"] } },
+        { id: "tabletkb",  label: "平板键盘", desc: "已有外接键盘", parts: ["平板键盘"],
+          when: { form: ["tablet"] } },
+        { id: "stylus",    label: "手写笔", desc: "已有触控笔", parts: ["手写笔"],
+          when: { form: ["tablet"] } },
+        { id: "film",      label: "保护膜", desc: "已有贴膜", parts: ["保护膜"],
+          when: { form: ["tablet"] } },
+
+        { id: "none", label: "都没有", desc: "从零开始配", parts: [] }
       ]
     },
+    /* 第 10 题：优先配好哪些。勾中的置顶，其余折叠 —— 但仍在页面上，不隐藏 */
     {
-      id: "focus", title: "重点想升级哪些部件？（可多选，勾选的会排到推荐最前；已拥有的外设会自动跳过）", multi: true,
+      id: "focus", title: "重点想先配好哪些？（可多选，勾选的排在最前）", multi: true,
       options: [
-        { id: "core",     label: "整机核心件", desc: "CPU/显卡/主板/内存/硬盘" },
-        { id: "cooler",   label: "散热器", desc: "CPU/笔记本散热" },
-        { id: "monitor",  label: "显示器", desc: "屏幕素质" },
-        { id: "input",    label: "⌨️ 键鼠", desc: "输入手感" },
-        { id: "stand",    label: "支架", desc: "桌面人体工学" },
-        { id: "dock",     label: "拓展坞", desc: "给笔记本扩接口的小盒子" },
-        { id: "audio",    label: "音频", desc: "听感与拾音" }
+        { id: "core", label: "整机核心件", desc: "CPU/显卡/主板/内存/硬盘",
+          parts: ["CPU", "显卡", "主板", "内存", "硬盘", "电源", "机箱", "散热"],
+          when: { form: ["desktop", "laptop", "both"] } },
+        { id: "cooler", label: "散热器", desc: "CPU 或笔记本散热",
+          parts: ["散热", "笔记本散热"],
+          when: { form: ["desktop", "laptop", "both"] } },
+        { id: "monitor", label: "显示器", desc: "屏幕素质",
+          parts: ["显示器", "外接显示器"],
+          when: { form: ["desktop"] } },
+        { id: "monitor", label: "外接显示器", desc: "屏幕素质",
+          parts: ["外接显示器", "显示器"],
+          when: { form: ["laptop", "both"] } },
+        { id: "input", label: "键鼠", desc: "输入手感",
+          parts: ["键鼠", "便携键鼠"],
+          when: { form: ["desktop", "laptop", "both"] } },
+        { id: "audio", label: "音频", desc: "听感与拾音",
+          parts: ["音频", "耳机/音箱", "耳机"],
+          when: { form: ["desktop", "laptop", "both"] } },
+        { id: "stand", label: "支架", desc: "桌面人体工学",
+          parts: ["支架", "笔记本支架"],
+          when: { form: ["desktop", "laptop", "both"] } },
+        { id: "dock",  label: "拓展坞", desc: "给笔记本扩接口",
+          parts: ["拓展坞", "扩展埂"],
+          when: { form: ["laptop", "both"] } },
+
+        { id: "p_body",   label: "手机本体", desc: "换机主要看它", parts: ["手机"],
+          when: { form: ["phone"] } },
+        { id: "p_charge", label: "充电与线材", desc: "快充头 + 数据线", parts: ["充电器", "数据线"],
+          when: { form: ["phone"] } },
+        { id: "p_protect", label: "保护与外观", desc: "壳 + 膜", parts: ["手机壳", "保护膜"],
+          when: { form: ["phone"] } },
+        { id: "p_audio",  label: "耳机与穿戴", desc: "耳机/手表", parts: ["耳机", "耳机/音箱", "手表"],
+          when: { form: ["phone"] } },
+        { id: "p_play",   label: "游戏与散热", desc: "手柄/散热背夹", parts: ["游戏手柄", "散热配件"],
+          when: { form: ["phone"] } },
+
+        { id: "t_body",   label: "平板本体", desc: "换机主要看它", parts: ["平板"],
+          when: { form: ["tablet"] } },
+        { id: "t_write",  label: "键盘与手写笔", desc: "生产力核心", parts: ["平板键盘", "手写笔"],
+          when: { form: ["tablet"] } },
+        { id: "t_charge", label: "充电与线材", desc: "快充头 + 数据线", parts: ["充电器", "数据线"],
+          when: { form: ["tablet"] } },
+        { id: "t_protect", label: "保护膜", desc: "护屏", parts: ["保护膜"],
+          when: { form: ["tablet"] } },
+        { id: "t_dock",   label: "拓展坞", desc: "外接屏与外设", parts: ["拓展坞", "扩展埂"],
+          when: { form: ["tablet"] } },
+        { id: "t_audio",  label: "耳机", desc: "听感", parts: ["耳机/音箱", "耳机"],
+          when: { form: ["tablet"] } }
       ]
     }
   ],
@@ -678,6 +849,16 @@ window.PC_DATA = {
       "笔记本先补支架和拓展坞：抬高屏幕护颈椎、一线连解决接口焦虑，比换本更值。",
       "散热底座救老本：高负载游戏或渲染能降 10 到 19 度，延寿又防降频。",
       "别用杂牌拓展坞：劣质坞可能烧接口，绿联、贝尔金级才稳。"
+    ],
+    mobile: [
+      "存储买大不买小：同价位优先 256G 起，128G 用两年就会天天清缓存。",
+      "快充协议比瓦数重要：买充电头先确认支持你手机的原厂协议（华为 SCP、小米澎湃、OPPO VOOC 等），不然插上只能慢充。",
+      "壳和膜别买错型号：曲面屏、折叠屏、直屏的膜不通用，下单前核对具体机型与开孔位置。"
+    ],
+    tablet: [
+      "手写笔认官方或官方认证：第三方笔在压感层级与延迟上差一截，画图和速记尤其明显。",
+      "平板存储不能扩展：按三年用量一次买够，只做笔记 128G 够、画画剪片直接上 256G。",
+      "键盘认机型与接口：磁吸键盘与触点方案机型绑定，跨型号买回来装不上。"
     ],
     common: [
       "先定预算再选配：别被参数带跑，按『用途 → 预算 → 配置』的顺序走最省心。",
