@@ -1024,6 +1024,10 @@
 
     /* 口语词与英文缩写映射到品类 id：搜「主板」「显卡」这类需求词时直接按品类命中，
        不需要型号名里真的出现这两个字 */
+    /* schema 必须先于 recommend.js 加载：枚举别名与硬字段解释都读它。
+       8 个页面都已按 scripts 顺序插入 js/specs-schema.js。 */
+    var SPEC_SCHEMA = (typeof window !== "undefined" && window.PC_SCHEMA) || null;
+
     var ALIAS = {
       "cpu": "cpu", "处理器": "cpu",
       "主板": "mobo", "motherboard": "mobo", "板子": "mobo",
@@ -1110,7 +1114,22 @@
        先用 ALIAS / NEED 的词表做贪心切分，把整串拆成可判定的语义单元。 */
     function segmentQuery(q) {
       var raw = tokens(q);
-      var keys = Object.keys(ALIAS).concat(Object.keys(NEED))
+      /* schema 里配的枚举人话别名也参与切分。
+         不加这一步，「机械硬盘」会被切成「机械」+「硬盘」：后半段命中品类 ssd，
+         前半段只在「建议搭配机械盘做冷备」这类备注里出现，于是搜机械硬盘会捞出一堆固态。
+         整体成一个 token 之后，它就只按 kind 的别名表判定。 */
+      var extra = [];
+      if (SPEC_SCHEMA && SPEC_SCHEMA.cats) {
+        Object.keys(SPEC_SCHEMA.cats).forEach(function (cid) {
+          (SPEC_SCHEMA.cats[cid].fields || []).forEach(function (f) {
+            if (!f.lbl) return;
+            Object.keys(f.lbl).forEach(function (v) {
+              f.lbl[v].forEach(function (a) { if (extra.indexOf(a) < 0) extra.push(a); });
+            });
+          });
+        });
+      }
+      var keys = Object.keys(ALIAS).concat(Object.keys(NEED)).concat(extra)
         .filter(function (k) { return k.length > 1; })
         .sort(function (a, b) { return b.length - a.length; });
       var out = [];
@@ -1130,17 +1149,91 @@
       return out.length ? out : raw;
     }
 
-    /* 单个关键词匹配：别名命中所属品类、或需求词的任一同义词出现在文本里，都算命中 */
-    function matchQuery(item, catId, toks) {
-      var hay = [item.name, item.brand, item.model, item.searchName, item.style, item.specs, item.valueNote, item.compat]
-        .concat(item.tags || []).filter(Boolean).join(" ").toLowerCase();
-      return toks.every(function (t) {
-        var asCat = ALIAS[t];
-        if (asCat) return asCat === catId;   // 品类词只按所属品类判定，避免命中别的品类里「提及」它的型号
+    /* ── 命中分层 ──────────────────────────────────────────────────────────
+       原来是一个 haystack 字符串包含，谁能命中全凭字段拼在一起的先后，分不出层级：
+       搜「M.2」时主体命中 58 条全是主板（specs 里写着 M.2 插槽），44 块 M.2 固态一条进不来。
+       现在拆成三层，返回值即排序权重：
+         1 = 字段命中（specs 原文 / specsObj 结构化取值）
+         2 = 型号 / 品牌命中（name brand model searchName style），品类别名也归这层
+         3 = 只命中软文本（valueNote / compat / tags）
+         0 = 不命中
+       多词查询取「最弱」的那层（max），这样「字段 + 软文本」混命中不会冒充纯字段命中。
+
+       为什么 specsObj 必须单独取值而不是拼进 specs 字符串：
+       specs 是人类可读的自由文本（「PCIe 4.0×4;1TB;TLC…」），结构化值（kind=HDD）
+       本来就不在字符串里。不读 specsObj，第 0 批的 schema 就是零收益。 */
+    function specsObjText(item) {
+      var o = item && item.specsObj;
+      if (!o) return "";
+      var out = [];
+      for (var k in o) {
+        if (Object.prototype.hasOwnProperty.call(o, k)) out.push(String(o[k]));
+      }
+      return out.join(" ").toLowerCase();
+    }
+
+    /* 枚举值的人话别名（schema 里配的 lbl）：库里存 HDD，用户搜「机械硬盘」。
+       只在 schema 里配了别名时才生效，没配就老实按取值原文匹配，不做模糊猜测。 */
+    function enumLabels(catId, key, val) {
+      if (!SPEC_SCHEMA) return null;
+      var cat = SPEC_SCHEMA.cats && SPEC_SCHEMA.cats[catId];
+      if (!cat) return null;
+      var fs2 = cat.fields || [], f = null;
+      for (var i = 0; i < fs2.length; i++) { if (fs2[i].k === key) { f = fs2[i]; break; } }
+      if (!f || !f.lbl) return null;
+      return f.lbl[val] || null;
+    }
+
+    function specObjHit(item, catId, t) {
+      var o = item && item.specsObj;
+      if (!o) return false;
+      for (var k in o) {
+        if (!Object.prototype.hasOwnProperty.call(o, k)) continue;
+        if (String(o[k]).toLowerCase().indexOf(t) > -1) return true;
+        var labs = enumLabels(catId, k, o[k]);
+        if (!labs) continue;
+        for (var i = 0; i < labs.length; i++) {
+          var lab = String(labs[i]).toLowerCase();
+          if (lab === t) return true;
+          /* 只允许「用户词是别名的一部分」（机械 ⊂ 机械硬盘），不允许反过来。
+             反向包含会出事：搜「移动固态」时 t 里含别名「固态」，
+             于是 46 块普通固态全部命中 —— 实测踩过一次。 */
+          if (t.length > 1 && lab.indexOf(t) > -1) return true;
+        }
+      }
+      return false;
+    }
+
+    function matchRank(item, catId, toks) {
+      var spec = (String(item.specs || "") + " " + specsObjText(item)).toLowerCase();
+      var idHay = [item.name, item.brand, item.model, item.searchName, item.style]
+        .filter(Boolean).join(" ").toLowerCase();
+      var soft = [item.valueNote, item.compat].concat(item.tags || [])
+        .filter(Boolean).join(" ").toLowerCase();
+      function anyAlt(hay, t) {
         var alts = NEED[t];
-        if (alts && alts.some(function (a) { return hay.indexOf(a) > -1; })) return true;
-        return hay.indexOf(t) > -1;
-      });
+        return !!(alts && alts.some(function (a) { return hay.indexOf(a) > -1; }));
+      }
+      var rank = 0;
+      for (var i = 0; i < toks.length; i++) {
+        var t = toks[i], lv = 0;
+        var asCat = ALIAS[t];
+        if (asCat) {
+          /* 品类词只按所属品类判定，避免命中别的品类里「提及」它的型号 */
+          if (asCat !== catId) return 0;
+          lv = 2;
+        } else if (spec.indexOf(t) > -1 || anyAlt(spec, t) || specObjHit(item, catId, t)) {
+          lv = 1;
+        } else if (idHay.indexOf(t) > -1 || anyAlt(idHay, t)) {
+          lv = 2;
+        } else if (soft.indexOf(t) > -1 || anyAlt(soft, t)) {
+          lv = 3;
+        } else {
+          return 0;
+        }
+        if (lv > rank) rank = lv;
+      }
+      return rank;
     }
 
     /* 命中关键词高亮，单字不高亮以免整页都是标记 */
@@ -1233,6 +1326,26 @@
       return mergedTotalCache;
     }
 
+    /* 搜索自检出口：给 tests/ 与验收脚本读「条目口径」。
+       卡片数 ≠ 条目数（49 组重复合并成 1160 张卡），只看 DOM 数不出「44 块 M.2 是否全覆盖」。
+       这里返回的是与渲染走同一份 matchRank 的原始结果，只读，不写状态。 */
+    if (typeof window !== "undefined") {
+      window.PCRecoDiag = {
+        segment: function (q) { return segmentQuery(q); },
+        rank: function (q) {
+          var toks = q ? segmentQuery(q) : null;
+          var out = [];
+          D.categories.forEach(function (cat) {
+            cat.items.forEach(function (item) {
+              var rk = toks ? matchRank(item, cat.id, toks) : 0;
+              if (rk) out.push({ cat: cat.id, id: item.id, name: item.name, rank: rk });
+            });
+          });
+          return out;
+        }
+      };
+    }
+
     function collect() {
       var list = [];
       var toks = state.q ? segmentQuery(state.q) : null;
@@ -1244,10 +1357,19 @@
           if (state.look !== "all" && lookOf(item) !== state.look) return;
           if (state.brand !== "all" && item.brand !== state.brand) return;
           if (!matchesBudget(item, state.budget)) return;
-          if (toks && !matchQuery(item, cat.id, toks)) return;
-          list.push({ cat: cat, item: item });
+          var rk = 0;
+          if (toks) {
+            rk = matchRank(item, cat.id, toks);
+            if (!rk) return;
+          }
+          list.push({ cat: cat, item: item, rank: rk });
         });
       });
+      /* 有查询时按命中层级升序（字段 → 型号 → 软文本）。同层保持原顺序，
+         否则每次输入一个字符卡片就会互相跳位。无查询时全是 0，跳过排序。 */
+      if (toks && list.length) {
+        list.sort(function (a, b) { return a.rank - b.rank; });
+      }
       return mergeEntries(list);
     }
 

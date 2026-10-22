@@ -102,6 +102,10 @@ ORDER.forEach(([k]) => {
 //    闸的实现就是同目录的 dedup-gate.cjs，口径内核是 js/dup-core.js（页面合并卡同一份）。
 //    这里不再本地实现，避免"闸算的"和"页面显示的"两套口径。
 const gate = require('./dedup-gate.cjs');
+/* specsObj 的派生规则与 tools/derive-specs-obj.cjs 是同一份（tools/specs-derive.cjs）。
+   写在这里是为了让「单独跑 rebuild」也不丢 specsObj —— 只靠 npm run data:rebuild 串联
+   的话，谁直接跑一次 rebuild-models.cjs 就会静默把结构化字段冲掉。 */
+const SD = require('./specs-derive.cjs');
 
 const FORCE = process.argv.includes('--force') || process.argv.includes('-f');
 
@@ -165,16 +169,21 @@ if (fresh.length || idDupIds.length) {
 // 7. 生成
 const q = JSON.stringify;
 const A = a => '[' + (a || []).map(q).join(', ') + ']';
-const fmt = it => '    { id: ' + q(it.id) + ', brand: ' + q(it.brand) + ', model: ' + q(it.model) +
-  ', name: ' + q(it.name) + ', searchName: ' + q(it.searchName) + ', style: ' + q(it.style) +
-  ', price: [' + it.price[0] + ', ' + it.price[1] + '], rating: ' + it.rating +
-  ', valueGrade: ' + q(it.valueGrade) + ', valueNote: ' + q(it.valueNote) +
-  ', use: ' + A(it.use) + ', audience: ' + A(it.audience) + ', tags: ' + A(it.tags) +
-  ', specs: ' + q(it.specs) + ', compat: ' + q(it.compat) + ' },';
+const fmtWith = catId => it => {
+  const d = SD.derive(catId, it);
+  const objTxt = d.obj ? ', specsObj: ' + JSON.stringify(d.obj) : '';
+  const misTxt = d.missing.length ? ', specsMissing: ' + JSON.stringify(d.missing) : '';
+  return '    { id: ' + q(it.id) + ', brand: ' + q(it.brand) + ', model: ' + q(it.model) +
+    ', name: ' + q(it.name) + ', searchName: ' + q(it.searchName) + ', style: ' + q(it.style) +
+    ', price: [' + it.price[0] + ', ' + it.price[1] + '], rating: ' + it.rating +
+    ', valueGrade: ' + q(it.valueGrade) + ', valueNote: ' + q(it.valueNote) +
+    ', use: ' + A(it.use) + ', audience: ' + A(it.audience) + ', tags: ' + A(it.tags) +
+    ', specs: ' + q(it.specs) + objTxt + misTxt + ', compat: ' + q(it.compat) + ' },';
+};
 
 let total = 0, body = 'window.PC_MODELS = {\n';
 ORDER.forEach(([k, label], idx) => {
-  body += '  /* ---------- ' + label + ' ---------- */\n  ' + k + ': [\n' + data[k].map(fmt).join('\n') + '\n  ]' + (idx === ORDER.length - 1 ? '\n' : ',\n\n');
+  body += '  /* ---------- ' + label + ' ---------- */\n  ' + k + ': [\n' + data[k].map(fmtWith(k)).join('\n') + '\n  ]' + (idx === ORDER.length - 1 ? '\n' : ',\n\n');
   total += data[k].length;
 });
 body += '};\n';

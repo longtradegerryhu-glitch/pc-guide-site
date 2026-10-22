@@ -11,7 +11,10 @@
     "test:e2e": "node tests/e2e-inject-test.cjs",
     "test:reco": "node tests/reco-acceptance.cjs",
     "test:mutation:reco": "node tests/mutation-reco.cjs",
-    "test:all": "node tests/selftest-mutation.cjs && node tests/audit-search.cjs && node tests/e2e-merge.cjs && node tests/e2e-inject-test.cjs && node tools/check-wr-refs.cjs",
+    "test:all": "node tests/selftest-mutation.cjs && node tests/audit-search.cjs && node tests/specs-wire.cjs && node tests/e2e-merge.cjs && node tests/e2e-inject-test.cjs && node tools/check-wr-refs.cjs",
+    "test:specs-wire": "node tests/specs-wire.cjs",
+    "specs:derive": "node tools/derive-specs-obj.cjs",
+    "specs:wire:check": "node tools/derive-specs-obj.cjs --check",
     "audit:gate": "node tests/reco-acceptance.cjs",
     "audit:wr": "node tools/check-wr-refs.cjs",
     "audit:search": "node tests/audit-search.cjs",
@@ -19,7 +22,7 @@
     "dup:gate": "node tools/dedup-gate.cjs",
     "dup:gate:strict": "node tools/dedup-gate.cjs --strict",
     "dup:review": "node tools/dup-review.cjs",
-    "data:rebuild": "node tools/rebuild-models.cjs"
+    "data:rebuild": "node tools/rebuild-models.cjs && node tools/derive-specs-obj.cjs"
   },
   "devDependencies": {
     "jsdom": "^26.0.0"

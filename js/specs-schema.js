@@ -1,5 +1,7 @@
 /* 21 品类 specs schema 定义 · ORD-06 第 0 批
-   状态：仅定义，未接线。本文件不解析、不写数据，供第 1 批迁移与第 4 批对比表消费。
+   状态：第 1 批已接线（ORD-14）。本文件仍不解析、不写数据，只做字段定义；
+   解析在 tools/specs-derive.cjs，产物写进 js/models-data.js 的 specsObj，
+   搜索（js/recommend.js 的 matchRank）读硬字段层，第 4 批对比表读同一份定义。
    字段排序 = 用户选购决策顺序：硬约束（装不装得上）→ 性能 → 体验 → 外观。
    键名约定：k=key n=显示名 t=类型 u=单位 r=必填(1/0) ex=示例值
              d=数据来源 derive(可从现有 specs 解析) / manual(现库没有，须外部核验补录)
@@ -87,7 +89,11 @@
        搜「M.2」当前只召回 24 款固态，漏 20 款。接口/形态是必填硬字段。 */
     ssd: { label: '固态硬盘', fields: [
       /* 品类内实测混入 3 块 3.5 英寸机械盘（紫盘/酷狼/Exos），无 kind 会被强标 SATA 与固态并列 */
-      { k: 'kind',      n: '类型',     t: 'enum', r: 1, ex: 'SSD', d: 'derive', e: ['SSD', 'HDD', '移动固态'], s: ['固态', '机械硬盘', '移动固态'] },
+      { k: 'kind',      n: '类型',     t: 'enum', r: 1, ex: 'SSD', d: 'derive', e: ['SSD', 'HDD', '移动固态'], s: ['固态', '机械硬盘', '移动固态'],
+        /* 枚举值是人话别名的机器形态：用户搜「机械硬盘」，库里存的是 HDD。
+           别名表放在 schema 而不是散在 matchQuery 里，是为了让对比表（第 4 批）
+           和搜索读同一份映射 —— 两处各写一份必然漂移。 */
+        lbl: { 'SSD': ['固态硬盘', '固态'], 'HDD': ['机械硬盘', '机械盘'], '移动固态': ['移动固态', '便携固态'] } },
       /* 形态与接口必须分开：SATA 是接口，M.2/U.2 是形态，混在一个字段里会把 3.5 寸机械盘标成 SATA 形态 */
       { k: 'form',      n: '形态',     t: 'enum', r: 1, ex: 'M.2', d: 'derive', e: ['M.2', '2.5 英寸', '3.5 英寸', 'U.2', 'mSATA', '便携'], s: ['m.2', '2280', '2230', '2.5英寸', '3.5英寸', 'u.2'] },
       { k: 'iface',     n: '接口',     t: 'enum', r: 1, ex: 'NVMe (PCIe)', d: 'derive', e: ['NVMe (PCIe)', 'SATA', 'USB'], s: ['sata', 'nvme', 'm.2', 'usb'] },
@@ -392,7 +398,7 @@
 
   global.PC_SCHEMA = {
     VERSION: VERSION,
-    STATUS: 'definition-only',   // 未接线：不解析、不写数据
+    STATUS: 'wired',             // ORD-14 第 1 批起：specsObj 由 tools/specs-derive.cjs 写入，搜索读硬字段层
     TYPES: TYPES,
     errors: errs,
     cats: CATS,

@@ -308,11 +308,11 @@
   "softOnly": 0
  },
  "ssd.form": {
-  "hit": 53,
+  "hit": 50,
   "total": 53,
-  "pct": 100,
+  "pct": 94.3,
   "req": 1,
-  "softOnly": 0
+  "softOnly": 3
  },
  "ssd.iface": {
   "hit": 53,
@@ -322,9 +322,9 @@
   "softOnly": 0
  },
  "ssd.ifaceVer": {
-  "hit": 43,
+  "hit": 53,
   "total": 53,
-  "pct": 81.1,
+  "pct": 100,
   "req": 1,
   "softOnly": 0
  },
@@ -343,39 +343,39 @@
   "softOnly": 0
  },
  "ssd.dram": {
-  "hit": 42,
+  "hit": 45,
   "total": 53,
-  "pct": 79.2,
+  "pct": 84.9,
   "req": 1,
   "softOnly": 1
  },
  "ssd.seqRead": {
-  "hit": 43,
+  "hit": 50,
   "total": 53,
-  "pct": 81.1,
+  "pct": 94.3,
   "req": 1,
   "softOnly": 0
  },
  "ssd.seqWrite": {
-  "hit": 0,
-  "total": 53,
-  "pct": 0,
-  "req": 0,
-  "softOnly": 0
- },
- "ssd.tbw": {
   "hit": 7,
   "total": 53,
   "pct": 13.2,
   "req": 0,
   "softOnly": 0
  },
- "ssd.warranty": {
-  "hit": 40,
+ "ssd.tbw": {
+  "hit": 8,
   "total": 53,
-  "pct": 75.5,
-  "req": 1,
+  "pct": 15.1,
+  "req": 0,
   "softOnly": 0
+ },
+ "ssd.warranty": {
+  "hit": 47,
+  "total": 53,
+  "pct": 88.7,
+  "req": 1,
+  "softOnly": 1
  },
  "psu.wattage": {
   "hit": 53,
@@ -1381,16 +1381,16 @@
  "tablet.stylus": {
   "hit": 0,
   "total": 66,
-  "pct": null,
-  "req": 0,
-  "softOnly": 0
+  "pct": 0,
+  "req": 1,
+  "softOnly": 3
  },
  "tablet.keyboard": {
   "hit": 0,
   "total": 66,
-  "pct": null,
-  "req": 0,
-  "softOnly": 0
+  "pct": 0,
+  "req": 1,
+  "softOnly": 4
  },
  "tablet.cellular": {
   "hit": 1,

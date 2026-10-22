@@ -12,6 +12,10 @@ const M = c.window.PC_MODELS;
 vm.runInContext(fs.readFileSync(path.join(SITE, 'js/specs-schema.js'), 'utf8'), c);
 // specs-schema 是 (function(global){})(window||globalThis) 形态，在 vm 里挂到 window
 const SCH = c.window.PC_SCHEMA || c.PC_SCHEMA;
+/* 字段解析的唯一实现：tools/specs-derive.cjs。
+   原本 ssd 的那套正则只在这里存在，迁移时又写一份必然漂移（dryrun 说 53/53、
+   迁移填不出值是 ORD-11 反复返工的根因）。改成委托后两边由构造保证一致。 */
+const SD = require('./specs-derive.cjs');
 
 /* 把 specs 切成片段，并保留原串，用于跨字段共享上下文 */
 function segs(it) {
@@ -73,21 +77,6 @@ const R = {
     outputs:   [/(\d+\s*[×x]\s*DP[\d.]*)/i, /(DP[\d.]*\s*\+?\s*(?:\d+\s*[×x]\s*)?HDMI)/i, /HDMI/i],
     recPSU:    [/(?:建议|官方建议)\s*(\d+)\s*W/i, /建议电源\s*(\d+)/i],
     arch:      [/Blackwell/i, /RDNA\s*\d/i, /Ada/i, /Lovelace/i]
-  },
-  ssd: {
-    /* 关键字段：specs 里几乎没有，靠型号/接口推断 —— 这正是 ORD-06 点名的缺失 */
-    /* 推断而非明文：PCIe×4 的消费级固态就是 M.2（U.2/AIC 极罕见且会写明 U.2） */
-    kind:     [/3\.5\s*英寸/i, /\d{4}\s*rpm/i, /移动固态|便携/i, /TLC|QLC|MLC/i, /PCIe|NVMe/i],
-    form:     [/U\.2/i, /mSATA/i, /M\.2/i, /3\.5\s*英寸/i, /2\.5\s*英寸/i, /SATA/i, /PCIe\s*[\d.]+\s*[×x]\s*\d/i, /PCIe\s*[\d.]+/i, /移动固态|便携|USB\s*[\d.]*/i],
-    iface:    [/SATA/i, /USB\s*[\d.]*/i, /PCIe|NVMe/i],
-    ifaceVer: [/PCIe\s*([\d.]+)\s*[×x]\s*\d/i, /SATA\s*([\d.]+)/i, /USB\s*([\d.]+)/i],
-    capacity: [/(\d+)\s*TB/i, /(\d+)\s*GB/i],
-    nand:     [/TLC/i, /QLC/i, /MLC/i],
-    dram:     [/无独立缓存/, /独立缓存/, /\bHMB\b/i, /无缓/, /有缓/],
-    seqRead:  [/读\s*(?:速\s*)?([\d,]+)\s*MB\/s/i, /([\d,]+)\s*MB\/s\s*读/i, /顺序读\s*([\d,]+)/i],
-    seqWrite: [/写\s*(?:速\s*)?([\d,]+)\s*MB\/s/i, /([\d,]+)\s*MB\/s\s*写/i],
-    tbw:      [/([\d,]+)\s*TBW/i],
-    warranty: [/(\d+)\s*年\s*[保质]/]
   },
   psu: {
     wattage:   [/(\d{3,4})\s*W/i],
@@ -293,12 +282,32 @@ const R = {
 
 /* ── 跑覆盖 ── */
 const rows = [];
-Object.keys(R).forEach(catId => {
+/* 按 schema 的品类遍历，不按 R 的键 —— ssd 的规则已整体移到 specs-derive，
+   照 R 的键遍历会让 ssd 整类从报告里消失（实测掉了 583 个格子且不报错）。 */
+Object.keys(SCH.cats).forEach(catId => {
   const arr = M[catId] || [];
   const sch = SCH.cats[catId];
   if (!arr.length || !sch) { rows.push({ catId, missing: true }); return; }
   const fields = sch.fields.filter(f => f.d === 'derive');
   fields.forEach(f => {
+    /* 有 specs-derive 实现的字段走同一份规则，取值与命中同源 */
+    const sd = SD.RULES[catId] && SD.RULES[catId][f.k];
+    if (sd) {
+      let hit = 0, softOnly = 0;
+      arr.forEach(it => {
+        if (SD.deriveField(catId, f.k, it) != null) { hit++; return; }
+        /* 硬字段没取到值，但同一套正则能在软文本里命中 —— 量化「只能靠软文本」 */
+        const hay = ALL(it);
+        if (sd.some(r => r.re.test(hay))) softOnly++;
+      });
+      rows.push({
+        catId, key: f.k, label: f.n, req: f.r,
+        total: arr.length, hit, softOnly,
+        pct: Math.round(hit / arr.length * 1000) / 10,
+        via: 'specs-derive'
+      });
+      return;
+    }
     const rules = R[catId] && R[catId][f.k];
     if (!rules) {
       rows.push({ catId, key: f.k, label: f.n, total: arr.length, hit: 0, noRule: true });

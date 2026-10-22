@@ -19,7 +19,7 @@ const L = [];
 L.push('# 21 品类 specs 字段清单（ORD-06 第 0 批定义稿）');
 L.push('');
 L.push('> 机器可读定义：`js/specs-schema.js`（`window.PC_SCHEMA`）。本文件由 `node tools/schema-doc.cjs` 生成，**勿手改**。');
-L.push('> 状态：仅定义，未接线。不解析、不改数据。');
+L.push('> 状态：第 1 批已接线（ORD-14）。定义在本文件，解析在 `tools/specs-derive.cjs`，产物写进 `js/models-data.js` 的 `specsObj`，搜索与第 4 批对比表读同一份。');
 L.push('');
 L.push('**排序原则**：按用户选购决策顺序 —— 硬约束（装不装得上）→ 性能 → 体验 → 外观。');
 L.push('不是按现有 specs 的分号位置排。现有位置实测不可用：显示器 3~12 段不定长，拓展坞 1~9 段，按索引对齐必然把「亮度」和「噪音」排进同一行。');
