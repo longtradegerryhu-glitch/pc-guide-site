@@ -168,7 +168,9 @@
     "稳定器": /稳定器|云台/i,
     "手机支架": /支架|指环/i,
     "指环支架": /指环|支架/i,
-    "手写笔": /笔/i,
+    /* 笔类只写 /笔/ 会漏掉 Apple Pencil（中文名里没有「笔」字），
+       iPad 主体因此永远拿不到唯一那支能用的笔 —— 加上 Pencil 才让生态判定有东西可判 */
+    "手写笔": /笔|Pencil/i,
     "平板键盘": /键盘/i,
     "游戏手柄": /手柄/i,
     "散热配件": /散热|风扇|背夹/i,
@@ -183,8 +185,15 @@
   /* 配置单里部分部件写的是组合价，折算到配件库的单件价位再用 */
   var PART_SPLIT = { "键鼠": 0.75 };   // 「客制化键盘 + 旗舰鼠标」是两件，单件目标按 75% 计
 
+  /* 目标价按「配置单行」取，不按「品类」取。
+     同一品类下不同行的价位能差 5 倍：手机影像档的「手机壳 ¥60-100」与「稳定器 ¥300-500」
+     都映射到 mobileacc，按品类取 max 就把手机壳的目标价顶到 400 ——
+     窗口随之上移到 240~600，79 块的壳不在窗口里，于是退到「同价位最近」，
+     给 vivo 手机配了 149-199 的 iPhone 17 专用壳。这是甲方看到那一幕的第一层。
+     品类聚合值只作兜底（行名为空时才用），且取中位数不用 max：
+     max 每次都被最贵那行带走，等于把串味传染给同品类的其他行。 */
   function planPartTargets(plan) {
-    var t = {};
+    var byPart = {}, acc = {};
     (plan.parts || []).forEach(function (row) {
       var cid = PART_CAT[row[0]];
       if (!cid) return;
@@ -194,9 +203,75 @@
       var hi = nums.length > 1 ? parseInt(nums[1], 10) : lo;
       var v = (lo + hi) / 2;
       if (PART_SPLIT[row[0]]) v *= PART_SPLIT[row[0]];
-      t[cid] = Math.max(t[cid] || 0, v);
+      byPart[row[0]] = v;
+      (acc[cid] = acc[cid] || []).push(v);
     });
-    return t;
+    var byCat = {};
+    Object.keys(acc).forEach(function (cid) {
+      var a = acc[cid].slice().sort(function (x, y) { return x - y; });
+      var n = a.length;
+      byCat[cid] = n % 2 ? a[(n - 1) / 2] : (a[n / 2 - 1] + a[n / 2]) / 2;
+    });
+    return { byPart: byPart, byCat: byCat };
+  }
+
+  /* ---------- 生态兼容 ----------
+     库里 brand 一直分开写着（"Apple" / "苹果" / "华为" …），选配件时从来没读过它，
+     于是「vivo 手机 + 苹果 iPhone 17 官方硅胶壳」能出现在同一屏。
+     判定只用 brand + 物类关键词，不去猜型号字符串属于谁：后者每进一个新型号就漏一次。 */
+  /* 归一化：同一家库里写成两种（手机库 Apple 5 条 + 苹果 1 条，配件库 ma1 写 Apple、pw6 写 苹果）。
+     不认这一条，写「苹果」的那批配件就能绕过对「Apple」的判定。 */
+  var ECO_BRAND = {
+    "apple": "apple", "苹果": "apple",
+    "huawei": "huawei", "华为": "huawei",
+    "samsung": "samsung", "三星": "samsung",
+    "xiaomi": "xiaomi", "小米": "xiaomi", "redmi": "xiaomi",
+    "honor": "honor", "荣耀": "honor",
+    "oppo": "oppo", "vivo": "vivo", "iqoo": "vivo",
+    "oneplus": "oneplus", "一加": "oneplus", "realme": "realme",
+    "lenovo": "lenovo", "联想": "lenovo", "zte": "zte", "中兴": "zte",
+    "google": "google", "谷歌": "google"
+  };
+  /* brand 写成「厂商」的通用件（ma5 通用钢化膜）靠产品线关键词兜住 */
+  var ECO_NAME = /iPhone|iPad|MacBook|MagSafe|Apple\s*Pencil|Magic\s*Trackpad|AirPods/i;
+
+  function ecoOf(it) {
+    if (!it) return "";
+    var b = String(it.brand || "").trim().toLowerCase();
+    if (ECO_BRAND[b]) return ECO_BRAND[b];
+    if (ECO_NAME.test(String(it.name || "") + " " + String(it.model || ""))) return "apple";
+    return "";
+  }
+
+  /* 只有「物理上装不到别的机器」的物类才做生态锁定。
+     膜 / 背夹 / 支架 / 自拍杆 / 耳机 / 通用线材 一律不判 —— 判了就是误杀：
+     「小米自拍杆 2S」会被判成只能配小米手机。
+     body       = 允许落在哪些本体品类上（缺省 = 不限品类，只锁生态）
+     appleOnly  = 这几件只能是苹果设备，且限 body 内（Apple Pencil 给 iPhone 装不上） */
+  var ECO_FIT = [
+    { name: "保护壳", re: /保护壳|保护套|手机壳|硅胶壳|防摔壳|磁吸壳|Tough Armor/i, body: { phone: 1 } },
+    { name: "手写笔", re: /Apple\s*Pencil|触控笔|手写笔/i, body: { phone: 1, tablet: 1 }, appleOnly: { tablet: 1 } },
+    { name: "平板键盘", re: /妙控键盘|Combo Touch|磁吸键盘|Book Cover|平板键盘|外接蓝牙键盘/i, body: { tablet: 1 } },
+    { name: "触控板", re: /Magic\s*Trackpad/i, body: { tablet: 1, laptop: 1 }, appleOnly: { tablet: 1, laptop: 1 } },
+    /* 原装头 / 编织线 / 磁吸电源：按机型配的，苹果那三件不能给安卓机 */
+    { name: "原装充电", re: /原装充电器|编织充电线|MagSafe/i }
+  ];
+
+  /* 返回排除理由，空串 = 可用。不用布尔值：页面要能说清「这一行为什么没有件」。 */
+  function compatDrop(it, bodyEco, bodyCatId) {
+    if (!bodyEco) return "";
+    var hay = String(it.brand || "") + " " + String(it.name || "") + " " + String(it.model || "");
+    var fit = null;
+    for (var i = 0; i < ECO_FIT.length; i++) {
+      if (ECO_FIT[i].re.test(hay)) { fit = ECO_FIT[i]; break; }
+    }
+    if (!fit) return "";
+    var ie = ecoOf(it);
+    if (!ie) return "";                                    /* 件没写生态 = 通用件 */
+    if (fit.body && !fit.body[bodyCatId]) return fit.name + "不配「" + bodyCatId + "」本体";
+    if (fit.appleOnly && ie === "apple" && !fit.appleOnly[bodyCatId]) return "苹果专用设备件，只配 iPad / MacBook";
+    if (ie !== bodyEco) return "生态不符（" + ie + " 件配 " + bodyEco + " 本体）";
+    return "";
   }
 
   /* 笔记本本体占预算大头，且不同档位机型差距大：目标价随预算上探，
@@ -293,8 +368,9 @@
           '<td class="spec-price">—</td></tr>';
       }
       var picked = bySrc[part] || [];
-      var libPrice = null, names = [];
+      var libPrice = null, names = [], blockedN = 0;
       picked.forEach(function (x) {
+        if (x.compatBlocked) blockedN = x.compatBlocked;
         var it = x.pick && x.pick.item;
         if (!it || !it.price) return;
         libPrice = libPrice
@@ -310,6 +386,8 @@
         lo += libPrice[0]; hi += libPrice[1]; libRows++;
       } else {
         cfgCell = esc(config);
+        /* 因生态排除而空手的行，表格里也要说明：只写「配置单原选」会让用户以为这就是推荐结果 */
+        if (blockedN) cfgCell += '<span class="spec-orig spec-block">暂无可用配件（按当前主体排除 ' + blockedN + ' 件不兼容型号）</span>';
         priceCell = esc(priceText);
         var nums = String(priceText).match(/\d+/g);
         if (nums) {
@@ -590,6 +668,16 @@
     var skipped = [];
     /* 同一套方案里不能给两行挑同一件（存储行与充电器行曾各推一个同款充电器） */
     var usedIds = {};
+    /* 配件能不能用取决于本体是谁：iPhone 壳装不到 vivo 上。
+       本体行一般排在配置单第一行，但「手机壳」也可能出现得比「手机」早 ——
+       靠行序赌不可靠。先把本体行算出来拿到它的生态，再算剩下的行，最后按原序还原。 */
+    var bodyEco = "", bodyCatId = "";
+    var order = (plan.parts || []).map(function (r, i) { return { r: r, i: i }; });
+    order.sort(function (a, b) {
+      var ba = WHOLE_BUDGET_SHARE[PART_CAT[a.r[0]] || ""] ? 0 : 1;
+      var bb = WHOLE_BUDGET_SHARE[PART_CAT[b.r[0]] || ""] ? 0 : 1;
+      return ba - bb || a.i - b.i;
+    });
 
     /* 用途只作软过滤：过滤后若覆盖不到配置单价位，就退回全库。
        否则「办公」场景会把配置单里的 360 水冷降成百元风冷、5070 降成入门卡。 */
@@ -606,17 +694,20 @@
       return inBand.length ? hit : items;
     }
 
-    (plan.parts || []).forEach(function (r) {
+    order.forEach(function (o) {
+      var r = o.r;
       var part = r[0], config = String(r[1] || ""), priceText = String(r[2] || "");
       /* 已有件按"配置单行"跳过。按品类跳会连坐：charger 里同时装着充电器/数据线/移动电源 */
       if (skipParts.indexOf(part) > -1) {
-        skipped.push({ part: part, config: config, priceText: priceText });
+        skipped.push({ part: part, config: config, priceText: priceText, _i: o.i });
         return;
       }
       var cid = PART_CAT[part] || null;
       var cat = null;
       if (cid) D.categories.forEach(function (c) { if (c.id === cid) cat = c; });
-      var target = (targets[cid] || base * 0.03) * targetScale * (scaleOf ? scaleOf(cid) : 1);
+      var isBody = !!(cid && WHOLE_BUDGET_SHARE[cid]);
+      var compatDropped = 0, compatBlocked = 0;
+      var target = (targets.byPart[part] || targets.byCat[cid] || base * 0.03) * targetScale * (scaleOf ? scaleOf(cid) : 1);
       if (PART_SPLIT[part]) target = target / PART_SPLIT[part];
       /* 笔记本本体按预算选档：配置单行价只是模板，不该锁死选择 */
       var minAnchorMid;
@@ -677,6 +768,20 @@
         var typed = SUB_KW[part] && SUB_CAT[cid] ? items.filter(function (it) {
           return SUB_KW[part].test(String(it.brand || "") + String(it.model || "") + String(it.name || ""));
         }) : null;
+        /* 生态过滤放在收窄之前：收窄（壳/笔/键盘…）的判定只看物类，
+           不过滤就会出现「vivo 手机 + 苹果 iPhone 17 官方硅胶壳」。
+           items 是 cat.items 的新数组（filter 不就地改），不会污染品类库。 */
+        if (!isBody && bodyEco && typed) {
+          var before = typed.length;
+          typed = typed.filter(function (it) { return !compatDrop(it, bodyEco, bodyCatId); });
+          compatDropped = before - typed.length;
+        } else if (!isBody && bodyEco) {
+          /* 没有行名收窄规则的品类（耳机/显示器/拓展坞…）也要挡一次：
+             生态件混进通用品类同样会错配，只是这里不过滤物类。 */
+          var before2 = items.length;
+          items = items.filter(function (it) { return !compatDrop(it, bodyEco, bodyCatId); });
+          compatDropped = before2 - items.length;
+        }
         var avail = typed || items;
         if (typed && !typed.length) avail = [];
         var pool = typed && !typed.length ? []
@@ -688,12 +793,13 @@
         /* 颜值偏好要压过"配置单同款"：用户明确说喜欢白色，配置单模板却点名海景房时，
            照模板推海景房再标"同款"，等于把这个回答当没听见。
            该风格有现货时，同款匹配也只在风格内找；没现货才退回全量。 */
-        var anchorPool = typed && typed.length ? typed : cat.items;
+        /* 同款匹配的全量池也必须过生态：用 cat.items 会把刚排除的件从后门捞回来 */
+        var anchorPool = typed && typed.length ? typed : items;
         /* 只对外观看得见、同档能换的品类应用颜值偏好。
            显卡/CPU 也带风格标注，但把显卡按"白色"换掉等于按颜色换性能档，是错的。 */
         var LOOK_CATS = { case: 1, monitor: 1, input: 1, stand: 1, audio: 1, dock: 1 };
         if (lookPref && lookPref !== "any" && lookPref !== "all" && LOOK_CATS[cid]) {
-          var styledAll = cat.items.filter(function (it) { return lookOf(it) === lookPref; });
+          var styledAll = items.filter(function (it) { return lookOf(it) === lookPref; });
           if (!styledAll.length && lookMiss.indexOf(cid) === -1) lookMiss.push(cid);
           /* 款式过滤是"同档换壳"，不能拿来卡住用户明说最看重的那一件：
              该风格最高也就到目标价的九成时，功能优先，款式退让。 */
@@ -711,13 +817,28 @@
         if (pick && pick.item && pick.item.id) usedIds[pick.item.id] = 1;
         /* 这一类有型号库但这一档挑不出东西时，退回档位直选：
            直接 filter 掉会让配置单少一行却不作声，用户以为是漏了。 */
-        if (!pick) textPick = catalogPick(part, target) || { name: config, price: [0, 0], alts: [] };
+        if (!pick) {
+          /* 因生态排除而空手时不许拿档位充数：档位里就写着「苹果 20W 原装充电器」这种东西，
+             填进来等于换个方式继续给安卓机配苹果件。这一行改为明写「暂无可用配件」。 */
+          if (compatDropped) compatBlocked = compatDropped;
+          else textPick = catalogPick(part, target) || { name: config, price: [0, 0], alts: [] };
+        }
       } else {
         textPick = catalogPick(part, target) || { name: config, price: [0, 0], alts: [] };
       }
-      out.push({ part: part, srcPart: part, config: config, priceText: priceText, cat: cat, pick: pick, textPick: textPick });
+      /* 本体行的选中件决定后面所有配件的生态。放在 push 前，配件行才能读到。 */
+      if (isBody && pick && pick.item) {
+        bodyCatId = cid;
+        bodyEco = ecoOf(pick.item);
+      }
+      out.push({ part: part, srcPart: part, config: config, priceText: priceText, cat: cat, pick: pick, textPick: textPick, compatBlocked: compatBlocked, _i: o.i });
     });
-    var finalRows = out.filter(function (r) { return r.pick || r.textPick; });
+    /* 本体行被提前处理过，这里按配置单原序还原 */
+    out.sort(function (a, b) { return a._i - b._i; });
+    skipped.sort(function (a, b) { return a._i - b._i; });
+    /* 有可推荐件、或有「无可用配件」明示，都算这一行交代清楚了；
+       两个都没有才是静默消失（用户会以为漏配了） */
+    var finalRows = out.filter(function (r) { return r.pick || r.textPick || r.compatBlocked; });
     // filter 会返回新数组，跳过的行要挂回去供配置单表格使用
     finalRows.skipped = skipped;
     finalRows.lookMiss = lookMiss;
@@ -762,10 +883,17 @@
       var priceTxt = it ? fmtPrice(it.price) : r.priceText;
       var badges = (r.hot && collapsible ? '<span class="fp-badge">升级重点</span>' : "") + badgeOf(r);
       if (!it && r.textPick) badges += '<span class="fp-badge fp-cat-badge">配置单原选</span>';
+      if (r.compatBlocked) badges += '<span class="fp-badge fp-block-badge">无可用件</span>';
       var why = "";
       if (!it) {
-        why = '<p class="fp-why">这一类没有独立的型号库，上面就是配置单的原选；同价位档位参考「' +
-          esc(r.textPick.name) + '（¥' + r.textPick.price[0] + '）」。装机时以主板接口与机箱限高为准。</p>';
+        if (r.compatBlocked) {
+          /* 不许静默消失，也不许拿不兼容的件充数：说清为什么没有，并把决定权交回用户 */
+          why = '<p class="fp-why fp-why-blocked">这一行暂无可用配件：按当前主体排除了 ' +
+            r.compatBlocked + ' 件生态不兼容的型号。可以按配置单原选自行挑选。</p>';
+        } else {
+          why = '<p class="fp-why">这一类没有独立的型号库，上面就是配置单的原选；同价位档位参考「' +
+            esc(r.textPick.name) + '（¥' + r.textPick.price[0] + '）」。装机时以主板接口与机箱限高为准。</p>';
+        }
       } else {
         if (r.pick.state === "alt") {
           // 型号不一致就必须说清差在哪，否则用户会以为这就是配置单写的那件
@@ -1376,24 +1504,25 @@
       return mergedTotalCache;
     }
 
+
     /* 搜索自检出口：给 tests/ 与验收脚本读「条目口径」。
        卡片数 ≠ 条目数（49 组重复合并成 1160 张卡），只看 DOM 数不出「44 块 M.2 是否全覆盖」。
-       这里返回的是与渲染走同一份 matchRank 的原始结果，只读，不写状态。 */
+       返回的是与渲染走同一份 matchInfo 的原始结果，只读，不写状态。
+       合并式赋值：targets/rows/compat 由 IIFE 顶层挂载，这里不能整体覆盖。 */
     if (typeof window !== "undefined") {
-      window.PCRecoDiag = {
-        segment: function (q) { return segmentQuery(q); },
-        rank: function (q) {
-          var toks = q ? segmentQuery(q) : null;
-          var so = toks ? structTokens(toks) : null;
-          var out = [];
-          D.categories.forEach(function (cat) {
-            cat.items.forEach(function (item) {
-              var mi = toks ? matchInfo(item, cat.id, toks, so) : { rank: 0, struct: 0 };
-              if (mi.rank) out.push({ cat: cat.id, id: item.id, name: item.name, rank: mi.rank, struct: mi.struct });
-            });
+      var DGS = window.PCRecoDiag = window.PCRecoDiag || {};
+      DGS.segment = function (q) { return segmentQuery(q); };
+      DGS.rank = function (q) {
+        var toks = q ? segmentQuery(q) : null;
+        var so = toks ? structTokens(toks) : null;
+        var out = [];
+        D.categories.forEach(function (cat) {
+          cat.items.forEach(function (item) {
+            var mi = toks ? matchInfo(item, cat.id, toks, so) : { rank: 0, struct: 0 };
+            if (mi.rank) out.push({ cat: cat.id, id: item.id, name: item.name, rank: mi.rank, struct: mi.struct });
           });
-          return out;
-        }
+        });
+        return out;
       };
     }
 
@@ -2626,7 +2755,7 @@
       if (!cat) return null;
       // 目标价位取方案配置单同类部件价位
       var targets = planPartTargets(plan);
-      var allowance = targets[catId] || budgetCap * 0.2;
+      var allowance = targets.byCat[catId] || budgetCap * 0.2;
       if (catId === "cooler" && use.indexOf("portable") === -1) allowance = Math.max(allowance, 150);
       // 电源与机箱同属 psu 类别；推荐「电源」位时排除机箱（与快速推荐同口径）
       var pool = cat.items;
@@ -3211,7 +3340,7 @@
 
         // 键鼠拆成键盘、鼠标两张卡，组合目标价 55/45 拆分
         if (cid === "input") {
-          var combo = targets.input ? targets.input / (PART_SPLIT["键鼠"] || 1) : base * 0.05;
+          var combo = targets.byCat.input ? targets.byCat.input / (PART_SPLIT["键鼠"] || 1) : base * 0.05;
           combo = Math.min(combo, cap);
           var segs = rowText.split(/[+＋]/);
           var kbItems = items.filter(function (it) { return (it.style || "").indexOf("键盘") !== -1; });
@@ -3240,7 +3369,7 @@
           return;
         }
         // 目标价位取配置单同类部件价位，未列的按整机中值 3% 兜底
-        var target = Math.min(targets[cid] || base * 0.03, cap);
+        var target = Math.min(targets.byCat[cid] || base * 0.03, cap);
         var p = pickOne(items, target, rowText, cat.items);
         if (p) out.push({ cat: cat, pick: p });
       });
@@ -3384,4 +3513,56 @@
   } else {
     boot();
   }
+      /* 搜索自检出口：给 tests/ 与验收脚本读「条目口径」。
+         卡片数 ≠ 条目数（49 组重复合并成 1160 张卡），只看 DOM 数不出「44 块 M.2 是否全覆盖」。
+         这里返回的是与渲染走同一份 matchRank 的原始结果，只读，不写状态。 */
+      /* 配置单价与生态判定不依赖配件页 DOM，挂到 IIFE 顶层，所有页面（含 smart.html）都能读。
+         搜索自检（segment/rank）依赖 initAccessories 作用域里的 matchInfo/segmentQuery，
+         仍留在那边挂载；两处都用合并式赋值，谁先执行都不会把对方覆盖掉。 */
+      if (typeof window !== "undefined") {
+        var DGX = window.PCRecoDiag = window.PCRecoDiag || {};
+        /* 配置单每行的目标价（测试与验收读这里，别在测试里复算 —— 复算一份就等于两套实现）。
+           byPart = 行名口径（实际使用值），byCat = 品类中位数兜底。 */
+        DGX.targets = function (planId) {
+          var pl = null;
+          D.plans.forEach(function (p) { if (p.id === planId) pl = p; });
+          return pl ? planPartTargets(pl) : null;
+        };
+        /* 生态判定单测出口：C2 要求「苹果件在苹果主体下不被误杀」，
+           但站内推荐当前挑不到苹果机型（实测 50 组问卷 0 次），端到端不可达，
+           只能在这里直接验判定本身。只读。 */
+        DGX.compat = function (itemName, bodyEco, bodyCatId) {
+          var LIB = (typeof window !== "undefined" && window.PC_MODELS) || {};
+          var hit = null;
+          Object.keys(LIB).forEach(function (k) {
+            (LIB[k] || []).forEach(function (it) { if (!hit && it.name === itemName) hit = it; });
+          });
+          if (!hit) return { found: false };
+          return { found: true, eco: ecoOf(hit), drop: compatDrop(hit, bodyEco, bodyCatId) };
+        };
+        /* 配置单每行的选件结果（26 套方案全覆盖用）。传 opts 可指定 budgetCap / uses / pref，
+           与页面同一份 fullPartRows，不另算一套。 */
+        DGX.rows = function (planId, opts) {
+          var pl = null;
+          D.plans.forEach(function (p) { if (p.id === planId) pl = p; });
+          if (!pl) return null;
+          var rs = fullPartRows(pl, opts || {});
+          return {
+            plan: pl.id,
+            rows: rs.map(function (r) {
+              var it = r.pick && r.pick.item;
+              return {
+                part: r.part, srcPart: r.srcPart || r.part, cat: r.cat ? r.cat.id : "", config: r.config,
+                name: it ? it.name : null, brand: it ? it.brand : null,
+                price: it ? it.price : null,
+                text: r.textPick ? r.textPick.name : null,
+                blocked: r.compatBlocked || 0
+              };
+            }),
+            skipped: (rs.skipped || []).map(function (s2) { return s2.part; }),
+            planParts: (pl.parts || []).map(function (r) { return r[0]; })
+          };
+        };
+      }
+
 })();
