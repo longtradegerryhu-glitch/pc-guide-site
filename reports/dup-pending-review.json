@@ -1,7 +1,11 @@
 {
-  "generatedAt": "2026-10-22T05:47:19.284Z",
+  "generatedAt": "2026-10-22T08:09:30.689Z",
   "source": "js/models-data.js",
-  "highRatioThreshold": 1.5,
+  "threshold": {
+    "midRatio": 1.5,
+    "priceGapPct": 50,
+    "widenedTolerance": 1.05
+  },
   "summary": {
     "total": 1209,
     "groups": 49,
@@ -9,7 +13,9 @@
     "cards": 1160,
     "maxPerGroup": 2,
     "conflict": 17,
-    "highDiff": 5
+    "highDiffDisputed": 11,
+    "highDiffWideOnly": 6,
+    "midRatioHigh": 5
   },
   "groups": [
     {
@@ -43,8 +49,12 @@
       ],
       "gap": 400,
       "gapPct": 404,
+      "priceGapPct": 808,
+      "midRatio": 5.84,
+      "selfSpan": 1.64,
+      "dispute": "disputed",
       "conflict": true,
-      "hint": "两条区间不重叠且倍率 5.84×，不可能同时为真，需确认渠道与版本后删掉错的那条"
+      "hint": "两条区间不重叠且中点比 5.84×，不可能同时为真，需确认渠道与版本后删掉错的那条"
     },
     {
       "catId": "earphone",
@@ -77,8 +87,12 @@
       ],
       "gap": 261,
       "gapPct": 24.8,
+      "priceGapPct": 166,
+      "midRatio": 1.77,
+      "selfSpan": 1.56,
+      "dispute": "disputed",
       "conflict": true,
-      "hint": "两条区间不重叠且倍率 1.77×，不可能同时为真，需确认渠道与版本后删掉错的那条"
+      "hint": "两条区间不重叠且中点比 1.77×，不可能同时为真，需确认渠道与版本后删掉错的那条"
     },
     {
       "catId": "earphone",
@@ -111,8 +125,12 @@
       ],
       "gap": 500,
       "gapPct": 25,
+      "priceGapPct": 110,
+      "midRatio": 1.6,
+      "selfSpan": 1.4,
+      "dispute": "disputed",
       "conflict": true,
-      "hint": "两条区间不重叠且倍率 1.6×，不可能同时为真，需确认渠道与版本后删掉错的那条"
+      "hint": "两条区间不重叠且中点比 1.6×，不可能同时为真，需确认渠道与版本后删掉错的那条"
     },
     {
       "catId": "gpu",
@@ -145,8 +163,12 @@
       ],
       "gap": 1299,
       "gapPct": 50,
+      "priceGapPct": 88,
+      "midRatio": 1.58,
+      "selfSpan": 1.38,
+      "dispute": "disputed",
       "conflict": true,
-      "hint": "两条区间不重叠且倍率 1.58×，不可能同时为真，需确认渠道与版本后删掉错的那条"
+      "hint": "两条区间不重叠且中点比 1.58×，不可能同时为真，需确认渠道与版本后删掉错的那条"
     },
     {
       "catId": "earphone",
@@ -179,8 +201,12 @@
       ],
       "gap": 400,
       "gapPct": 50.1,
+      "priceGapPct": 88,
+      "midRatio": 1.58,
+      "selfSpan": 1.38,
+      "dispute": "disputed",
       "conflict": true,
-      "hint": "两条区间不重叠且倍率 1.58×，不可能同时为真，需确认渠道与版本后删掉错的那条"
+      "hint": "两条区间不重叠且中点比 1.58×，不可能同时为真，需确认渠道与版本后删掉错的那条"
     },
     {
       "catId": "cpu",
@@ -213,8 +239,12 @@
       ],
       "gap": 1800,
       "gapPct": 42.9,
+      "priceGapPct": 60,
+      "midRatio": 1.47,
+      "selfSpan": 1.17,
+      "dispute": "disputed",
       "conflict": true,
-      "hint": "区间不重叠但差距不大（1.47×），大概率是不同渠道报价，确认后保留并集"
+      "hint": "区间不重叠但差距不大（中点比 1.47×），大概率是不同渠道报价，确认后保留并集"
     },
     {
       "catId": "ssd",
@@ -247,8 +277,12 @@
       ],
       "gap": 211,
       "gapPct": 33,
+      "priceGapPct": 56,
+      "midRatio": 1.45,
+      "selfSpan": 1.18,
+      "dispute": "disputed",
       "conflict": true,
-      "hint": "区间不重叠但差距不大（1.45×），大概率是不同渠道报价，确认后保留并集"
+      "hint": "区间不重叠但差距不大（中点比 1.45×），大概率是不同渠道报价，确认后保留并集"
     },
     {
       "catId": "tablet",
@@ -281,8 +315,12 @@
       ],
       "gap": 0,
       "gapPct": 0,
+      "priceGapPct": 103,
+      "midRatio": 1.45,
+      "selfSpan": 1.56,
+      "dispute": "disputed",
       "conflict": true,
-      "hint": "区间不重叠但差距不大（1.45×），大概率是不同渠道报价，确认后保留并集"
+      "hint": "区间不重叠但差距不大（中点比 1.45×），大概率是不同渠道报价，确认后保留并集"
     },
     {
       "catId": "laptop",
@@ -315,8 +353,12 @@
       ],
       "gap": 475,
       "gapPct": 13.2,
+      "priceGapPct": 61,
+      "midRatio": 1.36,
+      "selfSpan": 1.35,
+      "dispute": "disputed",
       "conflict": true,
-      "hint": "区间不重叠但差距不大（1.36×），大概率是不同渠道报价，确认后保留并集"
+      "hint": "区间不重叠但差距不大（中点比 1.36×），大概率是不同渠道报价，确认后保留并集"
     },
     {
       "catId": "gpu",
@@ -349,8 +391,12 @@
       ],
       "gap": 1399,
       "gapPct": 22.2,
+      "priceGapPct": 49,
+      "midRatio": 1.33,
+      "selfSpan": 1.14,
+      "dispute": "none",
       "conflict": true,
-      "hint": "区间不重叠但差距不大（1.33×），大概率是不同渠道报价，确认后保留并集"
+      "hint": "区间不重叠但差距不大（中点比 1.33×），大概率是不同渠道报价，确认后保留并集"
     },
     {
       "catId": "earphone",
@@ -383,8 +429,12 @@
       ],
       "gap": 0,
       "gapPct": 0,
+      "priceGapPct": 67,
+      "midRatio": 1.31,
+      "selfSpan": 1.43,
+      "dispute": "disputed",
       "conflict": true,
-      "hint": "区间不重叠但差距不大（1.31×），大概率是不同渠道报价，确认后保留并集"
+      "hint": "区间不重叠但差距不大（中点比 1.31×），大概率是不同渠道报价，确认后保留并集"
     },
     {
       "catId": "earphone",
@@ -417,6 +467,10 @@
       ],
       "gap": -251,
       "gapPct": -12,
+      "priceGapPct": 67,
+      "midRatio": 1.25,
+      "selfSpan": 1.52,
+      "dispute": "disputed",
       "conflict": false,
       "hint": "两条区间重叠，判为重复录入，合并即可"
     },
@@ -451,8 +505,12 @@
       ],
       "gap": 200,
       "gapPct": 7.8,
+      "priceGapPct": 45,
+      "midRatio": 1.24,
+      "selfSpan": 1.22,
+      "dispute": "none",
       "conflict": true,
-      "hint": "区间不重叠但差距不大（1.24×），大概率是不同渠道报价，确认后保留并集"
+      "hint": "区间不重叠但差距不大（中点比 1.24×），大概率是不同渠道报价，确认后保留并集"
     },
     {
       "catId": "gpu",
@@ -485,8 +543,12 @@
       ],
       "gap": 29,
       "gapPct": 1.3,
+      "priceGapPct": 47,
+      "midRatio": 1.22,
+      "selfSpan": 1.24,
+      "dispute": "none",
       "conflict": true,
-      "hint": "区间不重叠但差距不大（1.22×），大概率是不同渠道报价，确认后保留并集"
+      "hint": "区间不重叠但差距不大（中点比 1.22×），大概率是不同渠道报价，确认后保留并集"
     },
     {
       "catId": "gpu",
@@ -519,6 +581,10 @@
       ],
       "gap": -1000,
       "gapPct": -32.3,
+      "priceGapPct": 99,
+      "midRatio": 1.19,
+      "selfSpan": 1.99,
+      "dispute": "wide-only",
       "conflict": false,
       "hint": "两条区间重叠，判为重复录入，合并即可"
     },
@@ -553,6 +619,10 @@
       ],
       "gap": -435,
       "gapPct": -25.6,
+      "priceGapPct": 71,
+      "midRatio": 1.17,
+      "selfSpan": 1.71,
+      "dispute": "wide-only",
       "conflict": false,
       "hint": "两条区间重叠，判为重复录入，合并即可"
     },
@@ -587,8 +657,12 @@
       ],
       "gap": 71,
       "gapPct": 8.6,
+      "priceGapPct": 21,
+      "midRatio": 1.15,
+      "selfSpan": 1.11,
+      "dispute": "none",
       "conflict": true,
-      "hint": "区间不重叠但差距不大（1.15×），大概率是不同渠道报价，确认后保留并集"
+      "hint": "区间不重叠但差距不大（中点比 1.15×），大概率是不同渠道报价，确认后保留并集"
     },
     {
       "catId": "cooler",
@@ -621,8 +695,12 @@
       ],
       "gap": 0,
       "gapPct": 0,
+      "priceGapPct": 33,
+      "midRatio": 1.15,
+      "selfSpan": 1.17,
+      "dispute": "none",
       "conflict": true,
-      "hint": "区间不重叠但差距不大（1.15×），大概率是不同渠道报价，确认后保留并集"
+      "hint": "区间不重叠但差距不大（中点比 1.15×），大概率是不同渠道报价，确认后保留并集"
     },
     {
       "catId": "earphone",
@@ -655,6 +733,10 @@
       ],
       "gap": -100,
       "gapPct": -16.7,
+      "priceGapPct": 50,
+      "midRatio": 1.15,
+      "selfSpan": 1.5,
+      "dispute": "wide-only",
       "conflict": false,
       "hint": "两条区间重叠，判为重复录入，合并即可"
     },
@@ -689,6 +771,10 @@
       ],
       "gap": -200,
       "gapPct": -8.8,
+      "priceGapPct": 38,
+      "midRatio": 1.14,
+      "selfSpan": 1.31,
+      "dispute": "none",
       "conflict": false,
       "hint": "两条区间重叠，判为重复录入，合并即可"
     },
@@ -723,6 +809,10 @@
       ],
       "gap": -21,
       "gapPct": -15,
+      "priceGapPct": 42,
+      "midRatio": 1.12,
+      "selfSpan": 1.29,
+      "dispute": "none",
       "conflict": false,
       "hint": "两条区间重叠，判为重复录入，合并即可"
     },
@@ -757,6 +847,10 @@
       ],
       "gap": -300,
       "gapPct": -30,
+      "priceGapPct": 62,
+      "midRatio": 1.11,
+      "selfSpan": 1.62,
+      "dispute": "wide-only",
       "conflict": false,
       "hint": "两条区间重叠，判为重复录入，合并即可"
     },
@@ -791,8 +885,12 @@
       ],
       "gap": 22,
       "gapPct": 1.5,
+      "priceGapPct": 18,
+      "midRatio": 1.1,
+      "selfSpan": 1.17,
+      "dispute": "none",
       "conflict": true,
-      "hint": "区间不重叠但差距不大（1.1×），大概率是不同渠道报价，确认后保留并集"
+      "hint": "区间不重叠但差距不大（中点比 1.1×），大概率是不同渠道报价，确认后保留并集"
     },
     {
       "catId": "cpu",
@@ -825,6 +923,10 @@
       ],
       "gap": -299,
       "gapPct": -8.1,
+      "priceGapPct": 30,
+      "midRatio": 1.1,
+      "selfSpan": 1.27,
+      "dispute": "none",
       "conflict": false,
       "hint": "两条区间重叠，判为重复录入，合并即可"
     },
@@ -859,6 +961,10 @@
       ],
       "gap": 0,
       "gapPct": 0,
+      "priceGapPct": 22,
+      "midRatio": 1.1,
+      "selfSpan": 1.22,
+      "dispute": "none",
       "conflict": false,
       "hint": "一条是单点价且落在另一条区间内，属写法差异，不是矛盾"
     },
@@ -893,6 +999,10 @@
       ],
       "gap": -99,
       "gapPct": -3.5,
+      "priceGapPct": 24,
+      "midRatio": 1.1,
+      "selfSpan": 1.21,
+      "dispute": "none",
       "conflict": false,
       "hint": "两条区间重叠，判为重复录入，合并即可"
     },
@@ -927,6 +1037,10 @@
       ],
       "gap": -601,
       "gapPct": -7,
+      "priceGapPct": 28,
+      "midRatio": 1.1,
+      "selfSpan": 1.22,
+      "dispute": "none",
       "conflict": false,
       "hint": "两条区间重叠，判为重复录入，合并即可"
     },
@@ -961,6 +1075,10 @@
       ],
       "gap": -150,
       "gapPct": -11.5,
+      "priceGapPct": 31,
+      "midRatio": 1.09,
+      "selfSpan": 1.31,
+      "dispute": "none",
       "conflict": false,
       "hint": "两条区间重叠，判为重复录入，合并即可"
     },
@@ -995,8 +1113,12 @@
       ],
       "gap": 99,
       "gapPct": 3.4,
+      "priceGapPct": 14,
+      "midRatio": 1.08,
+      "selfSpan": 1.1,
+      "dispute": "none",
       "conflict": true,
-      "hint": "区间不重叠但差距不大（1.08×），大概率是不同渠道报价，确认后保留并集"
+      "hint": "区间不重叠但差距不大（中点比 1.08×），大概率是不同渠道报价，确认后保留并集"
     },
     {
       "catId": "gpu",
@@ -1029,6 +1151,10 @@
       ],
       "gap": -694,
       "gapPct": -8.1,
+      "priceGapPct": 22,
+      "midRatio": 1.07,
+      "selfSpan": 1.21,
+      "dispute": "none",
       "conflict": false,
       "hint": "两条区间重叠，判为重复录入，合并即可"
     },
@@ -1063,6 +1189,10 @@
       ],
       "gap": -100,
       "gapPct": -14.5,
+      "priceGapPct": 30,
+      "midRatio": 1.07,
+      "selfSpan": 1.29,
+      "dispute": "none",
       "conflict": false,
       "hint": "两条区间重叠，判为重复录入，合并即可"
     },
@@ -1097,6 +1227,10 @@
       ],
       "gap": -151,
       "gapPct": -9.7,
+      "priceGapPct": 22,
+      "midRatio": 1.06,
+      "selfSpan": 1.19,
+      "dispute": "none",
       "conflict": false,
       "hint": "两条区间重叠，判为重复录入，合并即可"
     },
@@ -1131,6 +1265,10 @@
       ],
       "gap": -50,
       "gapPct": -8.3,
+      "priceGapPct": 20,
+      "midRatio": 1.06,
+      "selfSpan": 1.2,
+      "dispute": "none",
       "conflict": false,
       "hint": "两条区间重叠，判为重复录入，合并即可"
     },
@@ -1165,6 +1303,10 @@
       ],
       "gap": -100,
       "gapPct": -38.6,
+      "priceGapPct": 54,
+      "midRatio": 1.06,
+      "selfSpan": 1.54,
+      "dispute": "wide-only",
       "conflict": false,
       "hint": "两条区间重叠，判为重复录入，合并即可"
     },
@@ -1199,6 +1341,10 @@
       ],
       "gap": -4000,
       "gapPct": -33.3,
+      "priceGapPct": 47,
+      "midRatio": 1.06,
+      "selfSpan": 1.47,
+      "dispute": "none",
       "conflict": false,
       "hint": "两条区间重叠，判为重复录入，合并即可"
     },
@@ -1233,6 +1379,10 @@
       ],
       "gap": -399,
       "gapPct": -11.4,
+      "priceGapPct": 20,
+      "midRatio": 1.04,
+      "selfSpan": 1.17,
+      "dispute": "none",
       "conflict": false,
       "hint": "两条区间重叠，判为重复录入，合并即可"
     },
@@ -1267,6 +1417,10 @@
       ],
       "gap": -474,
       "gapPct": -12.5,
+      "priceGapPct": 24,
+      "midRatio": 1.04,
+      "selfSpan": 1.24,
+      "dispute": "none",
       "conflict": false,
       "hint": "两条区间重叠，判为重复录入，合并即可"
     },
@@ -1301,6 +1455,10 @@
       ],
       "gap": 0,
       "gapPct": 0,
+      "priceGapPct": 6,
+      "midRatio": 1.02,
+      "selfSpan": 1.06,
+      "dispute": "none",
       "conflict": false,
       "hint": "一条是单点价且落在另一条区间内，属写法差异，不是矛盾"
     },
@@ -1335,6 +1493,10 @@
       ],
       "gap": 0,
       "gapPct": 0,
+      "priceGapPct": 12,
+      "midRatio": 1.02,
+      "selfSpan": 1.12,
+      "dispute": "none",
       "conflict": false,
       "hint": "一条是单点价且落在另一条区间内，属写法差异，不是矛盾"
     },
@@ -1369,6 +1531,10 @@
       ],
       "gap": -148,
       "gapPct": -12.7,
+      "priceGapPct": 15,
+      "midRatio": 1.01,
+      "selfSpan": 1.15,
+      "dispute": "none",
       "conflict": false,
       "hint": "两条区间重叠，判为重复录入，合并即可"
     },
@@ -1403,6 +1569,10 @@
       ],
       "gap": -3488,
       "gapPct": -28.4,
+      "priceGapPct": 30,
+      "midRatio": 1.01,
+      "selfSpan": 1.3,
+      "dispute": "none",
       "conflict": false,
       "hint": "两条区间重叠，判为重复录入，合并即可"
     },
@@ -1437,6 +1607,10 @@
       ],
       "gap": -300,
       "gapPct": -20.3,
+      "priceGapPct": 34,
+      "midRatio": 1.01,
+      "selfSpan": 1.34,
+      "dispute": "none",
       "conflict": false,
       "hint": "两条区间重叠，判为重复录入，合并即可"
     },
@@ -1471,6 +1645,10 @@
       ],
       "gap": 0,
       "gapPct": 0,
+      "priceGapPct": 3,
+      "midRatio": 1,
+      "selfSpan": 1.03,
+      "dispute": "none",
       "conflict": false,
       "hint": "一条是单点价且落在另一条区间内，属写法差异，不是矛盾"
     },
@@ -1505,6 +1683,10 @@
       ],
       "gap": -705,
       "gapPct": -17.7,
+      "priceGapPct": 18,
+      "midRatio": 1,
+      "selfSpan": 1.18,
+      "dispute": "none",
       "conflict": false,
       "hint": "两条区间重叠，判为重复录入，合并即可"
     },
@@ -1539,6 +1721,10 @@
       ],
       "gap": -1000,
       "gapPct": -20,
+      "priceGapPct": 20,
+      "midRatio": 1,
+      "selfSpan": 1.2,
+      "dispute": "none",
       "conflict": false,
       "hint": "两条区间重叠，判为重复录入，合并即可"
     },
@@ -1573,6 +1759,10 @@
       ],
       "gap": -4500,
       "gapPct": -69.2,
+      "priceGapPct": 69,
+      "midRatio": 1,
+      "selfSpan": 1.69,
+      "dispute": "wide-only",
       "conflict": false,
       "hint": "两条区间重叠，判为重复录入，合并即可"
     },
@@ -1607,6 +1797,10 @@
       ],
       "gap": -1400,
       "gapPct": -46.7,
+      "priceGapPct": 47,
+      "midRatio": 1,
+      "selfSpan": 1.47,
+      "dispute": "none",
       "conflict": false,
       "hint": "两条区间重叠，判为重复录入，合并即可"
     },
@@ -1641,6 +1835,10 @@
       ],
       "gap": -50,
       "gapPct": -5.3,
+      "priceGapPct": 5,
+      "midRatio": 1,
+      "selfSpan": 1.05,
+      "dispute": "none",
       "conflict": false,
       "hint": "两条区间重叠，判为重复录入，合并即可"
     },
@@ -1675,6 +1873,10 @@
       ],
       "gap": -100,
       "gapPct": -20,
+      "priceGapPct": 20,
+      "midRatio": 1,
+      "selfSpan": 1.2,
+      "dispute": "none",
       "conflict": false,
       "hint": "两条区间重叠，判为重复录入，合并即可"
     }
