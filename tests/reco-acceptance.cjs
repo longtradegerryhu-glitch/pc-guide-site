@@ -138,6 +138,8 @@ function readResult(dom) {
     resTotalText,
     skipNote: ((D.querySelector('.res-skip-note') || {}).textContent || '').replace(/\s+/g, ' ').trim(),
     warnNote: ((D.querySelector('.res-skip-warn') || {}).textContent || '').replace(/\s+/g, ' ').trim(),
+    /* ORD-13 §2：重点件全部落空时页面会有这条明示；note 判定要用它 */
+    focusMiss: ((D.querySelector('.res-focus-miss') || {}).textContent || '').replace(/\s+/g, ' ').trim(),
     moreSummary: ((D.querySelector('details.fp-more summary') || {}).textContent || '').trim(),
     profile: [...D.querySelectorAll('.result-persona .tag-pill')].map(p => p.textContent.trim()),
     pitfalls: [...D.querySelectorAll('.pitfall')].map(p => p.textContent.trim()),
@@ -670,14 +672,19 @@ async function runQuiz(dom, answers) {
         if (visA === visB) problems.push({ err: keys[i] + ' 与 ' + keys[j] + ' 的可见结构完全相同', 结构: visA });
       }
     }
-    /* 记录（不判 FAIL）：focus 声明件与方案无交集 —— 系统没给出任何提示，属可用性缺口 */
+    /* 记录（不判 FAIL，ORD-13 §2 改判）：无交集 **且** 结果页没有 .res-focus-miss 明示 才记。
+       原判定只看「无交集」，功能修好后仍照报，等于把过期结论写死在文本里。
+       另外改为跑「该 focus 自己那一轮」：用 p_body 的 result 判别的 focus 的明示会取错页面。 */
     phoneFocusOpts.forEach(o => {
-      const planParts = runs.p_body.spec.map(x => x.part);
+      const run = runs[o.id] || runs.p_body;
+      const planParts = run.spec.map(x => x.part);
       const inter = (o.parts || []).filter(p => planParts.indexOf(p) > -1);
-      if (!inter.length) notes.push({
+      if (inter.length) return;                      /* 有交集 → 不记 */
+      if (run.focusMiss) return;                     /* 已明示不可得 → 不记 */
+      notes.push({
         focus: o.id, 标签: o.label, 声明件: o.parts,
-        现象: '该方案里一件都没有 → 首屏为空，全部部件被折叠，用户勾的重点一件未出现',
-        首屏: hotOf(runs.p_body) || '(空)'
+        现象: '方案内无该重点件，且结果页没有 .res-focus-miss 明示',
+        首屏: hotOf(run) || '(空)'
       });
     });
 
@@ -693,7 +700,11 @@ async function runQuiz(dom, answers) {
     };
   });
 
-  /* ===== A15 逐题对照实验：10 题每题单独改变时结果都变化 ===== */
+  /* ===== A15 逐题对照实验：10 题每题单独改变时结果都变化 =====
+   * 适用范围：**有货档位**。本题组 alt 走桌面 alt 组合，那一档库内有货，
+   * 所以「结果必变」在此组合下成立。实现侧口径是「变 或 明示无货」取并集
+   * （更严：额外要求站点有明示机制）；换成无货组合（如木质机箱）时本断言不适用，
+   * FAIL 也不代表回归。判据切换需总控签，本脚本暂按原判据跑。 */
   await step('A15', '逐题对照实验：10 题每题单独改变，结果都变化', async () => {
     const alt = {
       form: 'laptop', use: 'create', budget: 'b12000', pref: 'rgb', look: 'seaview',

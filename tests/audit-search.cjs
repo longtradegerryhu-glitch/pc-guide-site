@@ -140,7 +140,21 @@ async function makeUiProbe(jsdomModule) {
 
   console.log(`探针口径：${mode}\n`);
 
-  const { items, stats } = await runChecks({ models, searchProbe: probe });
+  /* PART_CAT 在浏览器脚本里（package.json 是 type=module，不能 require），用正则切出对象字面量 */
+  const PART_CAT = (() => {
+    const src = fs.readFileSync(ROOT + 'js/recommend.js', 'utf8');
+    const m = src.match(/var PART_CAT = \{[\s\S]*?\};/);
+    if (!m) throw new Error('js/recommend.js 里找不到 PART_CAT');
+    return vm.runInNewContext('(' + m[0].replace(/^var PART_CAT = /, '').replace(/;$/, '') + ')');
+  })();
+  const DATA = ctx.window.PC_DATA || {};
+
+  const { items, stats } = await runChecks({
+    models, searchProbe: probe,
+    plans: DATA.plans || [],
+    partCat: PART_CAT,
+    catIds: (DATA.categories || []).map(c => c.id)
+  });
 
   let pass = 0, fail = 0, skip = 0;
   items.forEach(it => {

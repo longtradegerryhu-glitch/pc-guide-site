@@ -48,6 +48,10 @@ const BASE = {
   modelQuery: '5070 Ti',  // 型号词：必须存在软备注层，证明分层生效
 };
 
+/* PART_CAT 里允许出现的「虚拟品类 id」：不对应真实 category，只用来让行名能落地。
+   登记在此等于承认它不是品类；新增必须显式加进来，否则绕不开 plans:partcat-target。 */
+const VIRTUAL_CAT = ['laptop-cool'];
+
 const HARD = ['name', 'brand', 'model', 'searchName', 'style', 'specs'];
 const SOFT = ['valueNote', 'compat'];
 
@@ -132,7 +136,7 @@ function priceStats(models) {
  * 返回 [{ id, name, ok, actual, base, kind }]，调用方决定如何展示与退出码。
  * 只有 ok === false 计为 FAIL。
  */
-async function runChecks({ models, searchProbe, base = BASE }) {
+async function runChecks({ models, searchProbe, base = BASE, plans, partCat, catIds }) {
   const items = [];
   /* kind 显式标注，不靠 id 前缀推断 —— 否则 model:type（数据）会被 model:layer（搜索）的命名规则误伤 */
   const add = (id, name, ok, actual, b, kind) => items.push({ id, name, ok: !!ok, actual, base: b, kind: kind || 'data' });
@@ -178,6 +182,27 @@ async function runChecks({ models, searchProbe, base = BASE }) {
   add('model:type', 'model 全为字符串', p.numModel === 0, p.numModel, 0);
   add('price:single', `单点价格占比 <= ${base.singlePricePct}%`, p.singlePct <= base.singlePricePct,
     Number(p.singlePct.toFixed(1)), base.singlePricePct + '%');
+
+  /* 6. 配置单行名 ↔ PART_CAT（ORD-13 §6，纯校验，零数据改动）
+     行名对不上 → planPartTargets 里 `if (!cid) return;` 静默跳过，该件拿不到目标价，
+     配件区按默认档推。静默跳过是最难查的一类错，所以用闸门拦。 */
+  if (plans && partCat && catIds) {
+    const badRows = [];
+    (plans || []).forEach(pl => (pl.parts || []).forEach(r => {
+      if (!partCat[r[0]]) badRows.push((pl.id || pl.name) + ':' + r[0]);
+    }));
+    add('plans:partcat', '配置单每个行名都在 PART_CAT 内', badRows.length === 0,
+      badRows.length ? (JSON.stringify(badRows.slice(0, 8)) + (badRows.length > 8 ? ' …共 ' + badRows.length + ' 处' : '')) : '0 个未映射行名',
+      '0 个未映射行名');
+
+    const dangling = Object.keys(partCat).filter(k =>
+      catIds.indexOf(partCat[k]) < 0 && VIRTUAL_CAT.indexOf(partCat[k]) < 0);
+    add('plans:partcat-target', 'PART_CAT 取值都指向真实品类（虚拟 id 须在 VIRTUAL_CAT 登记）',
+      dangling.length === 0, dangling.length ? dangling : '0 个悬空映射', '0 个悬空映射');
+  } else {
+    /* 纯 models 调用（变异自测）没有 data.js，本项不适用，不计 FAIL */
+    add('plans:partcat', '配置单每个行名都在 PART_CAT 内', true, '未提供 plans/partCat，跳过', '0 个未映射行名');
+  }
 
   return { items, stats: { dup: d, presented: p2, price: p, specsBad: bad } };
 }
