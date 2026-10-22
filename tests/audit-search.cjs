@@ -177,7 +177,8 @@ async function makeUiProbe(jsdomModule) {
     models, searchProbe: probe,
     plans: DATA.plans || [],
     partCat: PART_CAT,
-    catIds: (DATA.categories || []).map(c => c.id)
+    catIds: (DATA.categories || []).map(c => c.id),
+    quiz: DATA.quiz || []
   });
 
   let pass = 0, fail = 0, skip = 0;

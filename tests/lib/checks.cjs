@@ -136,7 +136,7 @@ function priceStats(models) {
  * 返回 [{ id, name, ok, actual, base, kind }]，调用方决定如何展示与退出码。
  * 只有 ok === false 计为 FAIL。
  */
-async function runChecks({ models, searchProbe, base = BASE, plans, partCat, catIds }) {
+async function runChecks({ models, searchProbe, base = BASE, plans, partCat, catIds, quiz }) {
   const items = [];
   /* kind 显式标注，不靠 id 前缀推断 —— 否则 model:type（数据）会被 model:layer（搜索）的命名规则误伤 */
   const add = (id, name, ok, actual, b, kind) => items.push({ id, name, ok: !!ok, actual, base: b, kind: kind || 'data' });
@@ -202,6 +202,21 @@ async function runChecks({ models, searchProbe, base = BASE, plans, partCat, cat
   } else {
     /* 纯 models 调用（变异自测）没有 data.js，本项不适用，不计 FAIL */
     add('plans:partcat', '配置单每个行名都在 PART_CAT 内', true, '未提供 plans/partCat，跳过', '0 个未映射行名');
+  }
+
+  /* 问卷选项的 parts 白名单同样必须全都映射得到。
+     2026-10-22 发现的真实缺陷：dock / existing.dock / t_dock 的 parts 里写着「扩展埂」，
+     PART_CAT 查不到 → 这一项永久失效，但因为数组第一个「拓展坞」已经命中，症状被完全掩盖。
+     plans:partcat 只查 plan.parts 的行名，查不到这种藏在选项白名单里的死值。 */
+  if (quiz && quiz.length && partCat) {
+    const badOpt = [];
+    quiz.forEach(q => (q.options || []).forEach(o => (o.parts || []).forEach(pn => {
+      if (!partCat[pn]) badOpt.push(q.id + '/' + o.id + ':' + pn);
+    })));
+    add('quiz:optparts', '问卷选项的 parts 每项都在 PART_CAT 内', badOpt.length === 0,
+      badOpt.length ? JSON.stringify(badOpt.slice(0, 8)) : '0 个未映射部件名', '0 个未映射部件名');
+  } else {
+    add('quiz:optparts', '问卷选项的 parts 每项都在 PART_CAT 内', true, '未提供 quiz，跳过', '0 个未映射部件名');
   }
 
   return { items, stats: { dup: d, presented: p2, price: p, specsBad: bad } };
