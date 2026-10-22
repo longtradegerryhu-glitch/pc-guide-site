@@ -1,0 +1,1598 @@
+{
+ "cpu.socket": {
+  "hit": 61,
+  "total": 61,
+  "pct": 100,
+  "req": 1,
+  "softOnly": 0
+ },
+ "cpu.cores": {
+  "hit": 60,
+  "total": 61,
+  "pct": 98.4,
+  "req": 1,
+  "softOnly": 0
+ },
+ "cpu.threads": {
+  "hit": 60,
+  "total": 61,
+  "pct": 98.4,
+  "req": 1,
+  "softOnly": 0
+ },
+ "cpu.pCores": {
+  "hit": 7,
+  "total": 61,
+  "pct": 11.5,
+  "req": 0,
+  "softOnly": 0
+ },
+ "cpu.eCores": {
+  "hit": 3,
+  "total": 61,
+  "pct": 4.9,
+  "req": 0,
+  "softOnly": 1
+ },
+ "cpu.boostClock": {
+  "hit": 20,
+  "total": 61,
+  "pct": 32.8,
+  "req": 1,
+  "softOnly": 0
+ },
+ "cpu.tdp": {
+  "hit": 54,
+  "total": 61,
+  "pct": 88.5,
+  "req": 1,
+  "softOnly": 0
+ },
+ "cpu.lithography": {
+  "hit": 9,
+  "total": 61,
+  "pct": 14.8,
+  "req": 0,
+  "softOnly": 0
+ },
+ "cpu.igpu": {
+  "hit": 25,
+  "total": 61,
+  "pct": 41,
+  "req": 1,
+  "softOnly": 6
+ },
+ "cpu.arch": {
+  "hit": 20,
+  "total": 61,
+  "pct": 32.8,
+  "req": 1,
+  "softOnly": 24
+ },
+ "cpu.overclock": {
+  "hit": 5,
+  "total": 61,
+  "pct": 8.2,
+  "req": 0,
+  "softOnly": 1
+ },
+ "mobo.socket": {
+  "hit": 57,
+  "total": 57,
+  "pct": 100,
+  "req": 1,
+  "softOnly": 0
+ },
+ "mobo.chipset": {
+  "hit": 57,
+  "total": 57,
+  "pct": 100,
+  "req": 1,
+  "softOnly": 0
+ },
+ "mobo.formFactor": {
+  "hit": 57,
+  "total": 57,
+  "pct": 100,
+  "req": 1,
+  "softOnly": 0
+ },
+ "mobo.memType": {
+  "hit": 36,
+  "total": 57,
+  "pct": 63.2,
+  "req": 1,
+  "softOnly": 5
+ },
+ "mobo.memMax": {
+  "hit": 3,
+  "total": 57,
+  "pct": 5.3,
+  "req": 0,
+  "softOnly": 2
+ },
+ "mobo.pcieVer": {
+  "hit": 3,
+  "total": 57,
+  "pct": 5.3,
+  "req": 0,
+  "softOnly": 20
+ },
+ "mobo.m2Slots": {
+  "hit": 57,
+  "total": 57,
+  "pct": 100,
+  "req": 1,
+  "softOnly": 0
+ },
+ "mobo.vrmPhases": {
+  "hit": 21,
+  "total": 57,
+  "pct": 36.8,
+  "req": 0,
+  "softOnly": 0
+ },
+ "mobo.lan": {
+  "hit": 19,
+  "total": 57,
+  "pct": 33.3,
+  "req": 1,
+  "softOnly": 1
+ },
+ "mobo.wifi": {
+  "hit": 56,
+  "total": 57,
+  "pct": 98.2,
+  "req": 1,
+  "softOnly": 0
+ },
+ "mobo.usb4": {
+  "hit": 5,
+  "total": 57,
+  "pct": 8.8,
+  "req": 0,
+  "softOnly": 0
+ },
+ "ram.gen": {
+  "hit": 52,
+  "total": 52,
+  "pct": 100,
+  "req": 1,
+  "softOnly": 0
+ },
+ "ram.capacity": {
+  "hit": 50,
+  "total": 52,
+  "pct": 96.2,
+  "req": 1,
+  "softOnly": 1
+ },
+ "ram.kit": {
+  "hit": 38,
+  "total": 52,
+  "pct": 73.1,
+  "req": 1,
+  "softOnly": 8
+ },
+ "ram.speed": {
+  "hit": 40,
+  "total": 52,
+  "pct": 76.9,
+  "req": 1,
+  "softOnly": 0
+ },
+ "ram.cl": {
+  "hit": 51,
+  "total": 52,
+  "pct": 98.1,
+  "req": 1,
+  "softOnly": 0
+ },
+ "ram.form": {
+  "hit": 52,
+  "total": 52,
+  "pct": 100,
+  "req": 1,
+  "softOnly": 0
+ },
+ "ram.voltage": {
+  "hit": 2,
+  "total": 52,
+  "pct": 3.8,
+  "req": 0,
+  "softOnly": 0
+ },
+ "ram.height": {
+  "hit": 3,
+  "total": 52,
+  "pct": 5.8,
+  "req": 0,
+  "softOnly": 0
+ },
+ "ram.heatspreader": {
+  "hit": 24,
+  "total": 52,
+  "pct": 46.2,
+  "req": 0,
+  "softOnly": 2
+ },
+ "ram.die": {
+  "hit": 16,
+  "total": 52,
+  "pct": 30.8,
+  "req": 0,
+  "softOnly": 0
+ },
+ "gpu.vram": {
+  "hit": 61,
+  "total": 61,
+  "pct": 100,
+  "req": 1,
+  "softOnly": 0
+ },
+ "gpu.vramType": {
+  "hit": 60,
+  "total": 61,
+  "pct": 98.4,
+  "req": 1,
+  "softOnly": 0
+ },
+ "gpu.busWidth": {
+  "hit": 27,
+  "total": 61,
+  "pct": 44.3,
+  "req": 1,
+  "softOnly": 0
+ },
+ "gpu.cuda": {
+  "hit": 8,
+  "total": 61,
+  "pct": 13.1,
+  "req": 0,
+  "softOnly": 0
+ },
+ "gpu.tdp": {
+  "hit": 38,
+  "total": 61,
+  "pct": 62.3,
+  "req": 1,
+  "softOnly": 18
+ },
+ "gpu.powerConn": {
+  "hit": 4,
+  "total": 61,
+  "pct": 6.6,
+  "req": 1,
+  "softOnly": 5
+ },
+ "gpu.length": {
+  "hit": 2,
+  "total": 61,
+  "pct": 3.3,
+  "req": 0,
+  "softOnly": 0
+ },
+ "gpu.slots": {
+  "hit": 0,
+  "total": 61,
+  "pct": 0,
+  "req": 0,
+  "softOnly": 0
+ },
+ "gpu.outputs": {
+  "hit": 4,
+  "total": 61,
+  "pct": 6.6,
+  "req": 1,
+  "softOnly": 0
+ },
+ "gpu.recPSU": {
+  "hit": 1,
+  "total": 61,
+  "pct": 1.6,
+  "req": 0,
+  "softOnly": 0
+ },
+ "gpu.arch": {
+  "hit": 16,
+  "total": 61,
+  "pct": 26.2,
+  "req": 0,
+  "softOnly": 7
+ },
+ "ssd.form": {
+  "hit": 43,
+  "total": 53,
+  "pct": 81.1,
+  "req": 1,
+  "softOnly": 8
+ },
+ "ssd.ifaceVer": {
+  "hit": 40,
+  "total": 53,
+  "pct": 75.5,
+  "req": 1,
+  "softOnly": 0
+ },
+ "ssd.capacity": {
+  "hit": 53,
+  "total": 53,
+  "pct": 100,
+  "req": 1,
+  "softOnly": 0
+ },
+ "ssd.nand": {
+  "hit": 44,
+  "total": 53,
+  "pct": 83,
+  "req": 1,
+  "softOnly": 0
+ },
+ "ssd.dram": {
+  "hit": 42,
+  "total": 53,
+  "pct": 79.2,
+  "req": 1,
+  "softOnly": 1
+ },
+ "ssd.seqRead": {
+  "hit": 43,
+  "total": 53,
+  "pct": 81.1,
+  "req": 1,
+  "softOnly": 0
+ },
+ "ssd.seqWrite": {
+  "hit": 0,
+  "total": 53,
+  "pct": 0,
+  "req": 0,
+  "softOnly": 0
+ },
+ "ssd.tbw": {
+  "hit": 7,
+  "total": 53,
+  "pct": 13.2,
+  "req": 0,
+  "softOnly": 0
+ },
+ "ssd.warranty": {
+  "hit": 40,
+  "total": 53,
+  "pct": 75.5,
+  "req": 1,
+  "softOnly": 0
+ },
+ "psu.wattage": {
+  "hit": 53,
+  "total": 53,
+  "pct": 100,
+  "req": 1,
+  "softOnly": 0
+ },
+ "psu.efficiency": {
+  "hit": 46,
+  "total": 53,
+  "pct": 86.8,
+  "req": 1,
+  "softOnly": 3
+ },
+ "psu.standard": {
+  "hit": 36,
+  "total": 53,
+  "pct": 67.9,
+  "req": 1,
+  "softOnly": 1
+ },
+ "psu.form": {
+  "hit": 20,
+  "total": 53,
+  "pct": 37.7,
+  "req": 1,
+  "softOnly": 0
+ },
+ "psu.modular": {
+  "hit": 44,
+  "total": 53,
+  "pct": 83,
+  "req": 1,
+  "softOnly": 2
+ },
+ "psu.length": {
+  "hit": 5,
+  "total": 53,
+  "pct": 9.4,
+  "req": 0,
+  "softOnly": 0
+ },
+ "psu.fanSize": {
+  "hit": 3,
+  "total": 53,
+  "pct": 5.7,
+  "req": 0,
+  "softOnly": 0
+ },
+ "psu.pcie5": {
+  "hit": 13,
+  "total": 53,
+  "pct": 24.5,
+  "req": 0,
+  "softOnly": 2
+ },
+ "psu.cap": {
+  "hit": 6,
+  "total": 53,
+  "pct": 11.3,
+  "req": 0,
+  "softOnly": 3
+ },
+ "psu.warranty": {
+  "hit": 24,
+  "total": 53,
+  "pct": 45.3,
+  "req": 1,
+  "softOnly": 5
+ },
+ "case.formSupport": {
+  "hit": 42,
+  "total": 42,
+  "pct": 100,
+  "req": 1,
+  "softOnly": 0
+ },
+ "case.gpuMax": {
+  "hit": 33,
+  "total": 42,
+  "pct": 78.6,
+  "req": 1,
+  "softOnly": 0
+ },
+ "case.cpuMax": {
+  "hit": 18,
+  "total": 42,
+  "pct": 42.9,
+  "req": 1,
+  "softOnly": 0
+ },
+ "case.radSupport": {
+  "hit": 32,
+  "total": 42,
+  "pct": 76.2,
+  "req": 1,
+  "softOnly": 0
+ },
+ "case.volume": {
+  "hit": 6,
+  "total": 42,
+  "pct": 14.3,
+  "req": 0,
+  "softOnly": 1
+ },
+ "case.size": {
+  "hit": 3,
+  "total": 42,
+  "pct": 7.1,
+  "req": 0,
+  "softOnly": 0
+ },
+ "case.fanSlots": {
+  "hit": 8,
+  "total": 42,
+  "pct": 19,
+  "req": 0,
+  "softOnly": 0
+ },
+ "case.driveBays": {
+  "hit": 3,
+  "total": 42,
+  "pct": 7.1,
+  "req": 0,
+  "softOnly": 1
+ },
+ "case.color": {
+  "hit": 17,
+  "total": 42,
+  "pct": 40.5,
+  "req": 1,
+  "softOnly": 0
+ },
+ "case.sidePanel": {
+  "hit": 17,
+  "total": 42,
+  "pct": 40.5,
+  "req": 0,
+  "softOnly": 13
+ },
+ "case.frontIO": {
+  "hit": 2,
+  "total": 42,
+  "pct": 4.8,
+  "req": 0,
+  "softOnly": 0
+ },
+ "case.weight": {
+  "hit": 3,
+  "total": 42,
+  "pct": 7.1,
+  "req": 0,
+  "softOnly": 0
+ },
+ "cooler.type": {
+  "hit": 28,
+  "total": 54,
+  "pct": 51.9,
+  "req": 1,
+  "softOnly": 13
+ },
+ "cooler.radSize": {
+  "hit": 15,
+  "total": 54,
+  "pct": 27.8,
+  "req": 0,
+  "softOnly": 8
+ },
+ "cooler.height": {
+  "hit": 25,
+  "total": 54,
+  "pct": 46.3,
+  "req": 1,
+  "softOnly": 1
+ },
+ "cooler.tdpRating": {
+  "hit": 27,
+  "total": 54,
+  "pct": 50,
+  "req": 1,
+  "softOnly": 1
+ },
+ "cooler.heatpipes": {
+  "hit": 20,
+  "total": 54,
+  "pct": 37,
+  "req": 0,
+  "softOnly": 0
+ },
+ "cooler.sockets": {
+  "hit": 13,
+  "total": 54,
+  "pct": 24.1,
+  "req": 1,
+  "softOnly": 0
+ },
+ "cooler.fanSize": {
+  "hit": 10,
+  "total": 54,
+  "pct": 18.5,
+  "req": 0,
+  "softOnly": 1
+ },
+ "cooler.fanCount": {
+  "hit": 9,
+  "total": 54,
+  "pct": 16.7,
+  "req": 0,
+  "softOnly": 2
+ },
+ "cooler.rgb": {
+  "hit": 8,
+  "total": 54,
+  "pct": 14.8,
+  "req": 0,
+  "softOnly": 4
+ },
+ "monitor.size": {
+  "hit": 76,
+  "total": 76,
+  "pct": 100,
+  "req": 1,
+  "softOnly": 0
+ },
+ "monitor.resW": {
+  "hit": 75,
+  "total": 76,
+  "pct": 98.7,
+  "req": 1,
+  "softOnly": 0
+ },
+ "monitor.resH": {
+  "hit": 50,
+  "total": 76,
+  "pct": 65.8,
+  "req": 1,
+  "softOnly": 0
+ },
+ "monitor.panel": {
+  "hit": 73,
+  "total": 76,
+  "pct": 96.1,
+  "req": 1,
+  "softOnly": 2
+ },
+ "monitor.refresh": {
+  "hit": 71,
+  "total": 76,
+  "pct": 93.4,
+  "req": 1,
+  "softOnly": 0
+ },
+ "monitor.response": {
+  "hit": 24,
+  "total": 76,
+  "pct": 31.6,
+  "req": 1,
+  "softOnly": 1
+ },
+ "monitor.brightness": {
+  "hit": 20,
+  "total": 76,
+  "pct": 26.3,
+  "req": 1,
+  "softOnly": 0
+ },
+ "monitor.hdr": {
+  "hit": 21,
+  "total": 76,
+  "pct": 27.6,
+  "req": 0,
+  "softOnly": 1
+ },
+ "monitor.colorGamut": {
+  "hit": 20,
+  "total": 76,
+  "pct": 26.3,
+  "req": 0,
+  "softOnly": 2
+ },
+ "monitor.deltaE": {
+  "hit": 6,
+  "total": 76,
+  "pct": 7.9,
+  "req": 0,
+  "softOnly": 0
+ },
+ "monitor.bit": {
+  "hit": 11,
+  "total": 76,
+  "pct": 14.5,
+  "req": 0,
+  "softOnly": 1
+ },
+ "monitor.iface": {
+  "hit": 27,
+  "total": 76,
+  "pct": 35.5,
+  "req": 1,
+  "softOnly": 2
+ },
+ "monitor.usbcPower": {
+  "hit": 11,
+  "total": 76,
+  "pct": 14.5,
+  "req": 0,
+  "softOnly": 0
+ },
+ "monitor.curve": {
+  "hit": 5,
+  "total": 76,
+  "pct": 6.6,
+  "req": 0,
+  "softOnly": 0
+ },
+ "input.connection": {
+  "hit": 46,
+  "total": 68,
+  "pct": 67.6,
+  "req": 1,
+  "softOnly": 5
+ },
+ "input.layout": {
+  "hit": 35,
+  "total": 68,
+  "pct": 51.5,
+  "req": 0,
+  "softOnly": 0
+ },
+ "input.switchType": {
+  "hit": 3,
+  "total": 68,
+  "pct": 4.4,
+  "req": 0,
+  "softOnly": 15
+ },
+ "input.switchModel": {
+  "hit": 19,
+  "total": 68,
+  "pct": 27.9,
+  "req": 0,
+  "softOnly": 6
+ },
+ "input.hotswap": {
+  "hit": 16,
+  "total": 68,
+  "pct": 23.5,
+  "req": 0,
+  "softOnly": 4
+ },
+ "input.keycap": {
+  "hit": 7,
+  "total": 68,
+  "pct": 10.3,
+  "req": 0,
+  "softOnly": 0
+ },
+ "input.polling": {
+  "hit": 12,
+  "total": 68,
+  "pct": 17.6,
+  "req": 0,
+  "softOnly": 0
+ },
+ "input.dpi": {
+  "hit": 18,
+  "total": 68,
+  "pct": 26.5,
+  "req": 0,
+  "softOnly": 0
+ },
+ "input.weight": {
+  "hit": 13,
+  "total": 68,
+  "pct": 19.1,
+  "req": 0,
+  "softOnly": 1
+ },
+ "input.battery": {
+  "hit": 5,
+  "total": 68,
+  "pct": 7.4,
+  "req": 0,
+  "softOnly": 0
+ },
+ "input.rgb": {
+  "hit": 8,
+  "total": 68,
+  "pct": 11.8,
+  "req": 0,
+  "softOnly": 3
+ },
+ "network.wifiStd": {
+  "hit": 33,
+  "total": 40,
+  "pct": 82.5,
+  "req": 1,
+  "softOnly": 0
+ },
+ "network.band": {
+  "hit": 18,
+  "total": 40,
+  "pct": 45,
+  "req": 1,
+  "softOnly": 2
+ },
+ "network.speed": {
+  "hit": 22,
+  "total": 40,
+  "pct": 55,
+  "req": 1,
+  "softOnly": 6
+ },
+ "network.lanSpeed": {
+  "hit": 21,
+  "total": 40,
+  "pct": 52.5,
+  "req": 1,
+  "softOnly": 10
+ },
+ "network.lanPorts": {
+  "hit": 26,
+  "total": 40,
+  "pct": 65,
+  "req": 1,
+  "softOnly": 6
+ },
+ "network.mesh": {
+  "hit": 10,
+  "total": 40,
+  "pct": 25,
+  "req": 1,
+  "softOnly": 3
+ },
+ "network.antennas": {
+  "hit": 5,
+  "total": 40,
+  "pct": 12.5,
+  "req": 0,
+  "softOnly": 0
+ },
+ "network.usb": {
+  "hit": 4,
+  "total": 40,
+  "pct": 10,
+  "req": 0,
+  "softOnly": 1
+ },
+ "network.mem": {
+  "hit": 2,
+  "total": 40,
+  "pct": 5,
+  "req": 0,
+  "softOnly": 2
+ },
+ "network.fanless": {
+  "hit": 5,
+  "total": 40,
+  "pct": 12.5,
+  "req": 0,
+  "softOnly": 0
+ },
+ "stand.screenSize": {
+  "hit": 28,
+  "total": 40,
+  "pct": 70,
+  "req": 1,
+  "softOnly": 2
+ },
+ "stand.load": {
+  "hit": 25,
+  "total": 40,
+  "pct": 62.5,
+  "req": 1,
+  "softOnly": 1
+ },
+ "stand.heightRange": {
+  "hit": 5,
+  "total": 40,
+  "pct": 12.5,
+  "req": 0,
+  "softOnly": 0
+ },
+ "stand.tilt": {
+  "hit": 2,
+  "total": 40,
+  "pct": 5,
+  "req": 0,
+  "softOnly": 1
+ },
+ "stand.rotate": {
+  "hit": 3,
+  "total": 40,
+  "pct": 7.5,
+  "req": 0,
+  "softOnly": 1
+ },
+ "stand.armCount": {
+  "hit": 7,
+  "total": 40,
+  "pct": 17.5,
+  "req": 0,
+  "softOnly": 14
+ },
+ "stand.clampMax": {
+  "hit": 4,
+  "total": 40,
+  "pct": 10,
+  "req": 0,
+  "softOnly": 0
+ },
+ "stand.material": {
+  "hit": 10,
+  "total": 40,
+  "pct": 25,
+  "req": 0,
+  "softOnly": 1
+ },
+ "stand.warranty": {
+  "hit": 0,
+  "total": 40,
+  "pct": 0,
+  "req": 0,
+  "softOnly": 0
+ },
+ "dock.hostIface": {
+  "hit": 16,
+  "total": 34,
+  "pct": 47.1,
+  "req": 1,
+  "softOnly": 0
+ },
+ "dock.usbPorts": {
+  "hit": 24,
+  "total": 34,
+  "pct": 70.6,
+  "req": 1,
+  "softOnly": 3
+ },
+ "dock.hdmi": {
+  "hit": 25,
+  "total": 34,
+  "pct": 73.5,
+  "req": 1,
+  "softOnly": 0
+ },
+ "dock.dpPorts": {
+  "hit": 2,
+  "total": 34,
+  "pct": 5.9,
+  "req": 0,
+  "softOnly": 0
+ },
+ "dock.lanSpeed": {
+  "hit": 22,
+  "total": 34,
+  "pct": 64.7,
+  "req": 1,
+  "softOnly": 1
+ },
+ "dock.pdPower": {
+  "hit": 25,
+  "total": 34,
+  "pct": 73.5,
+  "req": 1,
+  "softOnly": 0
+ },
+ "dock.cardReader": {
+  "hit": 7,
+  "total": 34,
+  "pct": 20.6,
+  "req": 0,
+  "softOnly": 4
+ },
+ "dock.maxRes": {
+  "hit": 21,
+  "total": 34,
+  "pct": 61.8,
+  "req": 0,
+  "softOnly": 0
+ },
+ "dock.compat": {
+  "hit": 5,
+  "total": 34,
+  "pct": 14.7,
+  "req": 1,
+  "softOnly": 2
+ },
+ "laptop.cpu": {
+  "hit": 0,
+  "total": 79,
+  "pct": null,
+  "req": 0,
+  "softOnly": 0
+ },
+ "laptop.gpu": {
+  "hit": 0,
+  "total": 79,
+  "pct": null,
+  "req": 0,
+  "softOnly": 0
+ },
+ "laptop.gpuVram": {
+  "hit": 16,
+  "total": 79,
+  "pct": 20.3,
+  "req": 0,
+  "softOnly": 0
+ },
+ "laptop.ram": {
+  "hit": 59,
+  "total": 79,
+  "pct": 74.7,
+  "req": 1,
+  "softOnly": 1
+ },
+ "laptop.ramType": {
+  "hit": 13,
+  "total": 79,
+  "pct": 16.5,
+  "req": 0,
+  "softOnly": 0
+ },
+ "laptop.storage": {
+  "hit": 51,
+  "total": 79,
+  "pct": 64.6,
+  "req": 1,
+  "softOnly": 0
+ },
+ "laptop.screenSize": {
+  "hit": 77,
+  "total": 79,
+  "pct": 97.5,
+  "req": 1,
+  "softOnly": 0
+ },
+ "laptop.resolution": {
+  "hit": 72,
+  "total": 79,
+  "pct": 91.1,
+  "req": 1,
+  "softOnly": 2
+ },
+ "laptop.refresh": {
+  "hit": 51,
+  "total": 79,
+  "pct": 64.6,
+  "req": 0,
+  "softOnly": 1
+ },
+ "laptop.panel": {
+  "hit": 28,
+  "total": 79,
+  "pct": 35.4,
+  "req": 0,
+  "softOnly": 2
+ },
+ "laptop.weight": {
+  "hit": 42,
+  "total": 79,
+  "pct": 53.2,
+  "req": 1,
+  "softOnly": 8
+ },
+ "laptop.battery": {
+  "hit": 14,
+  "total": 79,
+  "pct": 17.7,
+  "req": 1,
+  "softOnly": 2
+ },
+ "laptop.thunderbolt": {
+  "hit": 0,
+  "total": 79,
+  "pct": null,
+  "req": 0,
+  "softOnly": 0
+ },
+ "laptop.tdpRelease": {
+  "hit": 1,
+  "total": 79,
+  "pct": 1.3,
+  "req": 0,
+  "softOnly": 3
+ },
+ "phone.soc": {
+  "hit": 0,
+  "total": 93,
+  "pct": null,
+  "req": 0,
+  "softOnly": 0
+ },
+ "phone.ram": {
+  "hit": 93,
+  "total": 93,
+  "pct": 100,
+  "req": 1,
+  "softOnly": 0
+ },
+ "phone.storage": {
+  "hit": 71,
+  "total": 93,
+  "pct": 76.3,
+  "req": 1,
+  "softOnly": 0
+ },
+ "phone.screenSize": {
+  "hit": 69,
+  "total": 93,
+  "pct": 74.2,
+  "req": 1,
+  "softOnly": 1
+ },
+ "phone.resolution": {
+  "hit": 34,
+  "total": 93,
+  "pct": 36.6,
+  "req": 1,
+  "softOnly": 1
+ },
+ "phone.refresh": {
+  "hit": 60,
+  "total": 93,
+  "pct": 64.5,
+  "req": 1,
+  "softOnly": 0
+ },
+ "phone.panel": {
+  "hit": 39,
+  "total": 93,
+  "pct": 41.9,
+  "req": 0,
+  "softOnly": 0
+ },
+ "phone.battery": {
+  "hit": 73,
+  "total": 93,
+  "pct": 78.5,
+  "req": 1,
+  "softOnly": 0
+ },
+ "phone.chargeWired": {
+  "hit": 65,
+  "total": 93,
+  "pct": 69.9,
+  "req": 1,
+  "softOnly": 3
+ },
+ "phone.chargeWireless": {
+  "hit": 36,
+  "total": 93,
+  "pct": 38.7,
+  "req": 0,
+  "softOnly": 0
+ },
+ "phone.weight": {
+  "hit": 93,
+  "total": 93,
+  "pct": 100,
+  "req": 1,
+  "softOnly": 0
+ },
+ "phone.thickness": {
+  "hit": 2,
+  "total": 93,
+  "pct": 2.2,
+  "req": 0,
+  "softOnly": 5
+ },
+ "phone.ipRating": {
+  "hit": 1,
+  "total": 93,
+  "pct": 1.1,
+  "req": 1,
+  "softOnly": 6
+ },
+ "phone.network": {
+  "hit": 1,
+  "total": 93,
+  "pct": 1.1,
+  "req": 1,
+  "softOnly": 1
+ },
+ "phone.camera": {
+  "hit": 4,
+  "total": 93,
+  "pct": 4.3,
+  "req": 0,
+  "softOnly": 17
+ },
+ "phone.satellite": {
+  "hit": 2,
+  "total": 93,
+  "pct": 2.2,
+  "req": 0,
+  "softOnly": 3
+ },
+ "phone.nfc": {
+  "hit": 0,
+  "total": 93,
+  "pct": 0,
+  "req": 0,
+  "softOnly": 0
+ },
+ "charger.power": {
+  "hit": 38,
+  "total": 41,
+  "pct": 92.7,
+  "req": 1,
+  "softOnly": 0
+ },
+ "charger.pdMax": {
+  "hit": 2,
+  "total": 41,
+  "pct": 4.9,
+  "req": 0,
+  "softOnly": 0
+ },
+ "charger.capacity": {
+  "hit": 9,
+  "total": 41,
+  "pct": 22,
+  "req": 0,
+  "softOnly": 0
+ },
+ "charger.ports": {
+  "hit": 18,
+  "total": 41,
+  "pct": 43.9,
+  "req": 1,
+  "softOnly": 0
+ },
+ "charger.protocol": {
+  "hit": 18,
+  "total": 41,
+  "pct": 43.9,
+  "req": 1,
+  "softOnly": 0
+ },
+ "charger.wireless": {
+  "hit": 6,
+  "total": 41,
+  "pct": 14.6,
+  "req": 0,
+  "softOnly": 0
+ },
+ "charger.gan": {
+  "hit": 6,
+  "total": 41,
+  "pct": 14.6,
+  "req": 0,
+  "softOnly": 9
+ },
+ "charger.foldPlug": {
+  "hit": 3,
+  "total": 41,
+  "pct": 7.3,
+  "req": 0,
+  "softOnly": 1
+ },
+ "charger.weight": {
+  "hit": 7,
+  "total": 41,
+  "pct": 17.1,
+  "req": 0,
+  "softOnly": 0
+ },
+ "charger.cableIncluded": {
+  "hit": 0,
+  "total": 41,
+  "pct": null,
+  "req": 0,
+  "softOnly": 0
+ },
+ "mobileacc.material": {
+  "hit": 8,
+  "total": 36,
+  "pct": 22.2,
+  "req": 1,
+  "softOnly": 0
+ },
+ "mobileacc.magsafe": {
+  "hit": 7,
+  "total": 36,
+  "pct": 19.4,
+  "req": 0,
+  "softOnly": 1
+ },
+ "mobileacc.wirelessCharge": {
+  "hit": 1,
+  "total": 36,
+  "pct": 2.8,
+  "req": 0,
+  "softOnly": 2
+ },
+ "mobileacc.dropRating": {
+  "hit": 2,
+  "total": 36,
+  "pct": 5.6,
+  "req": 0,
+  "softOnly": 0
+ },
+ "mobileacc.angle": {
+  "hit": 0,
+  "total": 36,
+  "pct": 0,
+  "req": 0,
+  "softOnly": 0
+ },
+ "mobileacc.weight": {
+  "hit": 3,
+  "total": 36,
+  "pct": 8.3,
+  "req": 0,
+  "softOnly": 0
+ },
+ "mobileacc.color": {
+  "hit": 1,
+  "total": 36,
+  "pct": 2.8,
+  "req": 0,
+  "softOnly": 0
+ },
+ "tablet.soc": {
+  "hit": 0,
+  "total": 66,
+  "pct": null,
+  "req": 0,
+  "softOnly": 0
+ },
+ "tablet.ram": {
+  "hit": 66,
+  "total": 66,
+  "pct": 100,
+  "req": 1,
+  "softOnly": 0
+ },
+ "tablet.storage": {
+  "hit": 54,
+  "total": 66,
+  "pct": 81.8,
+  "req": 1,
+  "softOnly": 4
+ },
+ "tablet.screenSize": {
+  "hit": 59,
+  "total": 66,
+  "pct": 89.4,
+  "req": 1,
+  "softOnly": 0
+ },
+ "tablet.resolution": {
+  "hit": 16,
+  "total": 66,
+  "pct": 24.2,
+  "req": 1,
+  "softOnly": 2
+ },
+ "tablet.refresh": {
+  "hit": 50,
+  "total": 66,
+  "pct": 75.8,
+  "req": 0,
+  "softOnly": 0
+ },
+ "tablet.panel": {
+  "hit": 33,
+  "total": 66,
+  "pct": 50,
+  "req": 0,
+  "softOnly": 0
+ },
+ "tablet.battery": {
+  "hit": 50,
+  "total": 66,
+  "pct": 75.8,
+  "req": 1,
+  "softOnly": 0
+ },
+ "tablet.charge": {
+  "hit": 39,
+  "total": 66,
+  "pct": 59.1,
+  "req": 1,
+  "softOnly": 0
+ },
+ "tablet.weight": {
+  "hit": 63,
+  "total": 66,
+  "pct": 95.5,
+  "req": 1,
+  "softOnly": 0
+ },
+ "tablet.thickness": {
+  "hit": 2,
+  "total": 66,
+  "pct": 3,
+  "req": 0,
+  "softOnly": 2
+ },
+ "tablet.stylus": {
+  "hit": 0,
+  "total": 66,
+  "pct": null,
+  "req": 0,
+  "softOnly": 0
+ },
+ "tablet.keyboard": {
+  "hit": 0,
+  "total": 66,
+  "pct": null,
+  "req": 0,
+  "softOnly": 0
+ },
+ "tablet.cellular": {
+  "hit": 1,
+  "total": 66,
+  "pct": 1.5,
+  "req": 0,
+  "softOnly": 3
+ },
+ "earphone.anc": {
+  "hit": 38,
+  "total": 95,
+  "pct": 40,
+  "req": 1,
+  "softOnly": 2
+ },
+ "earphone.ancDepth": {
+  "hit": 10,
+  "total": 95,
+  "pct": 10.5,
+  "req": 0,
+  "softOnly": 0
+ },
+ "earphone.driverUnit": {
+  "hit": 23,
+  "total": 95,
+  "pct": 24.2,
+  "req": 0,
+  "softOnly": 2
+ },
+ "earphone.driverType": {
+  "hit": 15,
+  "total": 95,
+  "pct": 15.8,
+  "req": 0,
+  "softOnly": 0
+ },
+ "earphone.codec": {
+  "hit": 11,
+  "total": 95,
+  "pct": 11.6,
+  "req": 1,
+  "softOnly": 3
+ },
+ "earphone.batterySingle": {
+  "hit": 15,
+  "total": 95,
+  "pct": 15.8,
+  "req": 1,
+  "softOnly": 1
+ },
+ "earphone.batteryTotal": {
+  "hit": 27,
+  "total": 95,
+  "pct": 28.4,
+  "req": 0,
+  "softOnly": 0
+ },
+ "earphone.weight": {
+  "hit": 23,
+  "total": 95,
+  "pct": 24.2,
+  "req": 0,
+  "softOnly": 0
+ },
+ "earphone.ipRating": {
+  "hit": 26,
+  "total": 95,
+  "pct": 27.4,
+  "req": 0,
+  "softOnly": 1
+ },
+ "earphone.micCount": {
+  "hit": 3,
+  "total": 95,
+  "pct": 3.2,
+  "req": 0,
+  "softOnly": 0
+ },
+ "audio.channels": {
+  "hit": 9,
+  "total": 37,
+  "pct": 24.3,
+  "req": 0,
+  "softOnly": 0
+ },
+ "audio.power": {
+  "hit": 8,
+  "total": 37,
+  "pct": 21.6,
+  "req": 0,
+  "softOnly": 1
+ },
+ "audio.freqResp": {
+  "hit": 9,
+  "total": 37,
+  "pct": 24.3,
+  "req": 1,
+  "softOnly": 0
+ },
+ "audio.driver": {
+  "hit": 13,
+  "total": 37,
+  "pct": 35.1,
+  "req": 0,
+  "softOnly": 0
+ },
+ "audio.connection": {
+  "hit": 24,
+  "total": 37,
+  "pct": 64.9,
+  "req": 1,
+  "softOnly": 2
+ },
+ "audio.micType": {
+  "hit": 10,
+  "total": 37,
+  "pct": 27,
+  "req": 0,
+  "softOnly": 1
+ },
+ "audio.polarPattern": {
+  "hit": 4,
+  "total": 37,
+  "pct": 10.8,
+  "req": 0,
+  "softOnly": 0
+ },
+ "audio.sampleRate": {
+  "hit": 9,
+  "total": 37,
+  "pct": 24.3,
+  "req": 0,
+  "softOnly": 0
+ },
+ "audio.bitDepth": {
+  "hit": 2,
+  "total": 37,
+  "pct": 5.4,
+  "req": 0,
+  "softOnly": 0
+ },
+ "audio.weight": {
+  "hit": 3,
+  "total": 37,
+  "pct": 8.1,
+  "req": 0,
+  "softOnly": 0
+ },
+ "wearable.screenSize": {
+  "hit": 27,
+  "total": 71,
+  "pct": 38,
+  "req": 0,
+  "softOnly": 0
+ },
+ "wearable.screenType": {
+  "hit": 28,
+  "total": 71,
+  "pct": 39.4,
+  "req": 0,
+  "softOnly": 0
+ },
+ "wearable.batteryLife": {
+  "hit": 22,
+  "total": 71,
+  "pct": 31,
+  "req": 1,
+  "softOnly": 0
+ },
+ "wearable.waterproof": {
+  "hit": 7,
+  "total": 71,
+  "pct": 9.9,
+  "req": 1,
+  "softOnly": 0
+ },
+ "wearable.gps": {
+  "hit": 11,
+  "total": 71,
+  "pct": 15.5,
+  "req": 0,
+  "softOnly": 1
+ },
+ "wearable.health": {
+  "hit": 8,
+  "total": 71,
+  "pct": 11.3,
+  "req": 0,
+  "softOnly": 2
+ },
+ "wearable.esim": {
+  "hit": 10,
+  "total": 71,
+  "pct": 14.1,
+  "req": 0,
+  "softOnly": 1
+ },
+ "wearable.nfc": {
+  "hit": 8,
+  "total": 71,
+  "pct": 11.3,
+  "req": 0,
+  "softOnly": 2
+ },
+ "wearable.weight": {
+  "hit": 16,
+  "total": 71,
+  "pct": 22.5,
+  "req": 0,
+  "softOnly": 1
+ },
+ "wearable.strap": {
+  "hit": 2,
+  "total": 71,
+  "pct": 2.8,
+  "req": 0,
+  "softOnly": 1
+ }
+}

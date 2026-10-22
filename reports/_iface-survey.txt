@@ -1,0 +1,65 @@
+## SSD 53 款，接口词出现位置统计
+  M.2     总命中  25  specs主体   0  soft  25  name   0
+  SATA    总命中   6  specs主体   6  soft   0  name   0
+  U.2     总命中   0  specs主体   0  soft   0  name   0
+  mSATA   总命中   0  specs主体   0  soft   0  name   0
+  PCIe    总命中  44  specs主体  44  soft   0  name   0
+
+## SSD 全部 53 条的形态判定（从 brand/model/name 推断）
+  M.2（可从型号推断 NVMe/2280 等） → 44 款
+  SATA 2.5英寸 → 6 款
+  移动固态/其他 → 3 款
+  无法判断 → 0 款
+
+## 各品类「接口/形态」硬规格在 specs 中的覆盖
+  cpu       /AM[45]/                     specs  33/61  仅软文本 2
+  cpu       /LGA\s?\d+/                  specs  28/61  仅软文本 0
+  cpu       /BGA/                        specs   0/61  仅软文本 0
+  mobo      /ATX|MATX|M-ATX|ITX|EATX|E-ATX/i specs  57/57  仅软文本 0
+  ram       /DDR[345]/                   specs  52/52  仅软文本 0
+  ram       /SO-?DIMM/i                  specs   3/52  仅软文本 0
+  ram       /DIMM/                       specs   4/52  仅软文本 0
+  gpu       /PCIe\s?[45]\.0/i            specs   0/61  仅软文本 0
+  ssd       /M\.2/                       specs   0/53  仅软文本 25
+  ssd       /SATA/                       specs   6/53  仅软文本 0
+  ssd       /U\.2/                       specs   0/53  仅软文本 0
+  psu       /ATX\s?3/i                   specs  36/53  仅软文本 1
+  psu       /SFX/i                       specs   3/53  仅软文本 0
+  psu       /(20|24)\s?pin/i             specs   0/53  仅软文本 0
+  case      /ATX|MATX|M-ATX|ITX|EATX|E-ATX/i specs  42/42  仅软文本 0
+  cooler    /AM[45]/                     specs  13/54  仅软文本 0
+  cooler    /LGA\s?\d+/                  specs  13/54  仅软文本 0
+  monitor   /HDMI/                       specs  27/76  仅软文本 2
+  monitor   /DP|DisplayPort/i            specs  26/76  仅软文本 4
+  monitor   /USB-?C/i                    specs   7/76  仅软文本 0
+  input     /蓝牙/                         specs   4/68  仅软文本 2
+  input     /2\.4G/i                     specs  10/68  仅软文本 0
+  input     /有线/                         specs  11/68  仅软文本 2
+  input     /三模/                         specs  26/68  仅软文本 5
+  network   /Wi-?Fi/i                    specs  32/40  仅软文本 0
+  network   /2\.5G/                      specs  25/40  仅软文本 6
+  network   /千兆/                         specs  10/40  仅软文本 11
+  network   /Mesh/                       specs  10/40  仅软文本 2
+  stand     /VESA/i                      specs   3/40  仅软文本 5
+  dock      /雷电|Thunderbolt/i            specs   8/34  仅软文本 2
+  dock      /USB\s?[34]/i                specs  18/34  仅软文本 0
+  dock      /HDMI/i                      specs  25/34  仅软文本 0
+  laptop    /雷电|Thunderbolt/i            specs   0/79  仅软文本 8
+  laptop    /USB-?[AC]/i                 specs   0/79  仅软文本 2
+  laptop    /HDMI/i                      specs   0/79  仅软文本 1
+  phone     /IP\d\d/                     specs   1/93  仅软文本 6
+  phone     /5G/                         specs   1/93  仅软文本 1
+  charger   /PD\s?\d|PD\d/               specs  12/41  仅软文本 0
+  charger   /PPS/                        specs  13/41  仅软文本 0
+  charger   /QC\d?/                      specs   1/41  仅软文本 0
+  mobileacc /MagSafe/i                   specs   1/36  仅软文本 1
+  mobileacc /Qi2?/                       specs   0/36  仅软文本 0
+  tablet    /USB-?C/i                    specs   0/66  仅软文本 1
+  tablet    /键盘/                         specs   0/66  仅软文本 39
+  tablet    /触控笔|手写笔/                    specs   0/66  仅软文本 29
+  earphone  /蓝牙/                         specs  20/95  仅软文本 3
+  earphone  /LDAC|aptX|AAC|SBC|LC3/      specs  11/95  仅软文本 3
+  audio     /XLR|RCA|3\.5mm|光纤|同轴|蓝牙/i   specs  23/37  仅软文本 4
+  wearable  /蓝牙/                         specs   7/71  仅软文本 2
+  wearable  /eSIM/                       specs  10/71  仅软文本 0
+  wearable  /NFC/                        specs   8/71  仅软文本 1
