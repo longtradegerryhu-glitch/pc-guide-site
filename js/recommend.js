@@ -51,7 +51,24 @@
   var DETAILS = window.PC_LOOK_DETAILS || [];
   var styleById = {};
   STYLES.forEach(function (s) { styleById[s.id] = s; });
-  function lookOf(item) { return (item && LOOKS[item.id]) || null; }
+  /* LOOKS 只标了几十款。没标的机型按名字里明说的外观词兜底 ——
+     「白色」「海景房」「木质」写在名字里就是事实描述，不是推测，不需要改数据。 */
+  var LOOK_NAME_KW = [
+    ["wood", /木质|胡桃木|实木/],
+    ["seaview", /海景房|全景/],
+    ["white", /白/],
+    ["business", /黑/],
+    ["rgb", /RGB|幻彩|灯条/i]
+  ];
+  function lookOf(item) {
+    if (!item) return null;
+    if (LOOKS[item.id]) return LOOKS[item.id];
+    var s = String(item.name || "") + String(item.model || "") + String(item.style || "");
+    for (var i = 0; i < LOOK_NAME_KW.length; i++) {
+      if (LOOK_NAME_KW[i][1].test(s)) return LOOK_NAME_KW[i][0];
+    }
+    return null;
+  }
 
   /* 型号 → 官方渠道：查真实产品图 + 查实时价（淘宝/京东搜索，纯前端跳转，无后端抓取）
    * 搜索词优先级：searchName（已优化，去描述词/容量后缀）> brand+model > name */
@@ -136,8 +153,30 @@
     "游戏手柄": "mobileacc", "平板键盘": "mobileacc", "手写笔": "mobileacc",
     "触控板": "mobileacc", "散热配件": "mobileacc", "清洁工具": "mobileacc",
     "屏幕挂绳": "mobileacc", "指环支架": "mobileacc", "游戏配件": "mobileacc",
-    "投屏器": "mobileacc", "存储": "charger"
+    "投屏器": "mobileacc", "存储": "ssd"
   };
+
+  /* 杂物筐品类（charger / mobileacc / ssd）一个品类里混装多种物件，只按价位挑会跨类型：
+     手机方案的「存储」行推出过氮化镓充电器、「手机壳」行推出过手机稳定器 ——
+     两行还挑了同一件。行名本身说明了物类时先按关键词收窄，收窄后一件都没有就不硬挑，
+     宁可按配置单原文给档位，也不给错的东西。 */
+  var SUB_KW = {
+    "存储": /存储卡|内存卡|移动固态|U盘|硬盘盒|TF|NM卡/i,
+    "手机壳": /壳|保护套/i,
+    "保护膜": /膜/i,
+    "镜头膜": /镜头/i,
+    "稳定器": /稳定器|云台/i,
+    "手机支架": /支架|指环/i,
+    "指环支架": /指环|支架/i,
+    "手写笔": /笔/i,
+    "平板键盘": /键盘/i,
+    "游戏手柄": /手柄/i,
+    "散热配件": /散热|风扇|背夹/i,
+    "充电器": /充电器|氮化镓|充电头/i,
+    "数据线": /线/i,
+    "移动电源": /移动电源|充电宝/i
+  };
+  var SUB_CAT = { charger: 1, mobileacc: 1, ssd: 1 };
 
   /* 从方案自己的配置单提取各类部件的目标价位（取价格中值）。
      只读既有数据、不引入新价格：方案说配 RTX 5080，配件推荐就不该给 RTX 5060。 */
@@ -214,6 +253,16 @@
         "</div>";
     }
     return "";
+  }
+
+  /* 颜值风格没现货时必须说出来。静默退回默认款，用户会以为这道题白填了。 */
+  var LOOK_CAT_LABEL = { case: "机箱", monitor: "显示器", input: "键鼠", stand: "支架", audio: "音频", dock: "拓展坞" };
+  function lookMissTip(rows, look) {
+    var miss = (rows && rows.lookMiss) || [];
+    if (!look || look === "any" || look === "all" || !miss.length) return "";
+    var names = miss.map(function (c) { return LOOK_CAT_LABEL[c] || c; });
+    return '<div class="res-skip-note res-look-miss">库内暂时没有符合你所选外观的' + esc(names.join(" / ")) +
+      "款，这几项按性能与价位优先挑选，外观没有强卡。想换款可以从配色更常见的选项里挑，或者先不定外观。</div>";
   }
 
   /* 全套配置单表格：结果页主角，快速推荐与深度测评共用。
@@ -385,7 +434,7 @@
     /* 「最看重什么」如果只用来做同档内微调，用户改变它时结果往往一模一样。
        真正能兑现偏好的做法是调这一类部件的目标价位：在意静音就多花在散热与机箱上，
        在意颜值就多花在机箱上，在意人体工学就多花在屏幕和键鼠上。 */
-    function buildTargetScale(pref, exp, look) {
+    function buildTargetScale(pref, exp, look, lifespan) {
       var map = {};
       if (pref === "quiet") { map.cooler = 1.25; map.case = 1.25; map.psu = 1.15; }
       else if (pref === "rgb") { map.case = 1.3; map.cooler = 1.25; }
@@ -401,7 +450,12 @@
       else if (pref === "t_perf") { map.tablet = 1.25; }
       if (exp === "pro") { map.cooler = (map.cooler || 1) * 1.2; }
       else if (exp === "new") { map.cooler = (map.cooler || 1) * 0.9; }
-      if (look && look !== "any" && look !== "all") { map.case = (map.case || 1) * 1.2; }
+      /* 机箱加价挪到 LOOK 分支里做：只有在真的挑得到该风格时才加，
+         否则「复古木质」会变成「随便是谁但贵 20%」。 */
+      /* 打算用多久决定该不该为寿命付溢价：用 5 年值得给固态和电源留余量，
+         只用 1 年就不必。不加这条，y1 与 y3 会给出同一套（实测差 0 件）。 */
+      if (lifespan === "y5") { map.ssd = (map.ssd || 1) * 1.2; map.psu = (map.psu || 1) * 1.2; }
+      else if (lifespan === "y1") { map.ssd = (map.ssd || 1) * 0.85; map.psu = (map.psu || 1) * 0.88; }
       return function (cid) { return map[cid] || 1; };
     }
 
@@ -434,7 +488,7 @@
     }
 
   /* 挑 top1 + 2 备选：配置单同款置顶，其余按价位距离 + 等级排序 */
-  function pickOne(items, target, rowText, allItems, minAnchorMid, bias) {
+  function pickOne(items, target, rowText, allItems, minAnchorMid, bias, preferOverAnchor) {
     if (!items.length) return null;
     var win = items.filter(function (it) {
       var m = mid(it.price);
@@ -443,9 +497,12 @@
     var pool = win.length ? win : items;
     /* 偏好只在价位窗口内决定"同类里挑哪件"：
        静音/颜值这类偏好把 360 水冷换成百元风冷，是比不挑更糟的错。 */
+    /* 用户在「最看重什么」里点了名的那一类，功能款要压过配置单模板点名的型号。
+       不这么做，"静音散热"与"人体工学"会推出同一套 —— 这道题等于白问。 */
+    var skipAnchor = false;
     if (bias) {
       var liked = pool.filter(function (it) { return bias(it) > 0; });
-      if (liked.length) pool = liked;
+      if (liked.length) { pool = liked; if (preferOverAnchor) skipAnchor = true; }
     }
     var ranked = pool.slice().sort(function (a, b) {
       var da = Math.abs(mid(a.price) - target), db = Math.abs(mid(b.price) - target);
@@ -463,7 +520,7 @@
       return Math.abs(mid(a.price) - target) - Math.abs(mid(b.price) - target);
     })[0] : null;
     /* 预算明显高于配置单同款时不再锁死同款：否则预算拉满也只能拿到模板里那件入门型号 */
-    if (anchorTop && (minAnchorMid === undefined || mid(anchorTop.price) >= minAnchorMid)) {
+    if (anchorTop && !skipAnchor && (minAnchorMid === undefined || mid(anchorTop.price) >= minAnchorMid)) {
       top = anchorTop;
       isAnchor = true;
     } else {
@@ -523,11 +580,16 @@
     var targetScale = opts.targetScale || 1;
     var scaleOf = typeof opts.scaleOf === "function" ? opts.scaleOf : null;
     var lookPref = opts.look || "";
+    var pref = opts.pref || "";
+    /* 颜值风格在哪些品类上没现货 —— 结果页必须说出来，静默退回等于骗人 */
+    var lookMiss = [];
     var targets = planPartTargets(plan);
     var base = mid(plan.price || [0, 0]);
     var budgetCap = opts.budgetCap || 0;
     var out = [];
     var skipped = [];
+    /* 同一套方案里不能给两行挑同一件（存储行与充电器行曾各推一个同款充电器） */
+    var usedIds = {};
 
     /* 用途只作软过滤：过滤后若覆盖不到配置单价位，就退回全库。
        否则「办公」场景会把配置单里的 360 水冷降成百元风冷、5070 降成入门卡。 */
@@ -558,6 +620,10 @@
       if (PART_SPLIT[part]) target = target / PART_SPLIT[part];
       /* 笔记本本体按预算选档：配置单行价只是模板，不该锁死选择 */
       var minAnchorMid;
+      /* 「你最看重什么」得压过配置单模板：偏好在某类上明显加码（≥1.2 倍）时，
+         配置单点名那件若明显低于新目标就不再锁死同款，否则静音与人体工学推出同一套。 */
+      var strongPref = !!(scaleOf && scaleOf(cid) > 1.25);
+      if (strongPref) minAnchorMid = target * 0.95;
       if (WHOLE_BUDGET_SHARE[cid]) {
         var lapTarget = laptopBudgetTarget(priceText, budgetCap, WHOLE_BUDGET_SHARE[cid]);
         if (lapTarget > 0) {
@@ -566,16 +632,32 @@
         }
       }
 
+      /* 「最看重什么」里哪些选项在哪几个品类上有物理对应。只有列出来的才允许
+         让功能款压过模板同款；没列的（如性价比）只调价位，不换型号。
+         必须在这里算：下面键鼠分支就要用，放到 LOOK 块里会被 var 提升成 undefined。 */
+      var PREF_CATS = {
+        quiet: { cooler: 1, case: 1, psu: 1 },
+        rgb: { case: 1, cooler: 1 },
+        ergo: { input: 1, monitor: 1, stand: 1 },
+        p_camera: { phone: 1 },
+        p_battery: { phone: 1 },
+        t_ink: { mobileacc: 1 },
+        t_screen: { tablet: 1 }
+      };
+      var preferOverAnchor = !!(PREF_CATS[pref] && PREF_CATS[pref][cid]);
+
       // 键鼠是「键盘 + 鼠标」组合件，拆成两条，否则只出一件
       // 「便携键鼠」是笔记本方案里的同一件组合，同样要拆
       if ((part === "键鼠" || part === "便携键鼠") && cat && cat.items && cat.items.length) {
         var comboItem = cat.items;
-        if (uses.length) comboItem = narrow(comboItem, target);
+        /* 点名"人体工学"时不能按用途过滤：人体工学键鼠都是办公款，
+           按游戏用途筛完一个都不剩，这道题就被过滤掉了。 */
+        if (uses.length && !preferOverAnchor) comboItem = narrow(comboItem, target);
         var kbSet = comboItem.filter(function (it) { return (it.style || "").indexOf("键盘") !== -1; });
         var msSet = comboItem.filter(function (it) { return (it.style || "").indexOf("鼠标") !== -1; });
         var segs = config.split(/[+＋]/);
-        var kbPick = pickOne(kbSet.length ? kbSet : comboItem, target * 0.55, segs[0] || "", cat.items, undefined, bias);
-        var msPick = pickOne(msSet.length ? msSet : comboItem, target * 0.45, segs[1] || "", cat.items, undefined, bias);
+        var kbPick = pickOne(kbSet.length ? kbSet : comboItem, target * 0.55, segs[0] || "", cat.items, undefined, bias, preferOverAnchor);
+        var msPick = pickOne(msSet.length ? msSet : comboItem, target * 0.45, segs[1] || "", cat.items, undefined, bias, preferOverAnchor);
         if (kbPick) out.push({ part: "键盘", srcPart: part, icon: "⌨️", config: config, priceText: priceText, cat: cat, pick: kbPick, textPick: null });
         if (msPick) out.push({ part: "鼠标", srcPart: part, icon: "🖱️", config: config, priceText: priceText, cat: cat, pick: msPick, textPick: null });
         return;
@@ -590,23 +672,43 @@
           if (onlyPsu.length) items = onlyPsu;
         }
         /* 散热按冷排规格选，不走用途软过滤：软过滤会把它整档降下来 */
-        var pool = cid === "cooler" ? coolerForm(items, config) : narrow(items, target);
+        /* 行名说了物类就先收窄；typed 为空数组时不回落（空数组是 true，会把 pool 清空，
+           pickOne 直接返回 null，随后走配置单原文兜底 —— 这是想要的结果） */
+        var typed = SUB_KW[part] && SUB_CAT[cid] ? items.filter(function (it) {
+          return SUB_KW[part].test(String(it.brand || "") + String(it.model || "") + String(it.name || ""));
+        }) : null;
+        var avail = typed || items;
+        if (typed && !typed.length) avail = [];
+        var pool = typed && !typed.length ? []
+          : (cid === "cooler" ? coolerForm(avail, target)
+             : (preferOverAnchor ? avail : narrow(avail, target)));
+        if (typed && typed.length) {
+          pool = pool.filter(function (it) { return !usedIds[it.id]; });
+        }
         /* 颜值偏好要压过"配置单同款"：用户明确说喜欢白色，配置单模板却点名海景房时，
            照模板推海景房再标"同款"，等于把这个回答当没听见。
            该风格有现货时，同款匹配也只在风格内找；没现货才退回全量。 */
-        var anchorPool = cat.items;
+        var anchorPool = typed && typed.length ? typed : cat.items;
         /* 只对外观看得见、同档能换的品类应用颜值偏好。
            显卡/CPU 也带风格标注，但把显卡按"白色"换掉等于按颜色换性能档，是错的。 */
         var LOOK_CATS = { case: 1, monitor: 1, input: 1, stand: 1, audio: 1, dock: 1 };
         if (lookPref && lookPref !== "any" && lookPref !== "all" && LOOK_CATS[cid]) {
           var styledAll = cat.items.filter(function (it) { return lookOf(it) === lookPref; });
-          if (styledAll.length) {
+          if (!styledAll.length && lookMiss.indexOf(cid) === -1) lookMiss.push(cid);
+          /* 款式过滤是"同档换壳"，不能拿来卡住用户明说最看重的那一件：
+             该风格最高也就到目标价的九成时，功能优先，款式退让。 */
+          var styledTop = 0;
+          styledAll.forEach(function (it) { styledTop = Math.max(styledTop, mid(it.price)); });
+          if (styledAll.length && (!strongPref || styledTop >= target * 0.9)) {
             anchorPool = styledAll;
             var styledPool = pool.filter(function (it) { return lookOf(it) === lookPref; });
             if (styledPool.length) pool = styledPool;
+            /* 选中款式通常略贵：在这类上加一点预算，别让风格偏好压着便宜货走 */
+            target = target * 1.12;
           }
         }
-        pick = pickOne(pool, target, config, anchorPool, minAnchorMid, bias);
+        pick = pickOne(pool, target, config, anchorPool, minAnchorMid, bias, preferOverAnchor);
+        if (pick && pick.item && pick.item.id) usedIds[pick.item.id] = 1;
         /* 这一类有型号库但这一档挑不出东西时，退回档位直选：
            直接 filter 掉会让配置单少一行却不作声，用户以为是漏了。 */
         if (!pick) textPick = catalogPick(part, target) || { name: config, price: [0, 0], alts: [] };
@@ -618,6 +720,7 @@
     var finalRows = out.filter(function (r) { return r.pick || r.textPick; });
     // filter 会返回新数组，跳过的行要挂回去供配置单表格使用
     finalRows.skipped = skipped;
+    finalRows.lookMiss = lookMiss;
     return finalRows;
   }
 
@@ -628,13 +731,20 @@
     if (!plan) return "";
     opts = opts || {};
     var pri = opts.priority || [];
-    var collapsible = pri.length > 0;
     var rows = fullPartRows(plan, opts);
     if (!rows.length) return "";
+    /* 先数命中，再决定折不折。只看"有没有勾重点"不看"勾的重点在不在这一套里"，
+       结果是勾了「耳机与穿戴」却碰上不含耳机的方案时，整屏被收进折叠区，首屏变空白。 */
+    var hotHits = 0;
     rows.forEach(function (r) {
       var keys = [r.srcPart, r.part, r.cat ? r.cat.id : ""];
-      r.hot = !collapsible || keys.some(function (k) { return k && pri.indexOf(k) > -1; });
+      r.hot = keys.some(function (k) { return k && pri.indexOf(k) > -1; });
+      if (r.hot) hotHits++;
     });
+    /* 用户没点重点就不折叠：折叠区的标题是「其余部件」，没有重点就没有"其余"。 */
+    var collapsible = pri.length > 0 && opts.fold !== false && hotHits > 0;
+    /* 不折叠 = 全部行都进主列表。设成 false 会让 hotRows 与 restRows 双双落空，配件区整片消失。 */
+    if (!collapsible) rows.forEach(function (r) { r.hot = true; });
     /* 标记必须属实：同款 / 候选之一 / 档位具体型号 / 同档位替代，不能一律写"同款" */
     function badgeOf(r) {
       var st = r.pick && r.pick.state;
@@ -686,12 +796,20 @@
     var hotRows = rows.filter(function (r) { return r.hot; });
     var restRows = rows.filter(function (r) { return !r.hot; });
     var body = hotRows.map(rowHtml).join("");
-    if (restRows.length) {
+    /* 不折叠时 restRows 就是全部行：这里必须受 collapsible 门控，否则首屏依然空白 */
+    if (restRows.length && collapsible) {
       body += '<details class="fp-more"><summary>其余 ' + restRows.length +
         ' 个部件（不是这次的重点，点开看）</summary><div class="fp-list fp-list-sub">' +
         restRows.map(rowHtml).join("") + "</div></details>";
     }
-    return '<div class="fp-list">' + body + "</div>";
+    /* 重点项一件都没落地时必须说出来：用户勾了却看不到，会以为功能没生效 */
+    /* pri 里混着选项 id（如 p_audio），只把部件名写给用户看 */
+    var priNames = pri.filter(function (k) { return !/^[a-z][a-z0-9_]*$/.test(String(k)); });
+    var missTip = (pri.length && !hotHits)
+      ? '<div class="res-skip-note res-focus-miss">你勾的重点项（' + esc((priNames.length ? priNames : pri).join(" / ")) +
+        "）在这套组合里没有对应部件，所以没有置顶，下面按整体优先排列。换一套方案或取消这几项勾选即可。</div>"
+      : "";
+    return missTip + '<div class="fp-list">' + body + "</div>";
   }
 
   /* 方案简述卡：名称 + 档位 + 参考预算 + 适合人群 + 一句话说明 */
@@ -2006,7 +2124,8 @@
       var partOpts = {
         uses: use, priority: focusIds, budgetCap: budgetCap,
         skipParts: skipParts, bias: bias, targetScale: targetScale,
-        scaleOf: buildTargetScale(pref, exp, look), look: look
+        scaleOf: buildTargetScale(pref, exp, look, lifespan), look: look, pref: pref,
+        fold: rawFocus.length > 0
       };
 
       // 1) 基础整机方案（年限/强度参与匹配）
@@ -2160,10 +2279,11 @@
           ? '<div class="res-skip-note res-skip-warn">你把「' + esc(focusConflict.join(" / ")) +
               "」同时标成了重点配好，但它在已勾选的已有件里，已按跳过处理。想要新的就先取消已有件。</div>"
           : "";
+        var lookTip = p ? lookMissTip(curRows, look) : "";
         quizBody.innerHTML =
           warn +
           (p ? planBriefHtml(p) : '<div class="res-plan">未匹配到整机方案，请参考「搭配计划」板块。</div>') +
-          skipTip + conflictTip +
+          skipTip + conflictTip + lookTip +
           spec.html +
           '<div class="res-section"><span class="res-label">每个部件买什么型号（整机件 + 外设全覆盖，升级重点已置顶）</span>' +
             (p ? (fullPartsHtml(p, partOpts) || '<div class="empty-box">未匹配到可推荐的部件型号，请参考上方配置单。</div>') : "") +
@@ -2273,14 +2393,18 @@
           return pl.price[0] < best.price[0] ? pl : best;
         });
       }
-      return pool.reduce(function (best, pl) {
+      /* 先按预算挑最贵的一档，再看用途匹配度。
+         反着来（用途匹配数优先）会让多用途方案永远压住单用途方案：
+         t6000 同时标了 game 和 create 就拿 2 分，预算 13000 也顶不到 t8500。
+         上限用 price[1] 兜住，避免为了够预算挑中尾巴爆表的方案。 */
+      var fit = pool.filter(function (pl) { return pl.price[1] <= budgetCap * 1.5; });
+      var band = fit.length ? fit : pool;
+      return band.reduce(function (best, pl) {
+        if (pl.price[0] !== best.price[0]) return pl.price[0] > best.price[0] ? pl : best;
         var score = scoreOf(pl);
         var bestScore = scoreOf(best);
-        // 用途匹配度优先
-        if (score !== bestScore) return score > bestScore ? pl : best;
-        // 同匹配度下取预算内更贵的方案：预算充足却停在低档，是「最高档配置太素」的主因
-        return pl.price[0] > best.price[0] ? pl : best;
-      }, pool[0]);
+        return score > bestScore ? pl : best;
+      }, band[0]);
     }
 
     function pickItems(catId, use, pref, budgetCap, plan, intensity, look) {

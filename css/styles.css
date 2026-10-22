@@ -1803,3 +1803,15 @@ button.btn-primary { border: 0; }
 .fp-more > summary { cursor: pointer; font-size: 13px; font-weight: 600; color: var(--color-text); }
 .fp-more[open] > summary { margin-bottom: 10px; }
 .fp-list-sub { margin-top: 0; }
+
+/* 颜值风格无现货的明示条：与「已跳过」同款底，但用蓝色区分，避免被当成警告 */
+.res-skip-note.res-look-miss {
+  border-left-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.08);
+}
+
+/* 重点项在这套方案里不存在时的明示条 */
+.res-skip-note.res-focus-miss {
+  border-left-color: #f59e0b;
+  background: rgba(245, 158, 11, 0.1);
+}
