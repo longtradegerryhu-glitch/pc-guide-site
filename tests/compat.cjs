@@ -407,6 +407,31 @@ const APPLE_ONLY = /Apple\s*Pencil|妙控键盘|Magic\s*Trackpad/i;
   ok('C9b Apple Watch 在安卓手机上排除（只能配 iPhone）', watch.found && !!watch.drop,
     watch.found ? (watch.drop || '被放行 —— 这就是 ORD-25 要修的缺陷') : '不在库');
 
+  /* ================= C10 = 「笔记本支架」行不得推散热件 ================= */
+  /* ORD-25 第一版收窄写成 /笔记本|笔电/ ，s20「酷睿冰尊 笔记本散热支架」的 style 与 name
+     都含「笔记本」且它最便宜（¥89-139），于是 10 套方案全部推同一件散热器。
+     散热件该走 laptop-cool 桶，不是抬高件。这条闸钉死「渲染出来的件不是散热件」，
+     并记录一次命中分布 —— 只验「不充数」不够，还得验「没推错物类」。 */
+  console.log('\n=== C10 「笔记本支架」行不得推散热件（散热走 laptop-cool 桶） ===');
+  {
+    const picked = [];
+    const bad = [];
+    plans.forEach(pl => {
+      const rr = DG.rows(pl.id, {});
+      (rr.rows || []).forEach(r => {
+        if (!/支架/.test(r.part) && r.cat !== 'stand') return;
+        if (!r.name) return;
+        const hay = r.name + ' ' + (r.specs || '');
+        picked.push({ plan: pl.id, part: r.part, name: r.name });
+        if (/散热|降温|风扇|涡轮|半导体制冷/.test(hay)) bad.push(pl.id + ' → ' + r.name);
+      });
+    });
+    ok('C10 支架类行没有一件是散热/风扇类', bad.length === 0 && picked.length > 0,
+      '共 ' + picked.length + ' 处支架选件，散热件 ' + bad.length + ' 件' + (bad.length ? '：' + bad.join(' ; ') : ''));
+    const uniq = [...new Set(picked.map(x => x.name))];
+    console.log('  支架类选件 ' + picked.length + ' 处 / 去重后 ' + uniq.length + ' 件 → ' + uniq.join(' | '));
+  }
+
   /* ================= C7 = 数据未改 ================= */
   console.log('\n=== C7 js/models-data.js 未被改动 ===');
   const git = spawnSync('git', ['diff', '--name-only', 'HEAD', '--', 'js/models-data.js'], { cwd: ROOT, encoding: 'utf8' });
