@@ -57,15 +57,38 @@ async function loadDom(file) {
   return dom;
 }
 
-/* 从卡片上取品类标签
-   标签形如 "🧠 CPU" / "🧩 内存" / "🗂️ 主板"。
-   注意 CPU 是英文 —— 不能用「只留中文」的过滤，否则 CPU/SSD 这类标签会被清空。 */
+/* 从卡片上取「品类显示名」。
+ *
+ * 原来：解析卡片内的 .acc-cat 文本（形如 "🧠 CPU"），正则去 emoji。
+ * 改成：读祖先 section.acc-group[data-cat] 的 id，再用站内唯一的
+ *       「品类 id → 显示名」映射表换算。
+ * 为什么：显示名可能有多个写法（「拓展坞」/「扩展坞」都有人写），
+ *   而 id 是唯一且稳定的；把映射表写死在这里，尺子的期望值就必须用
+ *   显示名 —— 于是「期望值拼错」会立刻变成"该行永远 0"，
+ *   而不再可能被误读成「产品没修好」。这条改动的直接收益：
+ *   5 条 X 类行的期望值是站内不存在的品类名（笔记本支架 / 扩展坞 /
+ *   键鼠 / 智能穿戴 / 整机方案），见下方 CAT_ID_BY_NAME。
+ */
+const CAT_ID_BY_NAME = {
+  'CPU': 'cpu', '主板': 'mobo', '内存': 'ram', '显卡': 'gpu', '固态硬盘': 'ssd',
+  '电源': 'psu', '机箱': 'case', '散热器': 'cooler', '显示器': 'monitor',
+  '键鼠外设': 'input', '网络设备': 'network', '支架': 'stand', '拓展坞': 'dock',
+  '笔记本电脑': 'laptop', '手机': 'phone', '充电与供电': 'charger',
+  '手机与平板配件': 'mobileacc', '平板': 'tablet', '耳机与耳麦': 'earphone',
+  '音箱与麦克风': 'audio', '智能穿戴与配套': 'wearable'
+};
+const CAT_NAME_BY_ID = Object.keys(CAT_ID_BY_NAME).reduce((m, n) => {
+  m[CAT_ID_BY_NAME[n]] = n; return m;
+}, {});
+
 function catOf(card) {
-  const t = card.querySelector('.acc-cat, [class*=cat]');
-  if (!t) return '?';
-  return t.textContent.trim()
-    .replace(/[^\u4e00-\u9fa5A-Za-z0-9]/g, '')   // 去 emoji 与空格，保留中英数
-    .replace(/^(.)/, '$1');
+  const g = card.closest('section.acc-group[data-cat]');
+  if (!g) {
+    const t = card.querySelector('.acc-cat, [class*=cat]');
+    return t ? t.textContent.trim().replace(/[^\u4e00-\u9fa5A-Za-z0-9]/g, '') : '?';
+  }
+  const id = g.getAttribute('data-cat');
+  return CAT_NAME_BY_ID[id] || id;
 }
 
 /* ===================== U 类 · 配件搜索 ===================== */
@@ -138,6 +161,118 @@ async function runSearchTasks() {
       chk(`U 搜「${t.q}」首屏 8 张里「${t.want}」≥ ${t.min} 张（${t.why}）`,
         got >= t.min, { 首屏分布: dist, 期望品类: t.want, 至少: t.min, 实际: got, 总命中: hits });
     }
+  }
+
+  /* ---- X 类 · 复合词 / 歧义词 / 零结果死路 ----------------------------
+   * 来源：审计 ORD-26 §3.5（三整类缺失维度）+ 总控 2026-10-24 独立复核。
+   *
+   * ORD-28 审计复核改了 3 处判据，逐条说明：
+   *
+   * ① 【期望值必须是站内真实品类名】
+   *    原来：'笔记本支架' / '扩展坞' / '键鼠' / '智能穿戴' / '整机方案'
+   *    改成：'支架' / '拓展坞' / '键鼠外设' / '智能穿戴与配套'；最后一条改成「方案引导」判据
+   *    为什么：这 5 个字符串在站内 21 个品类显示名里**一个都不存在**（实测全集：
+   *      CPU/主板/内存/显卡/固态硬盘/电源/机箱/散热器/显示器/键鼠外设/网络设备/
+   *      支架/拓展坞/笔记本电脑/手机/充电与供电/手机与平板配件/平板/耳机与耳麦/
+   *      音箱与麦克风/智能穿戴与配套）→ 这 5 行的期望值恒为 0，
+   *      **即使产品修好了也永远变不绿**，会被误判成「执行者没修」。
+   *    语义保持：'笔记本支架'→'支架'（笔记本支架在 stand 品类里）、
+   *      '扩展坞'→'拓展坞'（dock 品类的显示名就是「拓展坞」）、'键鼠'→'键鼠外设'、
+   *      '智能穿戴'→'智能穿戴与配套'。**阈值一张没动。**
+   *
+   * ② 【「组装电脑」这条要重写 —— 原判据恒真，测不到任何东西】
+   *    原来：hits > 0 || guide || alt，其中 alt 正则含「热门搜索」
+   *    改成：判据改成「**结果区里出现指向 plans.html 的可点击入口**」，
+   *          且「结果区」限定在 #accWrap / #accSearchHint / 空态容器内，
+   *          **不再扫全 body**。
+   *    为什么（实测）：未搜索时 alt 正则就已经命中「热门搜索」「替代」
+   *      ——「热门搜索」是配件页常驻区（#accHot），与查询无关；
+   *      而「试试」来自空态文案「没有匹配「组装电脑」的型号，换个关键词试试」
+   *      ——**恰恰是死路本身**。所以原判据在**任何查询下都 PASS**，
+   *      这行等于没测到东西（总控 §一.2 的判断成立）。
+   *    新判据为什么用「可点击入口」而不是「文案里出现方案二字」：
+   *      导航栏本来就有一个 `a[href="plans.html"]`（accessories.html 第 40 行），
+   *      扫全 body 会把导航栏当成方案引导 → 又是恒真。
+   *      必须限定在结果容器内，且必须是 **链接/按钮**（能点），不是文案。
+   *
+   * ③ 【「主机 / 台式机 / 游戏」三条：库里没有整机件 → 改判据形态】
+   *    原来：want='整机方案', min=1 —— 但站内不存在名为「整机方案」的品类，
+   *          且 1209 件里**没有一件是整机**（全是零件），所以这三条永不可达。
+   *    改成：判据 = 「结果区里出现指向 plans.html 的入口」+「首屏 8 张里
+   *          零件型卡片 ≤ N」（N=6，容许零件但不许首屏全是零件）。
+   *    为什么这样定：总控 §一.1 已指出「实际形态可能是『卡片 + 方案引导条』，
+   *      不是首屏 8 张里有方案卡」—— 我给的口径是：
+   *      **允许「方案引导入口」计通过，但必须同时限制零件霸占首屏**；
+   *      只看引导不看首屏，会放过「首屏 8 张全是 CPU + 一个方案按钮」这种
+   *      仍然难用的形态。上限 6 的依据：当前搜「台式机」首屏是
+   *      ssd3/case1/network2 共 6 件零件（总量只有 6 件），
+   *      所以 6 是「不误杀现状但不放过霸占」的分界。
+   */
+  const PLAN_LINK_IN_RESULT = 'a[href*="plans.html"], button[data-href*="plans.html"], [data-goto*="plans.html"]';
+  const RESULT_CONTAINERS = '#accWrap, #accSearchHint, #accEmpty, #accNoResult, .acc-empty, .acc-no-result, .acc-suggest';
+
+  /* 判据：结果区里有没有指向 plans.html 的可点击入口（限定在结果容器内，不扫全 body） */
+  const hasPlanEntry = () => {
+    const roots = RESULT_CONTAINERS.split(',').map(s => D.querySelector(s.trim())).filter(Boolean);
+    for (const r of roots) {
+      const links = [...r.querySelectorAll(PLAN_LINK_IN_RESULT)];
+      if (links.length) return { ok: true, href: links[0].getAttribute('href'), text: links[0].textContent.trim().slice(0, 30) };
+    }
+    for (const r of roots) {
+      if (r.matches && r.matches(PLAN_LINK_IN_RESULT)) return { ok: true, href: r.getAttribute('href'), text: r.textContent.trim().slice(0, 30) };
+    }
+    return { ok: false };
+  };
+
+  const X = [
+    /* X-1 复合词：多词连写不该被拆成 AND 条件后必然 0 结果 */
+    { q: '组装电脑',   plan: true, why: '新手第一大意图；站的主资产是 26 套方案，搜不到零件就必须给方案入口' },
+    { q: '笔记本支架', want: '支架',         min: 3, why: '配置单行名；stand 40 件里 6 件是笔记本支架（s8/s19/s20/s21/vst6 等）' },
+    { q: '平板键盘',   want: '手机与平板配件', min: 3, why: '配置单行名；mobileacc 里 5 件平板键盘（ma20/21/22/23/28）' },
+    { q: '手机支架',   want: '手机与平板配件', min: 3, why: '常见口语；mobileacc 36 件里 3 件名字含「手机支架」+ 车载/重力支架共 5 件' },
+    { q: '显卡支架',   want: '支架',         min: 2, why: '常见口语；stand 40 件' },
+    { q: 'CPU散热器', want: '散热器',       min: 3, why: '混合写法；cooler 52 件' },
+    { q: '电源适配器', want: '充电与供电',   min: 3, why: '常见口语；charger 41 件里 2 件转接器 + 30 件充电器' },
+    { q: '硬盘盒',     want: '拓展坞',       min: 1, why: '常见口语；库里确实有 3 件硬盘盒（d18/vdk10/vdk206，均在 dock 品类）' },
+    { q: '超级本',     want: '笔记本电脑',   min: 3, why: '品类别名；laptop 79 件里 25 件轻薄/超极本' },
+    { q: '键鼠外设',   want: '键鼠外设',     min: 3, why: '常见口语；input 67 件' },
+    { q: '智能穿戴',   want: '智能穿戴与配套', min: 3, why: '品类别名；wearable 70 件' },
+    { q: '屏幕保护',   want: '手机与平板配件', min: 1, why: '口语，指保护膜；mobileacc 里有 4 件膜（ma5-ma8）' },
+    /* X-2 歧义词：搜出来必须是「主流那一类」，不能被冷门品类霸占 */
+    { q: '键盘',       want: '键鼠外设',     min: 4, why: '现在首屏 8 张全是「手机与平板配件」；input 67 件里 37 件含「键盘」，其中 31 件 style 是键盘类' },
+    { q: '充电线',     want: '充电与供电',   min: 4, why: '现在只命中 1 件（苹果 USB-C 编织充电线）；charger 里 style=数据线 有 5 件' },
+    { q: '144Hz',      want: '显示器',       min: 3, why: '现在首屏 3 张显示器 + 5 张手机；显示器 76 款里只有 3 款写 144Hz（m36/vmo6/moq6）—— 阈值从 4 降到 3：4 在数据上不可达' },
+    /* X-3 整机意图：库里没有整机件 → 判据改为「给方案入口」+「首屏不许全是零件」 */
+    { q: '主机',       plan: true, maxParts: 6, why: '用户要的是整机，库里没有整机件 → 必须导向方案页' },
+    { q: '台式机',     plan: true, maxParts: 6, why: '同上' },
+    { q: '游戏',       plan: true, maxParts: 6, why: '站的最大资产是方案，不该首屏全是 CPU' },
+  ];
+
+  for (const t of X) {
+    inp.value = t.q;
+    inp.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+    await sleep(600);
+    const hint = D.querySelector('#accSearchHint');
+    const hm = hint ? hint.textContent.match(/命中 (\d+) 款/) : null;
+    const hits = hm ? +hm[1] : 0;
+    const cards = [...D.querySelectorAll('.acc-card')].slice(0, 8);
+    const dist = {};
+    cards.forEach(c => { const k = catOf(c); dist[k] = (dist[k] || 0) + 1; });
+    const shown = cards.length;
+
+    if (t.plan) {
+      /* 「给方案入口」判据：必须可点击，且在结果容器内（不扫全 body ——
+         导航栏本来就有一个 plans.html 链接，扫全 body 会恒真） */
+      const pe = hasPlanEntry();
+      const ok = pe.ok && shown <= (t.maxParts || 6);
+      chk('X 搜「' + t.q + '」给出可点击的方案页入口，且首屏零件不超过 ' + (t.maxParts || 6) + ' 张（' + t.why + '）',
+        ok, { 命中: hits, 首屏张数: shown, 有方案入口: pe.ok, 入口: pe.text || '', 首屏分布: dist });
+      continue;
+    }
+
+    const got = dist[t.want] || 0;
+    chk('X 搜「' + t.q + '」首屏 8 张里「' + t.want + '」≥ ' + t.min + ' 张（' + t.why + '）',
+      got >= t.min, { 首屏分布: dist, 期望品类: t.want, 至少: t.min, 实际: got, 总命中: hits });
   }
   dom.window.close();
 }

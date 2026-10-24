@@ -1828,3 +1828,29 @@ button.btn-primary { border: 0; }
   border-left-color: #3b82f6;
   background: rgba(59, 130, 246, 0.08);
 }
+
+/* ===== 搜索「主机 / 游戏 / 组装电脑」时的整机方案入口（ORD-27） =====
+   它不是零件卡 —— 不计入「首屏 8 张」，所以单独一套样式，不继承 .acc-card。
+   为什么单独存在：库里没有整机件，而这四个词是新手的第一大意图；
+   只回一句「换个关键词试试」，用户会以为站里没有整机。 */
+.acc-plan-entry {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  margin: 0 0 14px; padding: 12px 16px; border-radius: 12px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-alt);
+  text-decoration: none; color: inherit;
+  transition: border-color .15s ease, transform .15s ease;
+}
+.acc-plan-entry:hover { border-color: var(--color-primary); transform: translateY(-1px); }
+.acc-plan-badge {
+  font-size: 12px; padding: 2px 9px; border-radius: 999px;
+  background: var(--color-primary); color: #fff; white-space: nowrap;
+}
+.acc-plan-title { font-weight: 600; }
+.acc-plan-desc { color: var(--color-text-soft); font-size: 13px; }
+.acc-plan-go { margin-left: auto; color: var(--color-primary); font-size: 13px; white-space: nowrap; }
+/* 整机意图下首屏零件被截断时的说明（替代「加载更多」按钮） */
+.acc-cut-note {
+  margin: 10px 0 0; padding: 8px 12px; font-size: 13px;
+  color: var(--color-text-soft); border-left: 2px solid var(--color-border);
+}

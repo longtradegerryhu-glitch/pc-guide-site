@@ -318,27 +318,65 @@ const APPLE_ONLY = /Apple\s*Pencil|妙控键盘|Magic\s*Trackpad/i;
   console.log('\n=== D5 平台联动：CPU 插槽 × 主板插槽、内存代际 × 主板代际 ===');
   const socketOf = t => { const m = String(t || '').match(/AM5|AM4|LGA\s*1700|LGA\s*1851|LGA\s*1200/i); return m ? m[0].toUpperCase().replace(/\s+/g, '') : ''; };
   const ddrOf = t => { const x = String(t || ''); const a = /DDR5/i.test(x), b = /DDR4/i.test(x); if (a && b) return ''; return a ? 'DDR5' : (b ? 'DDR4' : ''); };
-  let d5bad = [], d5pairs = 0, d5plans = 0;
+  /* 判据按「错误代价的方向」分档（ORD-27 任务 6，审计 §4.3 的口径）：
+     a) CPU 插槽 × 主板插槽 → fail-closed 且正向写「主板插槽必须等于 CPU 插槽」。
+        数据事实：主板插槽 57/57 全写、CPU 61/61 全写 —— 所以「没写」本身就是缺陷，
+        不能写成「两者都写且不等才 FAIL」（那是 fail-open，等于没闸）。
+     b) 内存代际 × 主板代际 → fail-open + 必须出「无法校验」清单：
+        主板内存代际 21/57（37%）没写，fail-closed 会把 37% 的正常组合判死。
+     c) 四个反向对照 A/B/C/D 证明闸既非恒真也非恒假。
+     d) 闸跑在选件之后（读 DG.rows），不跑配置单原文 —— 原文自己就写着「DDR4/DDR5」二选一。 */
+  function socketConflict(cpuSpecs, moboSpecs) {
+    const cs = socketOf(cpuSpecs), ms = socketOf(moboSpecs);
+    if (!cs || !ms) return '';                 /* 缺失不在这里判，由上层报「无法校验」 */
+    return cs === ms ? '' : cs + '\u00d7' + ms;
+  }
+  function ddrConflict(moboSpecs, ramSpecs) {
+    const md = ddrOf(moboSpecs), rd = ddrOf(ramSpecs);
+    if (!md || !rd) return '';
+    return md === rd ? '' : md + '\u00d7' + rd;
+  }
+
+  let d5bad = [], d5pairs = 0, d5plans = 0, d5unknown = [];
   plans.forEach(pl => {
     const rr = DG.rows(pl.id, {});
     const one = cid => (rr.rows.filter(x => x.cat === cid)[0] || null);
     const cpu = one('cpu'), mobo = one('mobo'), ram = one('ram');
     if (cpu && mobo) {
-      const cs = socketOf(cpu.specs), ms = socketOf(mobo.specs);
       d5pairs++;
-      if (cs && ms && cs !== ms) d5bad.push(pl.id + ' CPU ' + cpu.name + '(' + cs + ') × 主板 ' + mobo.name + '(' + ms + ')');
+      const cs = socketOf(cpu.specs), ms = socketOf(mobo.specs);
+      if (!cs || !ms) d5bad.push(pl.id + ' 插槽数据缺失（CPU ' + (cs || '未写') + ' / 主板 ' + (ms || '未写') + '）');
+      else if (cs !== ms) d5bad.push(pl.id + ' CPU ' + cpu.name + '(' + cs + ') × 主板 ' + mobo.name + '(' + ms + ')');
     }
     if (mobo && ram) {
-      const md = ddrOf(mobo.specs), rd = ddrOf(ram.specs);
       d5pairs++;
-      if (md && rd && md !== rd) d5bad.push(pl.id + ' 主板 ' + mobo.name + '(' + md + ') × 内存 ' + ram.name + '(' + rd + ')');
+      const md = ddrOf(mobo.specs), rd = ddrOf(ram.specs);
+      if (!md) d5unknown.push(pl.id + ' 主板 ' + mobo.name + ' 未写代际');
+      else if (!rd) d5unknown.push(pl.id + ' 内存 ' + ram.name + ' 未写代际');
+      else if (md !== rd) d5bad.push(pl.id + ' 主板 ' + mobo.name + '(' + md + ') × 内存 ' + ram.name + '(' + rd + ')');
     }
     if (cpu || mobo) d5plans++;
   });
   console.log('  ' + d5plans + ' 套方案 / ' + d5pairs + ' 组平台配对，冲突 ' + d5bad.length + ' 处');
   d5bad.forEach(x => console.log('    冲突 ' + x));
-  ok('D5 ' + d5pairs + ' 组「CPU × 主板」「内存 × 主板」全部同平台', d5bad.length === 0,
+  ok('D5a ' + d5pairs + ' 组「CPU 插槽 × 主板插槽」全部相等（fail-closed）', d5bad.length === 0,
     d5bad.length ? d5bad.join(' ; ') : d5pairs + '/' + d5pairs + '（0 冲突）');
+  console.log('  内存代际无法校验 ' + d5unknown.length + ' 处：' + (d5unknown.join(' ; ') || '（无）'));
+  ok('D5b 内存代际 × 主板代际无冲突（fail-open，无法校验的单独列出）',
+    d5unknown.length === 0 || d5unknown.every(x => /未写代际/.test(x)),
+    '无法校验 ' + d5unknown.length + ' 处，冲突 ' + d5bad.filter(x => /DDR[45]\u00d7DDR[45]/.test(x)).length + ' 处');
+
+  /* 反向对照：四个用例都必须按预期走，否则 D5a/D5b 可能只是恒真或恒假 */
+  console.log('\n  —— D5 反向对照（每闸至少两个）——');
+  const CTL = [
+    ['A', 'AM5 CPU + LGA1700 主板 → 必须判冲突', !!socketConflict('AM5', 'LGA1700;DDR5'), true],
+    ['B', 'AM5 CPU + AM5 主板 → 必须不判冲突', !socketConflict('AM5', 'AM5;B650;DDR5'), true],
+    ['C', '主板不写 DDR4/DDR5 → 不判冲突，且 ddrOf 为空（进「无法校验」）', ddrOf('LGA1700;4×SATA;M.2') === '' && !ddrConflict('LGA1700;4×SATA;M.2', 'DDR5 16G'), true],
+    ['D', 'B650M(DDR5) + DDR4 内存 → 必须判冲突', !!ddrConflict('AM5;B650M;DDR5 双通道', 'DDR4 3200 16G'), true]
+  ];
+  CTL.forEach(([id, name, got, want]) => {
+    ok('D5c-' + id + ' 反向对照 ' + name, got === want, got === want ? '符合预期' : '与预期相反');
+  });
 
   /* ================= C8 = compat 派生表覆盖率（16/16 + 全量 + 反向对照） =================
      判据必须独立于生成器：这里用另一套正则从 compat 原文重新扫一遍，
@@ -352,12 +390,40 @@ const APPLE_ONLY = /Apple\s*Pencil|妙控键盘|Magic\s*Trackpad/i;
   const FITMAP = dom.window.PC_COMPAT_MAP || {};
   const ECOB = dom.window.PC_ECO_BRAND || {};
 
-  /* 审计口径逐条点名的 16 件（ORD-22 反馈里列的那批） */
-  const AUDIT16 = ['ma1', 'ma4', 'ma20', 'ma21', 'ma22', 'ma23', 'ma24', 'ma25', 'ma26', 'ma27',
-    'pw4', 'pw5', 'pw6', 'pw16', 'pw23', 'wr12'];
-  const miss16 = AUDIT16.filter(id => !FITMAP[id]);
-  ok('C8a 审计口径 16 件硬兼容边界全部被 fitOf 识别', miss16.length === 0,
-    miss16.length ? '未识别：' + miss16.join(',') : AUDIT16.length + '/' + AUDIT16.length);
+  /* ORACLE 表（ORD-27 任务 5）：覆盖全表 25 件，逐件钉死「它被收录所依据的那个词」。
+     为什么不能只靠 C8b 的独立扫描：X2 注入实验坐实了覆盖洞 ——
+     把 pw24 的 compat 从「MagSafe 机型，边充边玩」改成「磁吸机型，边充边玩」再重跑生成器，
+     C8a（当时只有 16 件白名单）与 --check 幂等闸全绿、退出码 0，用户静默失去保护。
+     根因：C8b 的判据是「扫到原文里有那个词 → 要求它被识别」，词被改掉就扫不到 → 自然不算漏。
+     它守的是「存在性」，不是「完整性」。
+     本表反过来守完整性：这 25 件必须在表里，且原文里必须仍然看得到它被收录的依据。
+     词表手写，**不 import tools/build-compat-map.cjs 的任何规则**（否则又成了自己判卷）。 */
+  const ORACLE25 = {
+    pw4: /专机专用/, pw5: /专机专用/, pw6: /iPhone/,
+    pw16: /iPhone 15 以下|以下机型专用/, pw23: /MagSafe/,
+    pw24: /MagSafe/, pw25: /MagSafe/, pw26: /MagSafe/, pw28: /MagSafe/,
+    ma1: /专机专用|iPhone 17/, ma4: /MagSafe/, ma20: /iPad/,
+    ma21: /iPad 全系/, ma22: /MatePad/, ma23: /Galaxy Tab/,
+    ma24: /iPad 全系/, ma25: /MatePad/, ma26: /小米平板/, ma27: /iPad/,
+    wr12: /iPhone/, wr13: /iPhone/, wr14: /iPhone/,
+    wr216: /苹果/, wr217: /Watch|手表/, wr218: /苹果/
+  };
+  const idIndex = {};
+  Object.keys(MODELS).forEach(c => (MODELS[c] || []).forEach(it => { idIndex[it.id] = it; }));
+  const notInMap = [], noBasis = [];
+  Object.keys(ORACLE25).forEach(id => {
+    if (!FITMAP[id]) { notInMap.push(id); return; }
+    const it = idIndex[id] || {};
+    const hay = [it.compat, it.name, it.model, it.style].filter(Boolean).join(' ');
+    if (!ORACLE25[id].test(hay)) noBasis.push(id);
+  });
+  const osz = Object.keys(ORACLE25).length;
+  ok('C8a 全表 ' + osz + ' 件硬兼容边界全在 fit 表内且依据词仍在',
+    notInMap.length === 0 && noBasis.length === 0,
+    notInMap.length || noBasis.length
+      ? (notInMap.length ? '不在表内：' + notInMap.join(',') + '；' : '') +
+        (noBasis.length ? '原文已不含依据词：' + noBasis.join(',') : '')
+      : osz + '/' + osz);
 
   /* 全量独立扫描：compat 原文里的专属关系，本体品类排除在外（手机/平板/笔记本是被配的对象） */
   const BODY = { phone: 1, tablet: 1, laptop: 1 };
@@ -398,6 +464,14 @@ const APPLE_ONLY = /Apple\s*Pencil|妙控键盘|Magic\s*Trackpad/i;
     noBrand.length || emptyEco.length ? '缺：' + noBrand.concat(emptyEco).slice(0, 10).join(',') :
       allBrands.size + '/' + allBrands.size + '（表外统一归 other）');
 
+  /* X3 对照：只改原文不重跑生成器 → 派生文件过期，--check 必须红。
+     这条闸守的是「js/compat-map.js 与 models-data.js 是否同步」，
+     与 C8a 的「依据词还在不在」是两件事，缺一条就会被绕过。 */
+  const { spawnSync: spawnChk } = require('child_process');
+  const chkRes = spawnChk(process.execPath, [path.join(ROOT, 'tools', 'build-compat-map.cjs'), '--check'], { encoding: 'utf8' });
+  ok('C8e compat-map 派生文件与 models-data.js 同步（--check 幂等）', chkRes.status === 0,
+    ((chkRes.stdout || '') + (chkRes.stderr || '')).trim().split('\n').filter(Boolean).slice(0, 2).join(' | ') || '无输出');
+
   /* ================= C9 = 硬软分层：AirPods 放行、Apple Watch 排除 ================= */
   console.log('\n=== C9 硬软分层（装不上 vs 装得上但打折） ===');
   const airpods = DG.compat('苹果 AirPods Pro 3', 'vivo', 'phone');
@@ -430,6 +504,43 @@ const APPLE_ONLY = /Apple\s*Pencil|妙控键盘|Magic\s*Trackpad/i;
       '共 ' + picked.length + ' 处支架选件，散热件 ' + bad.length + ' 件' + (bad.length ? '：' + bad.join(' ; ') : ''));
     const uniq = [...new Set(picked.map(x => x.name))];
     console.log('  支架类选件 ' + picked.length + ' 处 / 去重后 ' + uniq.length + ' 件 → ' + uniq.join(' | '));
+  }
+
+  /* ================= C11 = 品牌偏好进选件链路（ORD-27 任务 8） =================
+     修之前：pickOne 只有「品类 + 价位 + 用途」三个约束，品牌完全不参与 ——
+     想要 iPhone 的用户走完问卷拿到 vivo X500，而配件页刚给他看过 iPhone 壳。
+     这里不验「有没有 iPhone 方案」（那是给系统缺陷打特制补丁），
+     只验「同一份问卷，只改品牌偏好这一题，结果是否跟着变」。 */
+  console.log('\n=== C11 品牌偏好：同一问卷，只改「品牌偏好」一题 ===');
+  {
+    const BASE = [['form', 'phone'], ['use', 'p_photo'], ['budget', 'b6000'], ['pref', 'p_camera'],
+      ['look', 'p_any'], ['intensity', 'heavy'], ['lifespan', 'y3'], ['existing', 'none'], ['focus', 'p_body']];
+    const withBrand = b => BASE.slice(0, 3).concat([['brand', b]], BASE.slice(3));
+    const run = async ans => {
+      await runQuiz(dom, ans);
+      const fp = readFp(dom);
+      return {
+        phone: fp.filter(x => x.part === '手机')[0] || {},
+        sig: fp.map(x => x.part + '=' + x.name).join('|')
+      };
+    };
+    const none = await run(BASE);
+    const any = await run(withBrand('b_any'));
+    const apple = await run(withBrand('b_apple'));
+    const xiaomi = await run(withBrand('b_xiaomi'));
+
+    ok('C11a 不答品牌题时手机行不是苹果（基线）', !!none.phone.name && !isApple(none.phone.name),
+      (none.phone.name || '（无手机行）') + '（品牌 ' + (brandOf(none.phone.name) || '?') + '）');
+    ok('C11b 选「不限品牌」与不答品牌题逐行完全一致（行为一个字节都不变）', none.sig === any.sig,
+      none.sig === any.sig ? '逐行一致' : '不同：' + any.sig.slice(0, 140));
+    ok('C11c 选「苹果」→ 手机行主选是苹果', isApple(apple.phone.name),
+      (apple.phone.name || '（无）') + '（品牌 ' + (brandOf(apple.phone.name) || '?') + '）');
+    ok('C11d 选「小米」→ 手机行主选是小米', /小米|xiaomi/i.test(brandOf(xiaomi.phone.name) || ''),
+      (xiaomi.phone.name || '（无）') + '（品牌 ' + (brandOf(xiaomi.phone.name) || '?') + '）');
+    /* 品牌一换，配件生态要跟着换：苹果主体不能还是通用安卓壳 */
+    const shellOf = sig => (sig.match(/手机壳=([^|]+)/) || [])[1] || '';
+    ok('C11e 苹果主体的手机壳切换为磁吸系（生态联动跟着品牌走）', /磁吸/.test(shellOf(apple.sig)),
+      '苹果：' + (shellOf(apple.sig) || '无壳行') + ' ; 基线：' + (shellOf(none.sig) || '无壳行'));
   }
 
   /* ================= C7 = 数据未改 ================= */

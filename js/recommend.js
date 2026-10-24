@@ -176,20 +176,27 @@
     "散热配件": /散热|风扇|背夹/i,
     "充电器": /充电器|氮化镓|充电头/i,
     "数据线": /线/i,
-    "移动电源": /移动电源|充电宝/i,
-    /* 笔记本方案里「笔记本支架」这一行，库里 stand 品类 40 件只有 6 件是笔记本用的，
-       其余 34 件是显示器支架臂/增高架/升降桌。不收窄就会给笔记本推「单屏气压弹簧臂」——
-       实测 9 套笔记本方案里 4 套命中。
-       光收窄到「含笔记本」还不够：s20 的 style 是「笔记本散热支架」，name 也含「笔记本」，
-       而且它最便宜（¥89-139），于是 10 套方案全部推同一件散热器 ——
-       分类错（散热件该走 laptop-cool 桶）、场景错（它的 compat 是「游戏笔记本散热与抬高，
-       需接受风扇噪音」，推给轻办公/创作是错配）、覆盖浪费（3 件真抬高件一件没被选中）。
-       所以本行必须排除「散热」。收窄后候选 = s8 绿联折叠 ¥49-69 / s19 绿联立式 ¥59-89 /
-       s21 联想铝合金 ¥79-119 / vst6 绿巨能 ¥55-89。 */
-    "笔记本支架": /^(?![\s\S]*散热)(?=[\s\S]*(?:笔记本|笔电))/i
+    "移动电源": /移动电源|充电宝/i
+    /* 「笔记本支架」不放在这里判：它的物类只写在 style 里，而这里判的是
+       brand+model+name 的拼接串。按 name 判会稳定命中 s20（name 含「笔记本」、
+       价格最低），而它是散热件 —— 详见下面的 SUB_STYLE。 */
   };
   /* 品类 id → 该品类的行名关键词收窄是否可信（品类里混装了多个物类时才需要） */
   var SUB_CAT = { charger: 1, mobileacc: 1, ssd: 1, stand: 1 };
+
+  /* 物类写在 style 字段里的行，按 style 判而不是按 name 判（ORD-27 任务 7）。
+     支架的 style 是「笔记本支架 / 笔记本立式支架 / 笔记本散热支架 / 双用支架」，
+     name 是「北弧 LDT14 单屏气压弹簧臂」这类 —— 按 name 判不出用途。
+     口径：style 以「笔记本」开头且不含「散热」→ 笔记本支架（s8/s21/vst6/s19 四件）；
+     「笔记本散热支架」→ 不含「笔记本」开头以外…它确实以笔记本开头，但含散热 → 排除，
+     它该走 laptop-cool 桶（配置单里本来就有「笔记本散热」这一行）；
+     「双用支架」不以笔记本开头 → 留在 stand 通用组，不作笔记本支架行的主选。 */
+  var SUB_STYLE = {
+    "笔记本支架": function (it) {
+      var s = String(it.style || "");
+      return /^笔记本/.test(s) && !/散热/.test(s);
+    }
+  };
 
   /* 从方案自己的配置单提取各类部件的目标价位（取价格中值）。
      只读既有数据、不引入新价格：方案说配 RTX 5080，配件推荐就不该给 RTX 5060。 */
@@ -622,7 +629,21 @@
       return function (cid) { return map[cid] || 1; };
     }
 
-    function buildBias(pref, exp, lifespan, look) {
+    /* 品牌偏好 → 品牌正则（ORD-27 任务 8）。
+       pickOne 原来只有「品类 + 价位 + 用途」三个约束，品牌完全不参与 ——
+       于是任何有品牌偏好的用户都推不出自己想要的品牌。苹果只是最容易发现的症状：
+       站内 6 款 iPhone 在 26 套方案里一款都作不了主选，而配件页刚给他看过 iPhone 壳。
+       子品牌不合并：红米不等于小米、荣耀不等于华为 —— 那是两条产品线，不是一家。
+       不加「其他」：选「其他」就等于不限，走下面 brandOf=null 的原行为。 */
+    var BRAND_RE = {
+      b_apple: /apple|苹果/i,
+      b_huawei: /华为|huawei/i,
+      b_xiaomi: /小米|xiaomi/i,
+      b_lenovo: /联想|lenovo|thinkpad|thinkbook/i,
+      b_samsung: /三星|samsung/i
+    };
+
+    function buildBias(pref, exp, lifespan, look, brandPref) {
       var kw = [];
       if (pref === "quiet" || pref === "p_perf") kw = ["静音", "低噪", "安静", "风扇"];
       else if (pref === "rgb") kw = ["灯", "RGB", "幻彩"];
@@ -637,7 +658,7 @@
       if (exp === "pro") kw = kw.concat(["旗舰", "堆料"]);
       if (lifespan === "y5") kw = kw.concat(["5 年", "质保", "年保"]);
       var wantValue = pref === "value" || pref === "p_value" || pref === "t_value";
-      return function (it) {
+      var fn = function (it) {
         var hay = String((it.style || "") + " " + (it.valueNote || "") + " " + (it.specs || ""));
         var hit = 0;
         kw.forEach(function (k) { if (k && hay.indexOf(k) > -1) hit++; });
@@ -648,6 +669,11 @@
         }
         return hit;
       };
+      /* brandOf 由 pickOne 直接读：品牌是硬约束，不能混进 hit 计分
+         （混进去会被「静音 +2 / 颜值 +2」压掉，等于没设偏好）。
+         brandPref 为空或未知 → null → pickOne 走原逻辑，一个字节都不变。 */
+      fn.brandOf = BRAND_RE[brandPref] || null;
+      return fn;
     }
 
   /* 挑 top1 + 2 备选：配置单同款置顶，其余按价位距离 + 等级排序 */
@@ -664,6 +690,13 @@
        不这么做，"静音散热"与"人体工学"会推出同一套 —— 这道题等于白问。 */
     var skipAnchor = false;
     if (bias) {
+      /* 品牌偏好先于「最看重什么」：品牌是硬约束，静音/颜值是软偏好。
+         只在候选池里真有这个品牌时收紧；一件都没有就退回原行为 ——
+         品牌偏好不能把一行清空（那会让配置单少一件，比推错品牌更糟）。 */
+      if (bias.brandOf) {
+        var sameBrand = pool.filter(function (it) { return bias.brandOf.test(String(it.brand || "")); });
+        if (sameBrand.length) { pool = sameBrand; skipAnchor = true; }
+      }
       var liked = pool.filter(function (it) { return bias(it) > 0; });
       if (liked.length) { pool = liked; if (preferOverAnchor) skipAnchor = true; }
     }
@@ -870,9 +903,17 @@
            pickOne 直接返回 null，随后走配置单原文兜底 —— 这是想要的结果） */
         /* style 也要进 haystack：支架类的物类只写在 style 里（「笔记本支架」/「显示器支架」），
            name 是「北弧 LDT14 单屏气压弹簧臂」这种，靠名字永远判不出是给谁用的。 */
-        var typed = SUB_KW[part] && SUB_CAT[cid] ? items.filter(function (it) {
-          return SUB_KW[part].test(String(it.brand || "") + String(it.model || "") + String(it.name || "") + " " + String(it.style || ""));
-        }) : null;
+        var typed = null;
+        if (SUB_CAT[cid]) {
+          if (SUB_STYLE[part]) {
+            /* 按 style 判（比 name 准，见 SUB_STYLE 注释） */
+            typed = items.filter(SUB_STYLE[part]);
+          } else if (SUB_KW[part]) {
+            typed = items.filter(function (it) {
+              return SUB_KW[part].test(String(it.brand || "") + String(it.model || "") + String(it.name || "") + " " + String(it.style || ""));
+            });
+          }
+        }
         /* 行名收窄后一件都没有：这一行宁可明说「暂无可用配件」，也不拿别的物类凑数。
            判定在下面 pick 为空时做，这里只保留 typed 供那段代码读。 */
         /* 生态过滤放在收窄之前：收窄（壳/笔/键盘…）的判定只看物类，
@@ -1306,7 +1347,20 @@
       "转接器": "charger", "otg": "charger", "插线板": "charger",
       "手机壳": "mobileacc", "保护壳": "mobileacc", "手机模": "mobileacc", "保护膜": "mobileacc",
       "防窥": "mobileacc", "自拍杆": "mobileacc", "云台": "mobileacc", "手柄": "mobileacc",
-      "手写笔": "mobileacc", "键盘": "mobileacc", "穿戴消毒": "mobileacc", "车载支架": "mobileacc",
+      "手写笔": "mobileacc", "穿戴消毒": "mobileacc", "车载支架": "mobileacc",
+      "平板键盘": "mobileacc", "手机支架": "mobileacc",
+      /* 「键盘」有两个义项：电脑键盘（input 68 件）与平板键盘（mobileacc 5 件）。
+         用户搜「键盘」要的是前者，但直接删掉 mobileacc 就等于平板键盘搜不到了。
+         所以值写成数组：第 0 位是主流义项（一级命中），其余是次要义项（降一层、排在后面）。 */
+      "键盘": ["input", "mobileacc"], "键鼠": "input", "键鼠外设": "input",
+      /* 复合词整串入表（ORD-27 任务 1）。
+         这些词的共同点是「拆成两个 token 后每个都必须成立」，而 ALIAS 的品类词要求
+         条目属于该品类 —— 「笔记本支架」= laptop ∧ stand 于是必然 0 结果。
+         整串作为一个键时，segmentQuery 按长度优先把它切成一个 token，不再拆成 AND。 */
+      "笔记本支架": "stand", "显卡支架": "stand", "cpu散热器": "cooler",
+      "电源适配器": "charger", "充电线": "charger",
+      "硬盘盒": "dock", "屏幕保护": "mobileacc",
+      "超级本": "laptop", "超极本": "laptop", "智能穿戴": "wearable",
       "耳机": "earphone", "耳麦": "earphone", "蓝牙耳机": "earphone", "降噪耳机": "earphone",
       "头戴": "earphone", "入耳": "earphone", "真无线": "earphone", "开放式耳机": "earphone",
       "骨传导": "earphone", "游戏耳机": "earphone", "监听耳机": "earphone", "有线耳机": "earphone",
@@ -1342,28 +1396,36 @@
       "ddr5": ["ram", "mobo"],
       "ddr4": ["ram", "mobo"],
 
-      /* 固态：m.2 只归 ssd（见纪律②）；nvme 硬盘盒（dock）以 NVMe 为主语 */
+      /* 固态：m.2 只归 ssd（见纪律②）；nvme 硬盘盒（dock）以 NVMe 为主语
+         （ORD-27 任务 9）pcie4.0/5.0 从 ssd+mobo 收窄成 ssd（5.0 另加 gpu）：
+         「PCIe 4.0 ×4」出现在主板上说的是插槽版本，说不通「主板也该排前面」——
+         这正是 M.2 那条教训（搜 M.2 看到主板）的同型错误，不能在下一条重犯。 */
       "m.2": ["ssd"],
       "nvme": ["ssd", "dock"],
-      "pcie4.0": ["ssd", "mobo"],
-      "pcie5.0": ["ssd", "mobo", "gpu"],
+      "pcie4.0": ["ssd"],
+      "pcie5.0": ["ssd", "gpu"],
 
-      /* 电源：认证等级、模组化、功率档都是电源的主语 */
+      /* 电源：认证等级、模组化、功率档都是电源的主语。
+         「atx」收窄成 case+mobo（ORD-27 任务 9）：ATX 是版型/箱型标准，
+         电源的 ATX 命中全部来自「ATX3.1」子串，而 ATX3.1 另有专键 ——
+         裸词 ATX 归电源等于让 24 件电源顶满首屏（实测首屏 8 张全电源）。 */
       "atx3.1": ["psu"],
-      "atx": ["psu", "case", "mobo"],
+      "atx": ["case", "mobo"],
       "金牌": ["psu"],
       "铜牌": ["psu"],
       "模组": ["psu"],
       "750w": ["psu"],
       "850w": ["psu"],
 
-      /* 网络：速率词的主语是网络设备；带 2.5G 网口的拓展坞同属主体 */
+      /* 网络：速率词的主语是网络设备；带 2.5G 网口的拓展坞同属主体。
+         wifi7/wifi6e 收窄成 network（ORD-27 任务 9）：主板上的「WiFi7」是板载网卡规格，
+         说不通「主板也该排前面」—— 实测首屏 8 张全是主板，41 件网络设备一件没有。 */
       "2.5g": ["network", "dock"],
       "千兆": ["network", "dock"],
       "万兆": ["network"],
       "网口": ["network", "dock"],
-      "wifi7": ["network", "mobo"],
-      "wifi6e": ["network", "mobo"],
+      "wifi7": ["network"],
+      "wifi6e": ["network"],
 
       /* 平台/插槽/芯片组：插槽是主板的物理属性，CPU 是「适配该插槽」，故主板在前 */
       "am5": ["mobo", "cpu"],
@@ -1387,15 +1449,17 @@
       "热管": ["cooler"],
 
       /* 显示：分辨率/刷新率/面板都是显示器的选购主轴。
-         144Hz 在平板与手机上同样是卖点（实测 tablet 25 条 / phone 10 条 > monitor 3 条），
-         故三类并列主体，主体序仍按显示器在前（本站以显示器为该规格的选购主语） */
+         （ORD-27 任务 9）144hz/240hz 收窄成 monitor：把「144Hz 显示器」的需求
+         用映射引到平板上，是拿规则掩盖数据缺 —— 显示器库 76 款里只有 3 款写 144Hz，
+         这是数据债（已记账），不是靠「平板也算主体」就能变成对的。
+         ips 补 tablet：平板面板确实以 IPS 为主语，这一条说得通。 */
       "2k": ["monitor"],
       "4k": ["monitor"],
       "1080p": ["monitor"],
-      "144hz": ["monitor", "tablet", "phone"],
-      "240hz": ["monitor", "laptop"],
+      "144hz": ["monitor"],
+      "240hz": ["monitor"],
       "高刷": ["monitor", "tablet", "phone"],
-      "ips": ["monitor", "laptop"],
+      "ips": ["monitor", "tablet", "laptop"],
       "oled": ["monitor", "phone", "tablet", "laptop"],
       "护眼": ["monitor", "phone", "laptop"],
 
@@ -1473,7 +1537,21 @@
       "智能家居": ["智能", "米家", "物联", "摄像", "看家"]
     };
 
-    function tokens(q) { return q.toLowerCase().split(/\s+/).filter(Boolean); }
+    /* 拉丁串空白/连字符归一（ORD-27 任务 3）。
+       用户打「RTX5080」而库里写「NVIDIA RTX 5080 16G」，打「WiFi 7」而库里写「WiFi7」，
+       字面包含两边都不成立：实测搜 RTX5080 命中 1 件（还是笔记本），搜 RTX 5080 命中 11 件；
+       搜 WiFi 7 首屏 8 张全是主板，搜 wifi7 命中 41 件全是网络设备。
+       只处理「拉丁字母/数字之间」的空格与连字符 —— 中文之间的空格另有语义
+       （「机械 键盘」是两个词），一个字节都不动。 */
+    function normLatin(s) {
+      return String(s).toLowerCase()
+        .replace(/([a-z0-9])[ \t]*[-\u2013\u2014][ \t]*(?=[a-z0-9])/g, "$1")
+        .replace(/([a-z])[ \t]+(?=[0-9])/g, "$1")
+        .replace(/([0-9])[ \t]+(?=[a-z])/g, "$1");
+    }
+    function tokens(q) { return normLatin(q).split(/\s+/).filter(Boolean); }
+    /* 高亮要用用户原文，不能用归一后的串（归一后「wifi7」在「WiFi 7」里找不到，整页不高亮） */
+    function rawTokens(q) { return String(q).toLowerCase().split(/\s+/).filter(Boolean); }
 
     /* 中文没有空格分词，「长续航手机」「折叠屏手机」会被当成整串去匹配而落空。
        先用 ALIAS / NEED 的词表做贪心切分，把整串拆成可判定的语义单元。 */
@@ -1605,11 +1683,13 @@
        分层排序时 struct 是第二关键字：用户搜规格词，主体本身就是该规格的型号
        必须排在「规格里提到它」的型号前面。 */
     function matchInfo(item, catId, toks, structSet) {
-      var spec = (String(item.specs || "") + " " + specsObjText(item)).toLowerCase();
-      var idHay = [item.name, item.brand, item.model, item.searchName, item.style]
-        .filter(Boolean).join(" ").toLowerCase();
-      var soft = [item.valueNote, item.compat].concat(item.tags || [])
-        .filter(Boolean).join(" ").toLowerCase();
+      /* 三段 haystack 都做拉丁串归一：库里写「RTX 5080」，用户打「RTX5080」，
+         不归一就是两个不同的串。中文之间的空格原样保留。 */
+      var spec = normLatin(String(item.specs || "") + " " + specsObjText(item));
+      var idHay = normLatin([item.name, item.brand, item.model, item.searchName, item.style]
+        .filter(Boolean).join(" "));
+      var soft = normLatin([item.valueNote, item.compat].concat(item.tags || [])
+        .filter(Boolean).join(" "));
       function anyAlt(hay, t) {
         var alts = NEED[t];
         return !!(alts && alts.some(function (a) { return hay.indexOf(a) > -1; }));
@@ -1617,12 +1697,20 @@
       var so = structSet || {};
       var rank = 0, struct = 0;
       for (var i = 0; i < toks.length; i++) {
-        var t = toks[i], lv = 0, byObj = false;
+        var t = toks[i], lv = 0, byObj = false, mainCat = false, multi = false;
         var asCat = ALIAS[t];
         if (asCat) {
-          /* 品类词只按所属品类判定，避免命中别的品类里「提及」它的型号 */
-          if (asCat !== catId) return { rank: 0, struct: 0 };
-          lv = 2;
+          /* 品类词只按所属品类判定，避免命中别的品类里「提及」它的型号。
+             值可以是数组（一个词有多个义项）：
+               第 0 位 = 主流义项 → 一级命中 + 主体分 2（压过品类顺序）
+               其余   = 次要义项 → 软层（仍能搜到，但排在主流之后）
+             这样「键盘」既能给出机械键盘（input），又不会把平板键盘弄丢。 */
+          var arr = Object.prototype.toString.call(asCat) === "[object Array]" ? asCat : [asCat];
+          var at = arr.indexOf(catId);
+          if (at < 0) return { rank: 0, struct: 0 };
+          mainCat = at === 0;
+          multi = arr.length > 1;
+          lv = mainCat ? 2 : 3;
         } else if ((byObj = specObjHit(item, catId, t))) {
           lv = 1;
         } else if (spec.indexOf(t) > -1 || anyAlt(spec, t)) {
@@ -1649,6 +1737,10 @@
         var w = specCatWeight(t, catId);
         if (w) struct += w;
         else if (byObj) struct++;
+        /* 多义项词的主流义项也要有主体分，否则「键盘」的 input 组与 mobileacc 组
+           同为 struct 0，分组顺序由品类表决定（mobileacc 在 input 前面）——
+           主流义项就白标了。 */
+        else if (mainCat && multi) struct += 2;
         if (lv > rank) rank = lv;
       }
       return { rank: rank, struct: struct };
@@ -1727,20 +1819,20 @@
          分组取组内第一条（合并保留 order，第一条就是该组最靠前的条目）。 */
       if (!DupCore) {
         return list.map(function (o) {
-          return { cat: o.cat, item: o.item, merge: null, rank: o.rank, struct: o.struct };
+          return { cat: o.cat, item: o.item, merge: null, rank: o.rank, struct: o.struct, label: o.label };
         });
       }
       var order = [], bucket = {};
       list.forEach(function (o) {
         var k = DupCore.keyOf(o.cat.id, o.item);
-        if (!bucket[k]) { bucket[k] = { cat: o.cat, items: [], rank: o.rank, struct: o.struct }; order.push(k); }
+        if (!bucket[k]) { bucket[k] = { cat: o.cat, items: [], rank: o.rank, struct: o.struct, label: o.label }; order.push(k); }
         bucket[k].items.push(o.item);
       });
       return order.map(function (k) {
         var b = bucket[k];
-        if (b.items.length === 1) return { cat: b.cat, item: b.items[0], merge: null, rank: b.rank, struct: b.struct };
+        if (b.items.length === 1) return { cat: b.cat, item: b.items[0], merge: null, rank: b.rank, struct: b.struct, label: b.label };
         var m = DupCore.mergeGroup(b.cat.id, b.items);
-        return { cat: b.cat, item: m.item, merge: m, rank: b.rank, struct: b.struct };
+        return { cat: b.cat, item: m.item, merge: m, rank: b.rank, struct: b.struct, label: b.label };
       });
     }
 
@@ -1781,6 +1873,31 @@
       };
     }
 
+    /* 词组收窄（ORD-27 任务 1）。
+       整串已在 ALIAS 里（所以不会被拆成 AND 后必然 0 结果），但「笔记本支架」落到
+       stand 全品类 40 件还不够 —— 用户要的是那 4 件笔记本用的，不是显示器支架臂。
+       表里每条 = 在目标品类内再按子类筛一次；筛完数量够就用筛完的，
+       不够就保留全品类命中（宁可给多了，也不凭空给「暂无」）。 */
+    var PHRASE = {
+      "笔记本支架": { cat: "stand", min: 3, label: "笔记本支架", test: function (it) {
+        /* 口径按 style 判（ORD-27 任务 7）：style 以「笔记本」开头且不含「散热」。
+           不按 name 判的理由：s20 的 name 含「笔记本」、价格最低，
+           会稳定抢到主选，而它是散热件（该走 laptop-cool 桶），
+           推给轻办公本是噪音错配（它的 compat 自己写着「需接受风扇噪音」）。 */
+        var s = String(it.style || "");
+        return /^笔记本/.test(s) && !/散热/.test(s);
+      } },
+      "显卡支架": { cat: "stand", min: 1, test: function (it) {
+        return /显卡|gpu|支撑/i.test(String(it.style || "") + " " + String(it.name || ""));
+      } },
+      "平板键盘": { cat: "mobileacc", min: 3, test: function (it) { return /键盘/.test(String(it.name || "")); } },
+      "手机支架": { cat: "mobileacc", min: 3, test: function (it) {
+        return /支架/.test(String(it.style || "") + String(it.name || ""));
+      } },
+      "充电线": { cat: "charger", min: 4, test: function (it) { return /线/.test(String(it.name || "")); } },
+      "屏幕保护": { cat: "mobileacc", min: 1, test: function (it) { return /膜|保护/.test(String(it.name || "")); } }
+    };
+
     function collect() {
       var list = [];
       var toks = state.q ? segmentQuery(state.q) : null;
@@ -1808,6 +1925,15 @@
            ORD-17 的验收要求是「结构化命中的品类排在仅靠原串文本命中的品类之前」，
            只排 rank 做不到 —— 主板和固态同属字段层，主板在品类顺序里靠前。 */
         list.sort(function (a, b) { return (a.rank - b.rank) || (b.struct - a.struct); });
+      }
+      /* 词组收窄：整串命中一个词组时，在目标品类内再筛一层子类 */
+      if (toks && toks.length === 1 && PHRASE[toks[0]] && list.length) {
+        var ph = PHRASE[toks[0]];
+        var sub = list.filter(function (o) { return o.cat.id === ph.cat && ph.test(o.item); });
+        if (sub.length >= (ph.min || 1)) {
+          if (ph.label) sub.forEach(function (o) { o.label = ph.label; });
+          list = sub;
+        }
       }
       return mergeEntries(list);
     }
@@ -1944,7 +2070,7 @@
       return (
         '<article class="acc-card reveal in">' +
           '<div class="acc-head">' +
-            '<div><span class="acc-cat">' + o.cat.icon + " " + esc(o.cat.name) + "</span>" +
+            '<div><span class="acc-cat">' + o.cat.icon + " " + esc(o.label || o.cat.name) + "</span>" +
             '<h4 class="acc-name">' + hl(it.name, toks) + "</h4>" +
             (it.brand && it.model ? '<span class="acc-model">' + esc(it.brand + " " + it.model) + "</span>" : "") +
             "</div>" +
@@ -2077,9 +2203,25 @@
         return { id: x.id, label: x.icon + " " + x.label };
       }));
     }
+    /* 「组装电脑 / 主机 / 台式机 / 游戏」—— 新手的第一大意图，而站的主资产是 26 套配置单。
+       库里没有整机件，所以结果区第一眼必须是通往方案页的入口：
+       在一个有 26 套方案、1209 款型号的站里只回一句「换个关键词试试」，
+       用户会以为站里根本没有整机，这是误导。
+       注意它**不是** .acc-card（零件卡）—— 方案入口不该被算成「首屏 8 张零件」之一。 */
+    var PLAN_INTENT = /组装电脑|整机|主机|台式机|装机|diy|游戏/i;
+    function planCardHtml() {
+      return '<a class="acc-plan-entry" href="plans.html">' +
+        '<span class="acc-plan-badge">整机方案</span>' +
+        '<span class="acc-plan-title">26 套配置单：按用途与预算直接选</span>' +
+        '<span class="acc-plan-desc">办公 / 游戏 / 创作 / 便携 · 每套列明型号与单价区间</span>' +
+        '<span class="acc-plan-go">查看 →</span>' +
+        '</a>';
+    }
+
     function renderCards() {
       var list = collect();
-      var toks = state.q ? tokens(state.q) : null;
+      /* 高亮用原文 token：归一后的「wifi7」在「WiFi 7」里找不到，整页会一个字都不亮 */
+      var toks = state.q ? rawTokens(state.q) : null;
 
       /* 分组顺序也要让位给「结构化字段命中」。原来分组顺序写死在 D.categories 里，
          collect() 排得再对也没用：搜「M.2」时 mobo 整组排在 ssd 组前面，
@@ -2112,8 +2254,14 @@
 
       renderActive();
 
+      var planIntent = !!(state.q && PLAN_INTENT.test(state.q));
+      var planCard = planIntent ? planCardHtml() : "";
       if (!list.length) {
-        wrap.innerHTML = '<div class="empty-box">\u6ca1\u6709\u5339\u914d\u9879\u3002\u53ef\u4ee5\u8bd5\u8bd5\u4e0b\u9762\u7684\u70ed\u95e8\u641c\u7d22\uff0c\u6216\u70b9\u4e0a\u65b9\u6e05\u7a7a\u6761\u4ef6\u91cd\u65b0\u7b5b\u9009\u3002</div>';
+        wrap.innerHTML = planCard + (state.q
+          ? '<div class="empty-box">没有匹配「' + esc(state.q) + '」的型号。可以换个说法' +
+            '（例如用「显卡」代「显卡支架」、「机械键盘」代「键盘」），' +
+            '或直接看 <a href="plans.html">26 套整机配置单</a>。</div>'
+          : '<div class="empty-box">\u6ca1\u6709\u5339\u914d\u9879\u3002\u53ef\u4ee5\u8bd5\u8bd5\u4e0b\u9762\u7684\u70ed\u95e8\u641c\u7d22\uff0c\u6216\u70b9\u4e0a\u65b9\u6e05\u7a7a\u6761\u4ef6\u91cd\u65b0\u7b5b\u9009\u3002</div>');
         return;
       }
 
@@ -2124,6 +2272,22 @@
       });
       groups.sort(function (a, b) { return (groupStruct[b.cat.id] || 0) - (groupStruct[a.cat.id] || 0); });
 
+      /* 整机意图时首屏零件压到 6 张以内：用户搜「主机」「游戏」要的是整机方案，
+         给他 8 张 CPU 只会更迷路。6 是「不误杀台式机现状（库里只有 6 件）
+         但不放过霸占首屏」的分界。被截掉的用一行说明代替「加载更多」按钮 ——
+         在这一屏里继续加载零件没有意义，该让他去方案页或换具体关键词。 */
+      var cutNote = {};
+      if (planIntent) {
+        var capParts = 6, usedParts = 0;
+        groups = groups.map(function (g) {
+          var room = Math.max(0, capParts - usedParts);
+          var keep = g.items.slice(0, room);
+          usedParts += keep.length;
+          if (g.items.length > keep.length) cutNote[g.cat.id] = g.items.length - keep.length;
+          return { cat: g.cat, items: keep };
+        }).filter(function (g) { return g.items.length > 0; });
+      }
+
       /* 所有分组直接渲染，不折叠。条件变化时重置每组已加载条数 */
       var sig = state.device + "|" + state.cat + "|" + state.scene + "|" +
                 state.look + "|" + state.budget + "|" + state.brand + "|" + state.q;
@@ -2132,12 +2296,12 @@
         groupShown = {};
       }
 
-      wrap.innerHTML = groups.map(function (g) {
+      wrap.innerHTML = planCard + groups.map(function (g) {
         var cid = g.cat.id;
         var total = g.items.length;
         var shown = Math.max(groupShown[cid] || GROUP_PAGE, GROUP_PAGE);
         var slice = g.items.slice(0, shown);
-        var more = total - slice.length;
+        var more = total - slice.length + (cutNote[cid] || 0);
         return '<section class="acc-group" data-cat="' + esc(cid) + '">' +
           '<div class="acc-group-head">' +
             "<h3>" + g.cat.icon + " " + esc(g.cat.name) + "</h3>" +
@@ -2146,7 +2310,9 @@
           '<div class="acc-group-body">' +
             '<div class="acc-grid">' + slice.map(function (o) { return cardHtml(o, toks); }).join("") + "</div>" +
             (more > 0
-              ? '<button type="button" class="acc-group-more" data-more="' + esc(cid) + '">\u52a0\u8f7d\u66f4\u591a\uff08\u8fd8\u6709 ' + more + " \u6b3e\uff09</button>"
+              ? (planIntent
+                  ? '<div class="acc-cut-note">还有 ' + more + ' 款，用更具体的关键词（如「显卡」「i5」）查看</div>'
+                  : '<button type="button" class="acc-group-more" data-more="' + esc(cid) + '">\u52a0\u8f7d\u66f4\u591a\uff08\u8fd8\u6709 ' + more + " \u6b3e\uff09</button>")
               : "") +
           "</div>" +
         "</section>";
@@ -2716,7 +2882,10 @@
       });
 
       var budgetCap = MOBILE_BUDGET_AXIS[form] ? mobileBudgetCap(form, budget) : budgetOrder[budget];
-      var bias = buildBias(pref, exp, lifespan, look);
+      /* 品牌偏好（ORD-27 任务 8）：没答这题、或选「不限」→ b_any → brandOf=null，
+         pickOne 走原逻辑，行为一个字节都不变。 */
+      var brandPref = answerOf("brand")[0] || "b_any";
+      var bias = buildBias(pref, exp, lifespan, look, brandPref);
       // 使用强度真实影响目标价位：轻度往下收，重度往上放
       var targetScale = intensity === "light" ? 0.85 : intensity === "heavy" ? 1.12 : 1;
       var partOpts = {

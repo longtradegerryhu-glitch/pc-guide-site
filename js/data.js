@@ -634,7 +634,28 @@ window.PC_DATA = {
         { id: "b20000", label: "30000 元以上",  desc: "旗舰顶配" }
       ]
     },
-    /* 第 4 题：最看重什么。手机看续航/拍照，电脑看静音/人体工学 */
+    /* 品牌偏好：只约束「同价位窗口内优先选谁」，池里没有对应品牌就退回原行为。
+       为什么加这题：pickOne 原来只有品类+价位+用途三个约束，品牌完全不参与 ——
+       想要 iPhone 的用户走完问卷拿到的是安卓机，而配件页刚给他看过 iPhone 壳。
+       子品牌不合并：红米不并小米、荣耀不并华为。 */
+    {
+      id: "brand", title: "有品牌偏好吗？", multi: false,
+      options: [
+        { id: "b_any",    label: "不限品牌", desc: "同等条件优先性价比",
+          when: { form: ["phone", "tablet", "laptop", "both"] } },
+        { id: "b_apple",  label: "苹果",     desc: "iPhone / iPad / Mac",
+          when: { form: ["phone", "tablet", "laptop", "both"] } },
+        { id: "b_huawei", label: "华为",     desc: "手机 / 平板 / 笔记本（不含荣耀）",
+          when: { form: ["phone", "tablet", "laptop", "both"] } },
+        { id: "b_xiaomi", label: "小米",     desc: "手机 / 平板（不含红米）",
+          when: { form: ["phone", "tablet", "laptop", "both"] } },
+        { id: "b_lenovo", label: "联想",     desc: "联想 / ThinkPad 笔记本",
+          when: { form: ["laptop", "both"] } },
+        { id: "b_samsung", label: "三星",    desc: "手机 / 平板",
+          when: { form: ["phone", "tablet", "both"] } }
+      ]
+    },
+    /* 第 5 题：最看重什么。手机看续航/拍照，电脑看静音/人体工学 */
     {
       id: "pref", title: "你最看重什么？", multi: false,
       options: [
@@ -670,7 +691,7 @@ window.PC_DATA = {
           when: { form: ["tablet"] } }
       ]
     },
-    /* 第 5 题：颜值风格。海景房/RGB/木质是机箱概念，移动形态不出现 */
+    /* 第 6 题：颜值风格。海景房/RGB/木质是机箱概念，移动形态不出现 */
     {
       id: "look", title: "你更偏爱哪种颜值风格？", multi: false,
       options: [
@@ -712,7 +733,7 @@ window.PC_DATA = {
           when: { form: ["tablet"] } }
       ]
     },
-    /* 第 6 题：使用强度。全形态通用，只影响目标价位上浮/下调 */
+    /* 第 7 题：使用强度。全形态通用，只影响目标价位上浮/下调 */
     {
       id: "intensity", title: "每天使用强度大概？", multi: false,
       options: [
@@ -721,7 +742,7 @@ window.PC_DATA = {
         { id: "heavy", label: "重度（6 小时+）", desc: "长时间游戏/创作/渲染" }
       ]
     },
-    /* 第 7 题：年限。用"设备"而不是"电脑"，手机/平板形态下也成立 */
+    /* 第 8 题：年限。用"设备"而不是"电脑"，手机/平板形态下也成立 */
     {
       id: "lifespan", title: "这台设备打算用多久？", multi: false,
       options: [
@@ -730,7 +751,7 @@ window.PC_DATA = {
         { id: "y5", label: "5 年+", desc: "一次到位战未来" }
       ]
     },
-    /* 第 8 题：装机经验。只有自己装电脑的形态才问；手机/平板整题移除 */
+    /* 第 9 题：装机经验。只有自己装电脑的形态才问；手机/平板整题移除 */
     {
       id: "exp", title: "你以前装过或折腾过电脑吗？", multi: false,
       when: { form: ["desktop", "laptop", "both"] },
@@ -740,7 +761,7 @@ window.PC_DATA = {
         { id: "pro",  label: "老玩家", desc: "追求极致与细节" }
       ]
     },
-    /* 第 9 题：已有件。parts 是配置单里的行名白名单，
+    /* 第 10 题：已有件。parts 是配置单里的行名白名单，
        用来精确跳过那一行 —— 按类别跳会连带删掉同类的其他件
        （charger 类里同时装着充电器/数据线/移动电源）。 */
     {
@@ -783,7 +804,7 @@ window.PC_DATA = {
         { id: "none", label: "都没有", desc: "从零开始配", parts: [] }
       ]
     },
-    /* 第 10 题：优先配好哪些。勾中的置顶，其余折叠 —— 但仍在页面上，不隐藏 */
+    /* 第 11 题：优先配好哪些。勾中的置顶，其余折叠 —— 但仍在页面上，不隐藏 */
     {
       id: "focus", title: "重点想先配好哪些？（可多选，勾选的排在最前）", multi: true,
       options: [
