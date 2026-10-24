@@ -108,6 +108,37 @@ async function runSearchTasks() {
     chk(`U 搜「${q}」首屏 8 张里「${want}」≥ ${min} 张（${why}）`,
       got >= min, { 首屏分布: dist, 期望品类: want, 至少: min, 实际: got, 总命中: hits });
   }
+  /* ---- 追加三行（ORD-27 开工基线，由总控定稿；这三行现在是红的，就是 ORD-27 要做的事）----
+     来源：审计 ORD-26 §4.1① 与 §4.1⑤ 的实测，均已由我复核。
+     ① 「ATX」：电源的命中全部来自 specs 里的「ATX3.1」子串，而 ATX3.1 另有专键 →
+        裸词 ATX 该给版型（机箱/主板），不该被 24 件电源顶满首屏。用上界断言，不指定机箱还是主板先出。
+     ② 「RTX5080」不带空格：命中 1 件且是笔记本电脑，0 张显卡（显卡名写「NVIDIA RTX 5080 16G」）→
+        拉丁串匹配必须做空白归一，否则每加一个词都要在映射表里补一条，救不了通例。
+     ③ 「WiFi 7」带空格：被切成 wifi + 7，SPEC_CAT 的 wifi7 永远匹配不上 → 同一条根因。 */
+  const CAPS = [
+    { q: 'ATX',     cap: '电源',     max: 3, why: '电源的 ATX 命中全部来自「ATX3.1」子串且另有专键；裸词该给版型' },
+    { q: 'RTX5080', want: '显卡',    min: 6, why: '拉丁串空白归一：「RTX5080」应与「RTX 5080」等价' },
+    { q: 'WiFi 7',  want: '网络设备', min: 6, why: '拉丁串空白归一：带空格的「WiFi 7」不该被主板的 WiFi7 规格压过' },
+  ];
+  for (const t of CAPS) {
+    inp.value = t.q;
+    inp.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+    await sleep(700);
+    const cards = [...D.querySelectorAll('.acc-card')].slice(0, 8);
+    const dist = {};
+    cards.forEach(c => { const k = catOf(c); dist[k] = (dist[k] || 0) + 1; });
+    const hint = D.querySelector('#accSearchHint');
+    const hits = hint ? (hint.textContent.match(/命中 (\d+) 款/) || [])[1] : '?';
+    if (t.cap) {
+      const got = dist[t.cap] || 0;
+      chk(`U 搜「${t.q}」首屏 8 张里「${t.cap}」≤ ${t.max} 张（${t.why}）`,
+        got <= t.max, { 首屏分布: dist, 上限品类: t.cap, 最多: t.max, 实际: got, 总命中: hits });
+    } else {
+      const got = dist[t.want] || 0;
+      chk(`U 搜「${t.q}」首屏 8 张里「${t.want}」≥ ${t.min} 张（${t.why}）`,
+        got >= t.min, { 首屏分布: dist, 期望品类: t.want, 至少: t.min, 实际: got, 总命中: hits });
+    }
+  }
   dom.window.close();
 }
 
