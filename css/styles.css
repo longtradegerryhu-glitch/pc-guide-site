@@ -1280,6 +1280,9 @@ a.entry-card .card-title { margin-top: 0; }
 .fp-price { font-size: 14px; font-weight: 800; color: var(--color-primary); white-space: nowrap; }
 .fp-why { font-size: 12.5px; color: var(--color-text-soft); line-height: 1.7; margin: 6px 0 0; }
 .fp-why-blocked { color: #b45309; border-left: 2px solid rgba(245, 158, 11, .6); padding-left: 8px; }
+/* 软边界提示：装得上但功能打折（AirPods 在安卓上 / 小米手表在第三方手机上）。
+   与「无可用配件」的琥珀色区分开 —— 那是不装，这是装了但打折。 */
+.fp-soft-note { color: var(--color-text-soft); border-left: 2px solid rgba(148, 163, 184, .55); padding-left: 8px; }
 .fp-block-badge { background: rgba(245, 158, 11, .16); color: #b45309; border-color: rgba(245, 158, 11, .45); }
 .spec-block { display: block; margin-top: 2px; color: #b45309; }
 .fp-alts { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 8px; }

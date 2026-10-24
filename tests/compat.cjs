@@ -311,6 +311,102 @@ const APPLE_ONLY = /Apple\s*Pencil|妙控键盘|Magic\s*Trackpad/i;
   console.log('  覆盖 ' + plans.length + ' 套方案 / ' + c5n + ' 个推荐项，其中 ' + c5blocked + ' 行因生态排除改为明示「暂无可用配件」');
   ok('C5 每行都有交代（件 / 档位原选 / 无可用配件说明）', c5bad.length === 0, c5bad.length ? c5bad.slice(0, 8).join(' ; ') : c5n + '/' + c5n);
 
+  /* ================= D5 = 平台联动：26 套方案逐个验 =================
+     配置单原文自带歧义（t4500 主板行「H610M / B650M」+ 内存行「DDR4/DDR5 16G」），
+     两行各自二的选一 → 组合起来会出 DDR5 主板 + DDR4 内存。
+     这条闸不看实现，只看结果：每一套方案里 CPU 与主板必须同插槽、内存与主板必须同代际。 */
+  console.log('\n=== D5 平台联动：CPU 插槽 × 主板插槽、内存代际 × 主板代际 ===');
+  const socketOf = t => { const m = String(t || '').match(/AM5|AM4|LGA\s*1700|LGA\s*1851|LGA\s*1200/i); return m ? m[0].toUpperCase().replace(/\s+/g, '') : ''; };
+  const ddrOf = t => { const x = String(t || ''); const a = /DDR5/i.test(x), b = /DDR4/i.test(x); if (a && b) return ''; return a ? 'DDR5' : (b ? 'DDR4' : ''); };
+  let d5bad = [], d5pairs = 0, d5plans = 0;
+  plans.forEach(pl => {
+    const rr = DG.rows(pl.id, {});
+    const one = cid => (rr.rows.filter(x => x.cat === cid)[0] || null);
+    const cpu = one('cpu'), mobo = one('mobo'), ram = one('ram');
+    if (cpu && mobo) {
+      const cs = socketOf(cpu.specs), ms = socketOf(mobo.specs);
+      d5pairs++;
+      if (cs && ms && cs !== ms) d5bad.push(pl.id + ' CPU ' + cpu.name + '(' + cs + ') × 主板 ' + mobo.name + '(' + ms + ')');
+    }
+    if (mobo && ram) {
+      const md = ddrOf(mobo.specs), rd = ddrOf(ram.specs);
+      d5pairs++;
+      if (md && rd && md !== rd) d5bad.push(pl.id + ' 主板 ' + mobo.name + '(' + md + ') × 内存 ' + ram.name + '(' + rd + ')');
+    }
+    if (cpu || mobo) d5plans++;
+  });
+  console.log('  ' + d5plans + ' 套方案 / ' + d5pairs + ' 组平台配对，冲突 ' + d5bad.length + ' 处');
+  d5bad.forEach(x => console.log('    冲突 ' + x));
+  ok('D5 ' + d5pairs + ' 组「CPU × 主板」「内存 × 主板」全部同平台', d5bad.length === 0,
+    d5bad.length ? d5bad.join(' ; ') : d5pairs + '/' + d5pairs + '（0 冲突）');
+
+  /* ================= C8 = compat 派生表覆盖率（16/16 + 全量 + 反向对照） =================
+     判据必须独立于生成器：这里用另一套正则从 compat 原文重新扫一遍，
+     再和页面实际读的 window.PC_COMPAT_MAP 对账。用生成器自己的规则复算等于自己给自己判卷。 */
+  console.log('\n=== C8 硬兼容边界覆盖率（独立扫描 vs compat-map） ===');
+  const vm = require('vm');
+  const ctx2 = { window: {} };
+  vm.createContext(ctx2);
+  vm.runInContext(fs.readFileSync(path.join(ROOT, 'js', 'models-data.js'), 'utf8'), ctx2);
+  const MODELS = ctx2.window.PC_MODELS;
+  const FITMAP = dom.window.PC_COMPAT_MAP || {};
+  const ECOB = dom.window.PC_ECO_BRAND || {};
+
+  /* 审计口径逐条点名的 16 件（ORD-22 反馈里列的那批） */
+  const AUDIT16 = ['ma1', 'ma4', 'ma20', 'ma21', 'ma22', 'ma23', 'ma24', 'ma25', 'ma26', 'ma27',
+    'pw4', 'pw5', 'pw6', 'pw16', 'pw23', 'wr12'];
+  const miss16 = AUDIT16.filter(id => !FITMAP[id]);
+  ok('C8a 审计口径 16 件硬兼容边界全部被 fitOf 识别', miss16.length === 0,
+    miss16.length ? '未识别：' + miss16.join(',') : AUDIT16.length + '/' + AUDIT16.length);
+
+  /* 全量独立扫描：compat 原文里的专属关系，本体品类排除在外（手机/平板/笔记本是被配的对象） */
+  const BODY = { phone: 1, tablet: 1, laptop: 1 };
+  const COMMON = /支架|自拍杆|膜|贴|挂绳|指环|清洁/;   /* 通用类物类，不构成硬边界 */
+  const ORACLE = [
+    /iPhone\s*\d*\s*专机专用/, /MagSafe/, /iPad 全系/, /仅支持 iPad 与 Mac/, /iPad 需配/,
+    /MatePad 系列/, /Galaxy Tab 系列/, /小米平板 \d/, /仅兼容 iPhone/, /仅 iPhone/,
+    /Lightning[^。；]*(专用|以下机型)/, /以下机型专用/, /专机专用/, /仅适合 iPhone/, /iPhone 轻充/
+  ];
+  const oracleHits = [];
+  Object.keys(MODELS).forEach(cat => {
+    if (BODY[cat]) return;
+    (MODELS[cat] || []).forEach(it => {
+      const hay = (it.compat || '') + ' ' + (it.specs || '') + ' ' + (it.name || '') + ' ' + (it.model || '');
+      const kind = (it.style || '') + ' ' + (it.name || '');
+      if (COMMON.test(kind)) return;
+      if (ORACLE.some(re => re.test(hay))) oracleHits.push(cat + '/' + it.id);
+    });
+  });
+  const missAll = oracleHits.filter(h => !FITMAP[h.split('/')[1]]);
+  ok('C8b 独立扫描出的 ' + oracleHits.length + ' 件专属件全部被识别', missAll.length === 0,
+    missAll.length ? '未识别：' + missAll.join(',') : oracleHits.length + '/' + oracleHits.length +
+      '（另有同型补齐件，全表 ' + Object.keys(FITMAP).length + ' 件）');
+
+  /* 反向对照：通用件绝不能进 fit 表 —— 进了就是误杀（「小米自拍杆」只能配小米手机） */
+  const COMMONIDS = ['ma10', 'ma12', 'ma5', 'ma6', 'ma9'];
+  const wrongIn = COMMONIDS.filter(id => FITMAP[id]);
+  const details = COMMONIDS.filter(id => FITMAP[id]).map(id => id + '→' + FITMAP[id].why);
+  ok('C8c 通用件（支架/自拍杆/膜）不得进 fit 表', wrongIn.length === 0,
+    wrongIn.length ? '误收：' + details.join(' ; ') : COMMONIDS.join('/') + ' 均未收录');
+
+  /* 品牌表：全库每个 brand 都要有生态归属，表外必须归 other，绝不能是空 */
+  const allBrands = new Set();
+  Object.keys(MODELS).forEach(c => (MODELS[c] || []).forEach(it => { if (it.brand) allBrands.add(it.brand); }));
+  const noBrand = [...allBrands].filter(b => !ECOB[b]);
+  const emptyEco = [...allBrands].filter(b => ECOB[b] === '' || ECOB[b] == null);
+  ok('C8d 品牌生态表覆盖全库 ' + allBrands.size + ' 个品牌且无空值', noBrand.length === 0 && emptyEco.length === 0,
+    noBrand.length || emptyEco.length ? '缺：' + noBrand.concat(emptyEco).slice(0, 10).join(',') :
+      allBrands.size + '/' + allBrands.size + '（表外统一归 other）');
+
+  /* ================= C9 = 硬软分层：AirPods 放行、Apple Watch 排除 ================= */
+  console.log('\n=== C9 硬软分层（装不上 vs 装得上但打折） ===');
+  const airpods = DG.compat('苹果 AirPods Pro 3', 'vivo', 'phone');
+  const watch = DG.compat('Apple Watch SE 3', 'vivo', 'phone');
+  ok('C9a AirPods 在安卓手机上放行（安卓可用、只是功能受限）', airpods.found && !airpods.drop,
+    airpods.found ? (airpods.drop ? '被误排：' + airpods.drop : '放行，提示「' + (airpods.note || '无') + '」') : '不在库');
+  ok('C9b Apple Watch 在安卓手机上排除（只能配 iPhone）', watch.found && !!watch.drop,
+    watch.found ? (watch.drop || '被放行 —— 这就是 ORD-25 要修的缺陷') : '不在库');
+
   /* ================= C7 = 数据未改 ================= */
   console.log('\n=== C7 js/models-data.js 未被改动 ===');
   const git = spawnSync('git', ['diff', '--name-only', 'HEAD', '--', 'js/models-data.js'], { cwd: ROOT, encoding: 'utf8' });

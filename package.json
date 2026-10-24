@@ -23,7 +23,8 @@
     "dup:gate": "node tools/dedup-gate.cjs",
     "dup:gate:strict": "node tools/dedup-gate.cjs --strict",
     "dup:review": "node tools/dup-review.cjs",
-    "data:rebuild": "node tools/rebuild-models.cjs && node tools/derive-specs-obj.cjs"
+    "data:rebuild": "node tools/rebuild-models.cjs && node tools/derive-specs-obj.cjs",
+    "test:user": "node tests/user-tasks.cjs"
   },
   "devDependencies": {
     "jsdom": "^26.0.0"

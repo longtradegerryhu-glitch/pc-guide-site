@@ -229,6 +229,30 @@ function loadSchema() {
     console.log('     卡片口径「' + t + '」：首屏 ' + c.first + ' 张 / 展开后 ' + c.all + ' 张');
   }
 
+  /* ---------- A7 表外词行为一个字节都不变（ORD-25 的硬约束） ----------
+     新增的 SPEC_CAT 只对表内的词生效。一个表外词，如果它的 struct 恒为 0、
+     也不在 structSet 里，那么排序用的两个键（rank、struct）与改动前完全相同 ——
+     行为不可能变。这是可验证的证明，不是「我看过代码，应该没影响」。 */
+  const SC = W.PCRecoDiag.specCat();
+  const AL = W.PCRecoDiag.alias();
+  const OUT_WORDS = ['GDDR7', '白色', '2.4g'];
+  OUT_WORDS.forEach(w => {
+    const inTable = SC.indexOf(w.toLowerCase()) > -1;
+    const r = q(w);
+    const maxStruct = r.reduce((m, x) => Math.max(m, x.struct || 0), 0);
+    ok('A7 表外词「' + w + '」不受 SPEC_CAT 影响（表内=' + inTable + '，命中 ' + r.length + ' 条，max struct=' + maxStruct + '）',
+      !inTable && r.length > 0 && maxStruct === 0,
+      inTable ? '该词在表内了，换一个表外词再验'
+        : (r.length === 0 ? '该词无命中，无法证明' : 'max struct=' + maxStruct + '（应为 0）'));
+  });
+
+  /* A8 ALIAS 与 SPEC_CAT 不得重复收录同一个词：
+     ALIAS 是「品类同义词」（内存 → ram），SPEC_CAT 是「规格词归属」（DDR5 → ram）。
+     同一个词两边都收，语义会打架（ALIAS 那条会让非本品类的条目直接 rank=0）。 */
+  const dupKeys = AL.filter(k => SC.indexOf(k) > -1);
+  ok('A8 ALIAS 与 SPEC_CAT 无重复键', dupKeys.length === 0,
+    dupKeys.length ? '重复：' + dupKeys.join(',') : 'ALIAS ' + AL.length + ' 键 / SPEC_CAT ' + SC.length + ' 键，零交集');
+
   dom.window.close();
   report();
 

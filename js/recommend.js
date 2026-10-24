@@ -176,9 +176,14 @@
     "散热配件": /散热|风扇|背夹/i,
     "充电器": /充电器|氮化镓|充电头/i,
     "数据线": /线/i,
-    "移动电源": /移动电源|充电宝/i
+    "移动电源": /移动电源|充电宝/i,
+    /* 笔记本方案里「笔记本支架」这一行，库里 stand 品类 40 件只有 6 件是笔记本用的，
+       其余 34 件是显示器支架臂/增高架/升降桌。不收窄就会给笔记本推「单屏气压弹簧臂」——
+       实测 9 套笔记本方案里 4 套命中。 */
+    "笔记本支架": /笔记本|笔电/i
   };
-  var SUB_CAT = { charger: 1, mobileacc: 1, ssd: 1 };
+  /* 品类 id → 该品类的行名关键词收窄是否可信（品类里混装了多个物类时才需要） */
+  var SUB_CAT = { charger: 1, mobileacc: 1, ssd: 1, stand: 1 };
 
   /* 从方案自己的配置单提取各类部件的目标价位（取价格中值）。
      只读既有数据、不引入新价格：方案说配 RTX 5080，配件推荐就不该给 RTX 5060。 */
@@ -192,6 +197,59 @@
      给 vivo 手机配了 149-199 的 iPhone 17 专用壳。这是甲方看到那一幕的第一层。
      品类聚合值只作兜底（行名为空时才用），且取中位数不用 max：
      max 每次都被最贵那行带走，等于把串味传染给同品类的其他行。 */
+  /* 行名同类中位数（跨方案）：兜底值该按「同一个行名在其他方案里通常多少钱」取，
+     而不是「同一套方案里另一个共用品类的行多少钱」。
+     后者语义不通：手机影像档的「保护膜」行拿到「手写笔」行的 250，
+     因为两行都映射 mobileacc —— 膜和笔的价格没有可比性。 */
+  var ROW_MEDIAN_CACHE = null;
+  function rowNameMedian() {
+    if (ROW_MEDIAN_CACHE) return ROW_MEDIAN_CACHE;
+    var acc = {};
+    D.plans.forEach(function (p) {
+      (p.parts || []).forEach(function (row) {
+        var nums = String(row[2] || "").match(/\d+/g);
+        if (!nums || !nums.length) return;
+        var lo = parseInt(nums[0], 10);
+        var hi = nums.length > 1 ? parseInt(nums[1], 10) : lo;
+        var v = (lo + hi) / 2;
+        if (PART_SPLIT[row[0]]) v *= PART_SPLIT[row[0]];
+        (acc[row[0]] = acc[row[0]] || []).push(v);
+      });
+    });
+    var out = {};
+    Object.keys(acc).forEach(function (k) {
+      var a = acc[k].slice().sort(function (x, y) { return x - y; });
+      var n = a.length;
+      out[k] = n % 2 ? a[(n - 1) / 2] : (a[n / 2 - 1] + a[n / 2]) / 2;
+    });
+    ROW_MEDIAN_CACHE = out;
+    return out;
+  }
+
+  function median(arr) {
+    var a = arr.slice().sort(function (x, y) { return x - y; });
+    var n = a.length;
+    if (!n) return 0;
+    return n % 2 ? a[(n - 1) / 2] : (a[n / 2 - 1] + a[n / 2]) / 2;
+  }
+
+  /* ---------- 平台联动（ORD-25） ----------
+     配置单原文自带歧义：t4500 主板行写「H610M / B650M」（LGA1700+DDR4 / AM5+DDR5），
+     内存行写「DDR4/DDR5 16G」—— 两行各自独立的二选一，组合起来必然出现
+     DDR5 主板 + DDR4 内存，插不上；AM5 主板 + Intel CPU 同理。
+     这是配置单歧义，不是选件逻辑的错，所以修法是让后面的行跟着前面已选的件走：
+     主板先定，内存按它的代际收窄，CPU 按它的插槽收窄。 */
+  function socketOf(specs) {
+    var m = String(specs || "").match(/AM5|AM4|LGA\s*1700|LGA\s*1851|LGA\s*1200|LGA\s*1151|sTRX4/i);
+    return m ? m[0].toUpperCase().replace(/\s+/g, "") : "";
+  }
+  function ddrOf(specs) {
+    var t = String(specs || "");
+    var a = /DDR5/i.test(t), b = /DDR4/i.test(t);
+    if (a && b) return "";          /* 两种都支持 = 不构成约束 */
+    return a ? "DDR5" : (b ? "DDR4" : "");
+  }
+
   function planPartTargets(plan) {
     var byPart = {}, acc = {};
     (plan.parts || []).forEach(function (row) {
@@ -206,72 +264,91 @@
       byPart[row[0]] = v;
       (acc[cid] = acc[cid] || []).push(v);
     });
+    var rm = rowNameMedian();
     var byCat = {};
     Object.keys(acc).forEach(function (cid) {
-      var a = acc[cid].slice().sort(function (x, y) { return x - y; });
-      var n = a.length;
-      byCat[cid] = n % 2 ? a[(n - 1) / 2] : (a[n / 2 - 1] + a[n / 2]) / 2;
+      /* 先取每一行「跨方案的行名中位数」，再在这些行之间取中位数。
+         现状 0 处走到这里（每行都写得出价格），但兜底值必须是对的：
+         以后哪一行价格文本漏了数字，才不会拿隔壁行（膜 vs 笔）的价格顶上。 */
+      var vals = [];
+      Object.keys(byPart).forEach(function (p2) {
+        if (PART_CAT[p2] === cid && rm[p2] != null) vals.push(rm[p2]);
+      });
+      byCat[cid] = vals.length ? median(vals) : median(acc[cid]);
     });
-    return { byPart: byPart, byCat: byCat };
+    return { byPart: byPart, byCat: byCat, rowMedian: rm };
   }
 
-  /* ---------- 生态兼容 ----------
-     库里 brand 一直分开写着（"Apple" / "苹果" / "华为" …），选配件时从来没读过它，
-     于是「vivo 手机 + 苹果 iPhone 17 官方硅胶壳」能出现在同一屏。
-     判定只用 brand + 物类关键词，不去猜型号字符串属于谁：后者每进一个新型号就漏一次。 */
-  /* 归一化：同一家库里写成两种（手机库 Apple 5 条 + 苹果 1 条，配件库 ma1 写 Apple、pw6 写 苹果）。
-     不认这一条，写「苹果」的那批配件就能绕过对「Apple」的判定。 */
-  var ECO_BRAND = {
-    "apple": "apple", "苹果": "apple",
-    "huawei": "huawei", "华为": "huawei",
-    "samsung": "samsung", "三星": "samsung",
-    "xiaomi": "xiaomi", "小米": "xiaomi", "redmi": "xiaomi",
-    "honor": "honor", "荣耀": "honor",
-    "oppo": "oppo", "vivo": "vivo", "iqoo": "vivo",
-    "oneplus": "oneplus", "一加": "oneplus", "realme": "realme",
-    "lenovo": "lenovo", "联想": "lenovo", "zte": "zte", "中兴": "zte",
-    "google": "google", "谷歌": "google"
-  };
-  /* brand 写成「厂商」的通用件（ma5 通用钢化膜）靠产品线关键词兜住 */
-  var ECO_NAME = /iPhone|iPad|MacBook|MagSafe|Apple\s*Pencil|Magic\s*Trackpad|AirPods/i;
+  /* ---------- 生态兼容（ORD-25 重做：判据从 brand 换成 compat 派生表） ----------
+     ORD-21 用 brand 判「这件配件属于哪个生态」，方向是错的：
+     brand 是「厂商归属」，不是「适配归属」。库里有 4 件厂商与适配生态无关 ——
+     ma21 罗技 Combo Touch（iPad 专用）、ma4 绿联磁吸壳（MagSafe）、
+     pw23 Anker MagGo（iPhone）、pw16 Anker Lightning 线（iPhone 15 以下）。
 
-  function ecoOf(it) {
-    if (!it) return "";
-    var b = String(it.brand || "").trim().toLowerCase();
-    if (ECO_BRAND[b]) return ECO_BRAND[b];
-    if (ECO_NAME.test(String(it.name || "") + " " + String(it.model || ""))) return "apple";
-    return "";
-  }
+     现在分三层，数据一字不改（全部来自 js/compat-map.js，由 tools/build-compat-map.cjs
+     从 compat 文本派生）：
+       层1 ecoOfBrand(brand) 厂商 → 生态（214 个品牌全覆盖，表外归 other，绝不返回空）
+       层2 fitOf(item)       件 → { eco, scope }，compat 里写明的硬边界
+       层3 compatDrop(...)   通用件放行；专用件且生态或物类不符 → 排除并给可读理由
+     只有 fit 表里的件（当前 25 件）会被判，其余全是通用件 ——
+     这是「只锁物理上装不到别机」的实现方式，不再靠物类白名单猜：
+     膜 / 背夹 / 支架 / 自拍杆 / 耳机 / 通用线材在 compat 里没有专属关系，自然不被判。
+     「Anker 自拍杆」的 compat 写着「兼容 Type-C 与 Lightning」，
+     按字面像苹果专用，可它夹任何手机都能用 —— 物类不排他，表里就不会有它。 */
+  var COMPAT_MAP = (typeof window !== "undefined" && window.PC_COMPAT_MAP) || {};
+  var COMPAT_SOFT = (typeof window !== "undefined" && window.PC_COMPAT_SOFT) || {};
+  var ECO_BRAND_TBL = (typeof window !== "undefined" && window.PC_ECO_BRAND) || {};
+  var ECO_BY_LOWER = null;
 
-  /* 只有「物理上装不到别的机器」的物类才做生态锁定。
-     膜 / 背夹 / 支架 / 自拍杆 / 耳机 / 通用线材 一律不判 —— 判了就是误杀：
-     「小米自拍杆 2S」会被判成只能配小米手机。
-     body       = 允许落在哪些本体品类上（缺省 = 不限品类，只锁生态）
-     appleOnly  = 这几件只能是苹果设备，且限 body 内（Apple Pencil 给 iPhone 装不上） */
-  var ECO_FIT = [
-    { name: "保护壳", re: /保护壳|保护套|手机壳|硅胶壳|防摔壳|磁吸壳|Tough Armor/i, body: { phone: 1 } },
-    { name: "手写笔", re: /Apple\s*Pencil|触控笔|手写笔/i, body: { phone: 1, tablet: 1 }, appleOnly: { tablet: 1 } },
-    { name: "平板键盘", re: /妙控键盘|Combo Touch|磁吸键盘|Book Cover|平板键盘|外接蓝牙键盘/i, body: { tablet: 1 } },
-    { name: "触控板", re: /Magic\s*Trackpad/i, body: { tablet: 1, laptop: 1 }, appleOnly: { tablet: 1, laptop: 1 } },
-    /* 原装头 / 编织线 / 磁吸电源：按机型配的，苹果那三件不能给安卓机 */
-    { name: "原装充电", re: /原装充电器|编织充电线|MagSafe/i }
-  ];
-
-  /* 返回排除理由，空串 = 可用。不用布尔值：页面要能说清「这一行为什么没有件」。 */
-  function compatDrop(it, bodyEco, bodyCatId) {
-    if (!bodyEco) return "";
-    var hay = String(it.brand || "") + " " + String(it.name || "") + " " + String(it.model || "");
-    var fit = null;
-    for (var i = 0; i < ECO_FIT.length; i++) {
-      if (ECO_FIT[i].re.test(hay)) { fit = ECO_FIT[i]; break; }
+  /* 层1：厂商 → 生态。Apple 与 苹果 是同一家（手机库两种写法并存，不认这条就能绕过判定）；
+     子品牌不合并（iqoo ≠ vivo、redmi ≠ xiaomi），合并会造出假的「同生态」。 */
+  function ecoOfBrand(brand) {
+    var b = String(brand || "").trim();
+    if (!b) return "other";
+    if (ECO_BRAND_TBL[b]) return ECO_BRAND_TBL[b];
+    if (!ECO_BY_LOWER) {
+      ECO_BY_LOWER = {};
+      for (var k in ECO_BRAND_TBL) {
+        if (Object.prototype.hasOwnProperty.call(ECO_BRAND_TBL, k)) ECO_BY_LOWER[k.toLowerCase()] = ECO_BRAND_TBL[k];
+      }
     }
-    if (!fit) return "";
-    var ie = ecoOf(it);
-    if (!ie) return "";                                    /* 件没写生态 = 通用件 */
-    if (fit.body && !fit.body[bodyCatId]) return fit.name + "不配「" + bodyCatId + "」本体";
-    if (fit.appleOnly && ie === "apple" && !fit.appleOnly[bodyCatId]) return "苹果专用设备件，只配 iPad / MacBook";
-    if (ie !== bodyEco) return "生态不符（" + ie + " 件配 " + bodyEco + " 本体）";
+    return ECO_BY_LOWER[b.toLowerCase()] || "other";
+  }
+
+  /* 层2：件的适配边界。表里没有 = 通用件。 */
+  function fitOf(it) {
+    if (!it || !it.id) return null;
+    return COMPAT_MAP[it.id] || null;
+  }
+
+  var ECO_LABEL = {
+    apple: "苹果", huawei: "华为", samsung: "三星", xiaomi: "小米", redmi: "红米",
+    honor: "荣耀", oppo: "OPPO", vivo: "vivo", iqoo: "iQOO", oneplus: "一加",
+    realme: "realme", lenovo: "联想", zte: "中兴", google: "谷歌", other: "其他品牌"
+  };
+  var SCOPE_LABEL = { phone: "手机", tablet: "平板", laptop: "笔记本" };
+  function ecoLabel(e) { return ECO_LABEL[e] || e; }
+
+  /* 层3：返回排除理由，空串 = 可用。不用布尔值：页面要能说清「这一行为什么没有件」。 */
+  function compatDrop(it, bodyEco, bodyCatId) {
+    var f = fitOf(it);
+    if (!f) return "";
+    /* 没有本体信息就无从判断（台式方案没有手机/平板/笔记本本体） */
+    if (!bodyEco && !bodyCatId) return "";
+    if (f.scope && bodyCatId && f.scope.indexOf(bodyCatId) < 0) {
+      return "只能配" + f.scope.map(function (s) { return SCOPE_LABEL[s] || s; }).join(" / ") +
+        "，本体是" + (SCOPE_LABEL[bodyCatId] || bodyCatId);
+    }
+    if (f.eco && bodyEco && f.eco !== bodyEco) {
+      return "生态不符（" + ecoLabel(f.eco) + "专用件，本体是" + ecoLabel(bodyEco) + "）";
+    }
     return "";
+  }
+
+  /* 软边界：装得上但功能打折（AirPods 在安卓上能听歌、小米手表第三方功能受限）。
+     只提示、不排除 —— 把「体验打折」当「装不上」排除，正是 ORD-21 把 AirPods 误杀的原因。 */
+  function compatNote(it) {
+    return it && it.id && COMPAT_SOFT[it.id] ? COMPAT_SOFT[it.id] : "";
   }
 
   /* 笔记本本体占预算大头，且不同档位机型差距大：目标价随预算上探，
@@ -368,9 +445,10 @@
           '<td class="spec-price">—</td></tr>';
       }
       var picked = bySrc[part] || [];
-      var libPrice = null, names = [], blockedN = 0;
+      var libPrice = null, names = [], blockedN = 0, blankWhy = "";
       picked.forEach(function (x) {
         if (x.compatBlocked) blockedN = x.compatBlocked;
+        if (x.blankReason) blankWhy = x.blankReason;
         var it = x.pick && x.pick.item;
         if (!it || !it.price) return;
         libPrice = libPrice
@@ -388,6 +466,7 @@
         cfgCell = esc(config);
         /* 因生态排除而空手的行，表格里也要说明：只写「配置单原选」会让用户以为这就是推荐结果 */
         if (blockedN) cfgCell += '<span class="spec-orig spec-block">暂无可用配件（按当前主体排除 ' + blockedN + ' 件不兼容型号）</span>';
+        else if (blankWhy) cfgCell += '<span class="spec-orig spec-block">暂无可用配件（' + esc(blankWhy) + '）</span>';
         priceCell = esc(priceText);
         var nums = String(priceText).match(/\d+/g);
         if (nums) {
@@ -672,10 +751,18 @@
        本体行一般排在配置单第一行，但「手机壳」也可能出现得比「手机」早 ——
        靠行序赌不可靠。先把本体行算出来拿到它的生态，再算剩下的行，最后按原序还原。 */
     var bodyEco = "", bodyCatId = "";
+    /* 平台联动：CPU 先定（配置单这一行几乎总是点名具体型号）→ 主板按 CPU 插槽收窄
+       → 内存按主板代际收窄。
+       为什么不是主板先定：t4500 的主板行写「H610M / B650M」、CPU 行写「i3-14100F / R5 5500」，
+       主板先定会挑中 B650M（AM5），而配置单点名的两颗 CPU 都不在 AM5 上（LGA1700 / AM4），
+       结果只能从库里另挑一颗配置单没写的 CPU —— 配置单原文被整行换掉。
+       CPU 先定则保住配置单点名的型号，主板跟着插槽走。 */
+    var cpuSocket = "", moboDdr = "";
+    var PRIO = { cpu: 1, mobo: 2, ram: 3 };
     var order = (plan.parts || []).map(function (r, i) { return { r: r, i: i }; });
     order.sort(function (a, b) {
-      var ba = WHOLE_BUDGET_SHARE[PART_CAT[a.r[0]] || ""] ? 0 : 1;
-      var bb = WHOLE_BUDGET_SHARE[PART_CAT[b.r[0]] || ""] ? 0 : 1;
+      var ba = WHOLE_BUDGET_SHARE[PART_CAT[a.r[0]] || ""] ? 0 : (PRIO[PART_CAT[a.r[0]] || ""] || 4);
+      var bb = WHOLE_BUDGET_SHARE[PART_CAT[b.r[0]] || ""] ? 0 : (PRIO[PART_CAT[b.r[0]] || ""] || 4);
       return ba - bb || a.i - b.i;
     });
 
@@ -706,7 +793,7 @@
       var cat = null;
       if (cid) D.categories.forEach(function (c) { if (c.id === cid) cat = c; });
       var isBody = !!(cid && WHOLE_BUDGET_SHARE[cid]);
-      var compatDropped = 0, compatBlocked = 0;
+      var compatDropped = 0, compatBlocked = 0, blankReason = "";
       var target = (targets.byPart[part] || targets.byCat[cid] || base * 0.03) * targetScale * (scaleOf ? scaleOf(cid) : 1);
       if (PART_SPLIT[part]) target = target / PART_SPLIT[part];
       /* 笔记本本体按预算选档：配置单行价只是模板，不该锁死选择 */
@@ -757,6 +844,16 @@
       var pick = null, textPick = null;
       if (cat && cat.items && cat.items.length) {
         var items = cat.items;
+        /* 平台联动：主板已选定时，内存只留同代际、CPU 只留同插槽。
+           收窄后一件都没有就不收窄（保持原有兜底），但下面的闸会把它抓出来。 */
+        if (cid === "ram" && moboDdr) {
+          var ddrHit = items.filter(function (it) { return ddrOf(it.specs) === moboDdr; });
+          if (ddrHit.length) items = ddrHit;
+        }
+        if (cid === "mobo" && cpuSocket) {
+          var sockHit = items.filter(function (it) { return socketOf(it.specs) === cpuSocket; });
+          if (sockHit.length) items = sockHit;
+        }
         // psu 类别混装电源与机箱，电源位只取电源
         if (cid === "psu") {
           var onlyPsu = items.filter(function (it) { return (it.style || "").indexOf("电源") !== -1; });
@@ -765,9 +862,13 @@
         /* 散热按冷排规格选，不走用途软过滤：软过滤会把它整档降下来 */
         /* 行名说了物类就先收窄；typed 为空数组时不回落（空数组是 true，会把 pool 清空，
            pickOne 直接返回 null，随后走配置单原文兜底 —— 这是想要的结果） */
+        /* style 也要进 haystack：支架类的物类只写在 style 里（「笔记本支架」/「显示器支架」），
+           name 是「北弧 LDT14 单屏气压弹簧臂」这种，靠名字永远判不出是给谁用的。 */
         var typed = SUB_KW[part] && SUB_CAT[cid] ? items.filter(function (it) {
-          return SUB_KW[part].test(String(it.brand || "") + String(it.model || "") + String(it.name || ""));
+          return SUB_KW[part].test(String(it.brand || "") + String(it.model || "") + String(it.name || "") + " " + String(it.style || ""));
         }) : null;
+        /* 行名收窄后一件都没有：这一行宁可明说「暂无可用配件」，也不拿别的物类凑数。
+           判定在下面 pick 为空时做，这里只保留 typed 供那段代码读。 */
         /* 生态过滤放在收窄之前：收窄（壳/笔/键盘…）的判定只看物类，
            不过滤就会出现「vivo 手机 + 苹果 iPhone 17 官方硅胶壳」。
            items 是 cat.items 的新数组（filter 不就地改），不会污染品类库。 */
@@ -821,6 +922,9 @@
           /* 因生态排除而空手时不许拿档位充数：档位里就写着「苹果 20W 原装充电器」这种东西，
              填进来等于换个方式继续给安卓机配苹果件。这一行改为明写「暂无可用配件」。 */
           if (compatDropped) compatBlocked = compatDropped;
+          /* 行名收窄后一件都没有（stand 里只有显示器支架、没有笔记本支架）：
+             同样不许拿别的物类凑数，明说这一行没有可用件。 */
+          else if (typed && !typed.length) blankReason = "库里没有符合「" + part + "」的型号";
           else textPick = catalogPick(part, target) || { name: config, price: [0, 0], alts: [] };
         }
       } else {
@@ -829,16 +933,23 @@
       /* 本体行的选中件决定后面所有配件的生态。放在 push 前，配件行才能读到。 */
       if (isBody && pick && pick.item) {
         bodyCatId = cid;
-        bodyEco = ecoOf(pick.item);
+        bodyEco = ecoOfBrand(pick.item.brand);
       }
-      out.push({ part: part, srcPart: part, config: config, priceText: priceText, cat: cat, pick: pick, textPick: textPick, compatBlocked: compatBlocked, _i: o.i });
+      if (cid === "cpu" && pick && pick.item) cpuSocket = socketOf(pick.item.specs);
+      if (cid === "mobo" && pick && pick.item) moboDdr = ddrOf(pick.item.specs);
+      out.push({
+        part: part, srcPart: part, config: config, priceText: priceText, cat: cat,
+        pick: pick, textPick: textPick, compatBlocked: compatBlocked,
+        blankReason: blankReason || "", softNote: (pick && pick.item) ? compatNote(pick.item) : "",
+        _i: o.i
+      });
     });
     /* 本体行被提前处理过，这里按配置单原序还原 */
     out.sort(function (a, b) { return a._i - b._i; });
     skipped.sort(function (a, b) { return a._i - b._i; });
     /* 有可推荐件、或有「无可用配件」明示，都算这一行交代清楚了；
        两个都没有才是静默消失（用户会以为漏配了） */
-    var finalRows = out.filter(function (r) { return r.pick || r.textPick || r.compatBlocked; });
+    var finalRows = out.filter(function (r) { return r.pick || r.textPick || r.compatBlocked || r.blankReason; });
     // filter 会返回新数组，跳过的行要挂回去供配置单表格使用
     finalRows.skipped = skipped;
     finalRows.lookMiss = lookMiss;
@@ -883,13 +994,18 @@
       var priceTxt = it ? fmtPrice(it.price) : r.priceText;
       var badges = (r.hot && collapsible ? '<span class="fp-badge">升级重点</span>' : "") + badgeOf(r);
       if (!it && r.textPick) badges += '<span class="fp-badge fp-cat-badge">配置单原选</span>';
-      if (r.compatBlocked) badges += '<span class="fp-badge fp-block-badge">无可用件</span>';
+      if (r.compatBlocked || r.blankReason) badges += '<span class="fp-badge fp-block-badge">无可用件</span>';
       var why = "";
       if (!it) {
         if (r.compatBlocked) {
           /* 不许静默消失，也不许拿不兼容的件充数：说清为什么没有，并把决定权交回用户 */
           why = '<p class="fp-why fp-why-blocked">这一行暂无可用配件：按当前主体排除了 ' +
             r.compatBlocked + ' 件生态不兼容的型号。可以按配置单原选自行挑选。</p>';
+        } else if (r.blankReason) {
+          /* 行名收窄后没有对得上的件（支架行只收窄到笔记本支架，库里 34 件是显示器支架）：
+             明说，不拿别的物类凑数 */
+          why = '<p class="fp-why fp-why-blocked">' + esc(r.blankReason) +
+            '。这一行暂无可用配件，可以按配置单原选（「' + esc(r.config) + '」）自行挑选。</p>';
         } else {
           why = '<p class="fp-why">这一类没有独立的型号库，上面就是配置单的原选；同价位档位参考「' +
             esc(r.textPick.name) + '（¥' + r.textPick.price[0] + '）」。装机时以主板接口与机箱限高为准。</p>';
@@ -902,6 +1018,9 @@
             "（" + fmtPrice(it.price) + "）。想更接近原选，点下面备选。</p>";
         }
         if (it.valueNote) why += '<p class="fp-why">' + esc(it.valueNote) + "</p>";
+        /* 软边界：装得上但功能打折（AirPods 在安卓上、小米手表在第三方手机上）。
+           提示而不排除 —— 排除了等于拿「体验打折」当「装不上」。 */
+        if (r.softNote) why += '<p class="fp-why fp-soft-note">兼容提示：' + esc(r.softNote) + "</p>";
       }
       var cands = it
         ? (r.pick.alts || []).map(function (a) { return { label: a.name, q: a.searchName || a.name, price: fmtPrice(a.price) }; })
@@ -1167,7 +1286,7 @@
       "散热": "cooler", "散热器": "cooler", "风冷": "cooler", "水冷": "cooler", "冷排": "cooler",
       "显示器": "monitor", "monitor": "monitor", "屏幕": "monitor", "显示屏": "monitor",
       "音频": "audio", "audio": "audio",
-      "网络": "network", "network": "network",
+      "网络": "network", "network": "network", "网卡": "network",
       "支架": "stand", "stand": "stand",
       "拓展坞": "dock", "扩展坞": "dock", "dock": "dock",
       "笔记本": "laptop", "轻薄本": "laptop", "上网本": "laptop", "laptop": "laptop",
@@ -1191,6 +1310,118 @@
       "摄像头": "wearable", "路由器": "wearable", "智能音箱": "wearable", "台灯": "wearable",
       "相机": "wearable", "微单": "wearable"
     };
+
+    /* ── 规格词 → 主体品类（ORD-25）────────────────────────────────────────
+       这张表只回答一件事：用户打的这个词，指的是「哪一类东西本身」。
+       为什么需要它：结构化字段（specsObj）只迁了 ssd 一个品类（53/1209 = 4.4%），
+       其余 20 个品类的规格全在 specs 自由文本里，主排序键对它们完全失效 ——
+       搜「DDR5」时 35 块主板的「DDR5 双通道」与 47 条内存的「DDR5」同层同权，
+       主板在品类顺序里靠前，于是内存一条都进不了首屏。
+
+       用法（判分，不改命中）：条目命中某个词、且该词把这个条目的品类列为主体时，
+       记「主体命中」，权重 = 数组第 1 位 2 分 / 其余 1 分；排序按分数降序。
+       条目必须真的命中该词才计分 —— 所以多列品类不会让空品类凭空拿到权重。
+
+       收录纪律：
+         ① 与 ALIAS 不重复。ALIAS 管「品类同义词」（内存/内存条→ram、ipad→tablet），
+            本表管「规格词归属」（DDR5→ram）。同一个词只该出现在一张表里。
+         ② 多品类映射必须说得出「为什么这个品类也是主体」，说不出就只留一个。
+            反例：M.2 只归 ssd，不归 mobo —— 57 块主板的「1×M.2」说的是插槽，
+            把 mobo 列进来就等于把 ORD-17 修掉的「搜 M.2 看到主板」重新做一遍。
+         ③ 数据里 0 命中的词不收录（内存颗粒 / 16g显存 / 24g显存 / atx机箱 / 120水冷 /
+            atx板）：写了也不会生效，留着只是让表看起来比实际宽。 */
+    var SPEC_CAT = {
+      /* 内存代际：内存条是主体；主板的「DDR5 双通道」是板载规格，
+         但 DDR4 板与 DDR5 板本身就是两个选购分类，故列次要主体 */
+      "ddr5": ["ram", "mobo"],
+      "ddr4": ["ram", "mobo"],
+
+      /* 固态：m.2 只归 ssd（见纪律②）；nvme 硬盘盒（dock）以 NVMe 为主语 */
+      "m.2": ["ssd"],
+      "nvme": ["ssd", "dock"],
+      "pcie4.0": ["ssd", "mobo"],
+      "pcie5.0": ["ssd", "mobo", "gpu"],
+
+      /* 电源：认证等级、模组化、功率档都是电源的主语 */
+      "atx3.1": ["psu"],
+      "atx": ["psu", "case", "mobo"],
+      "金牌": ["psu"],
+      "铜牌": ["psu"],
+      "模组": ["psu"],
+      "750w": ["psu"],
+      "850w": ["psu"],
+
+      /* 网络：速率词的主语是网络设备；带 2.5G 网口的拓展坞同属主体 */
+      "2.5g": ["network", "dock"],
+      "千兆": ["network", "dock"],
+      "万兆": ["network"],
+      "网口": ["network", "dock"],
+      "wifi7": ["network", "mobo"],
+      "wifi6e": ["network", "mobo"],
+
+      /* 平台/插槽/芯片组：插槽是主板的物理属性，CPU 是「适配该插槽」，故主板在前 */
+      "am5": ["mobo", "cpu"],
+      "am4": ["mobo", "cpu"],
+      "lga1700": ["mobo", "cpu"],
+      "lga1851": ["mobo", "cpu"],
+      "b650": ["mobo"],
+      "b760": ["mobo"],
+      "x670": ["mobo"],
+      "z790": ["mobo"],
+      "matx": ["mobo", "case"],
+      "itx": ["case", "mobo"],
+
+      /* 机箱形态词 */
+      "玻璃侧透": ["case"],
+      "海景房": ["case"],
+
+      /* 散热：风冷/水冷/冷排已在 ALIAS，这里只补带规格的说法 */
+      "360水冷": ["cooler"],
+      "240水冷": ["cooler"],
+      "热管": ["cooler"],
+
+      /* 显示：分辨率/刷新率/面板都是显示器的选购主轴。
+         144Hz 在平板与手机上同样是卖点（实测 tablet 25 条 / phone 10 条 > monitor 3 条），
+         故三类并列主体，主体序仍按显示器在前（本站以显示器为该规格的选购主语） */
+      "2k": ["monitor"],
+      "4k": ["monitor"],
+      "1080p": ["monitor"],
+      "144hz": ["monitor", "tablet", "phone"],
+      "240hz": ["monitor", "laptop"],
+      "高刷": ["monitor", "tablet", "phone"],
+      "ips": ["monitor", "laptop"],
+      "oled": ["monitor", "phone", "tablet", "laptop"],
+      "护眼": ["monitor", "phone", "laptop"],
+
+      /* 显卡：RTX 既是显卡型号线，也是游戏本的卖点线 */
+      "rtx": ["gpu", "laptop"],
+      "显存": ["gpu"],
+
+      /* 键鼠：三模（蓝牙/2.4G/有线）是键鼠与耳机的共同卖点 */
+      "机械键盘": ["input"],
+      "无线鼠标": ["input"],
+      "三模": ["input", "earphone"],
+      "客制化": ["input"],
+
+      /* 接口：雷电是笔记本接口，拓展坞以它为主语 */
+      "雷电4": ["laptop", "dock"],
+      "雷电5": ["laptop", "dock"],
+
+      /* 移动 SoC：手机与平板共用同一颗芯片 */
+      "骁龙": ["phone", "tablet"],
+      "麒麟": ["phone", "tablet"],
+      "天玑": ["phone", "tablet"]
+    };
+
+    /* 该词把该品类列为主体时返回权重（2 主体 / 1 次要主体 / 0 无关） */
+    function specCatWeight(t, catId) {
+      var arr = SPEC_CAT[t];
+      if (!arr) return 0;
+      for (var i = 0; i < arr.length; i++) {
+        if (arr[i] === catId) return i === 0 ? 2 : 1;
+      }
+      return 0;
+    }
 
     /* 主观需求词映射到规格关键词，让「白色」「静音」「大显存」这类说法也能搜到结果 */
     var NEED = {
@@ -1257,7 +1488,10 @@
           });
         });
       }
-      var keys = Object.keys(ALIAS).concat(Object.keys(NEED)).concat(extra)
+      /* SPEC_CAT 的键也要参与切分，否则「机械键盘」会被「键盘」切成
+         「机械」+「键盘」，而 ALIAS 里「键盘」指向 mobileacc（平板键盘）——
+         搜机械键盘会整屏手机平板键盘，一个真正的键盘都没有。 */
+      var keys = Object.keys(ALIAS).concat(Object.keys(NEED)).concat(Object.keys(SPEC_CAT)).concat(extra)
         .filter(function (k) { return k.length > 1; })
         .sort(function (a, b) { return b.length - a.length; });
       var out = [];
@@ -1337,7 +1571,7 @@
        搜「M.2」时 57 块主板的 specs 里都写着「1×M.2」（说的是插槽），
        44 块 M.2 固态的 specsObj.form 才是「这件东西本身就是 M.2」。
        两者原来都算字段命中，于是主板全部排在固态前面。
-       只对「库里真有结构化表述」的词生效：ATX3.1 / GDDR7 这类没有结构化字段，
+       只对「库里真有结构化表述」的词生效：GDDR7 这类既没有 specsObj 也不在 SPEC_CAT 里，
        行为与原来完全一致，不会被误伤。 */
     var structTokCache = {};
     function structTokens(toks) {
@@ -1345,6 +1579,9 @@
       if (structTokCache[key]) return structTokCache[key];
       var set = {};
       toks.forEach(function (t) {
+        /* 规格词表里有的词，库里必然有品类以它为主体 —— 直接算「可结构化表达」，
+           不必等 specsObj 迁到那个品类（现在只迁了 ssd 一个）。 */
+        if (SPEC_CAT[t]) { set[t] = 1; return; }
         for (var c = 0; c < D.categories.length && !set[t]; c++) {
           var items = D.categories[c].items;
           for (var i = 0; i < items.length; i++) {
@@ -1374,22 +1611,24 @@
       var so = structSet || {};
       var rank = 0, struct = 0;
       for (var i = 0; i < toks.length; i++) {
-        var t = toks[i], lv = 0;
+        var t = toks[i], lv = 0, byObj = false;
         var asCat = ALIAS[t];
         if (asCat) {
           /* 品类词只按所属品类判定，避免命中别的品类里「提及」它的型号 */
           if (asCat !== catId) return { rank: 0, struct: 0 };
           lv = 2;
-        } else if (specObjHit(item, catId, t)) {
+        } else if ((byObj = specObjHit(item, catId, t))) {
           lv = 1;
-          struct++;
         } else if (spec.indexOf(t) > -1 || anyAlt(spec, t)) {
           /* 这个词在别处有结构化表述、这里只是自由文本顺带提到 → 降一层。
              主板「1×M.2 插槽」不等于 M.2 固态，不该占据主体层。
              例外：身份字段（名称/型号）里就带着这个词 —— 那等于「它本身就是这个」，
              「海备思 M.2 硬盘盒拓展坞」不该被当成顺带提及。 */
           var byName = idHay.indexOf(t) > -1 || anyAlt(idHay, t);
-          lv = (so[t] && !byName) ? 2 : 1;
+          /* 主体品类里提到它 = 这件东西本身就是这个规格，不降层。
+             降的只是「别的品类顺带提到」：主板写「DDR5 双通道」不算内存，
+             但主板自己支持 DDR5 是事实，所以 ddr5→mobo 有权重时不降。 */
+          lv = (so[t] && !byName && !specCatWeight(t, catId)) ? 2 : 1;
         } else if (idHay.indexOf(t) > -1 || anyAlt(idHay, t)) {
           lv = 2;
         } else if (soft.indexOf(t) > -1 || anyAlt(soft, t)) {
@@ -1397,6 +1636,13 @@
         } else {
           return { rank: 0, struct: 0 };
         }
+        /* 主体命中才计分：这个词指的是「哪一类东西本身」。
+           权重 2/1 让多品类映射里排第一的品类天然靠前，
+           否则 ddr5→[ram,mobo] 这种并列主体会退回品类顺序（mobo 在 ram 前面），
+           等于把「搜 DDR5 看到主板」重新做一遍。 */
+        var w = specCatWeight(t, catId);
+        if (w) struct += w;
+        else if (byObj) struct++;
         if (lv > rank) rank = lv;
       }
       return { rank: rank, struct: struct };
@@ -1512,6 +1758,9 @@
     if (typeof window !== "undefined") {
       var DGS = window.PCRecoDiag = window.PCRecoDiag || {};
       DGS.segment = function (q) { return segmentQuery(q); };
+      /* 规格词表只读出口：闸门要验「表外词行为没变」，就得能判断一个词在不在表内 */
+      DGS.specCat = function () { return Object.keys(SPEC_CAT); };
+      DGS.alias = function () { return Object.keys(ALIAS); };
       DGS.rank = function (q) {
         var toks = q ? segmentQuery(q) : null;
         var so = toks ? structTokens(toks) : null;
@@ -3538,7 +3787,12 @@
             (LIB[k] || []).forEach(function (it) { if (!hit && it.name === itemName) hit = it; });
           });
           if (!hit) return { found: false };
-          return { found: true, eco: ecoOf(hit), drop: compatDrop(hit, bodyEco, bodyCatId) };
+          return {
+            found: true, id: hit.id, brand: hit.brand,
+            eco: ecoOfBrand(hit.brand), fit: fitOf(hit),
+            drop: compatDrop(hit, bodyEco, bodyCatId),
+            note: compatNote(hit)
+          };
         };
         /* 配置单每行的选件结果（26 套方案全覆盖用）。传 opts 可指定 budgetCap / uses / pref，
            与页面同一份 fullPartRows，不另算一套。 */
@@ -3553,10 +3807,13 @@
               var it = r.pick && r.pick.item;
               return {
                 part: r.part, srcPart: r.srcPart || r.part, cat: r.cat ? r.cat.id : "", config: r.config,
-                name: it ? it.name : null, brand: it ? it.brand : null,
+                id: it ? it.id : null, name: it ? it.name : null, brand: it ? it.brand : null,
+                specs: it ? it.specs : null,
                 price: it ? it.price : null,
                 text: r.textPick ? r.textPick.name : null,
-                blocked: r.compatBlocked || 0
+                blocked: r.compatBlocked || 0,
+                blank: r.blankReason || "",
+                soft: r.softNote || ""
               };
             }),
             skipped: (rs.skipped || []).map(function (s2) { return s2.part; }),
