@@ -31,6 +31,15 @@ const ROOT = path.resolve(__dirname, '..');
 const ACC = path.join(ROOT, 'accessories.html');
 const SMART = path.join(ROOT, 'smart.html');
 
+/* 「前 N 张」的唯一口径常量（ORD-32）。
+ * 为什么提成常量：D3 首屏重构会改「第一眼看到多少张卡」这个量，
+ * 过去它散落在 6 处硬编码 8，改一处忘一处 = 尺子口径分裂。
+ * 现在只有一个数，改它就等于改全表口径。
+ * 注意口径本身：jsdom 没有布局引擎，本表量的是「DOM 前 N 张」，
+ * 不是「视口内 N 张」——真机实测视口内是 0 张卡（首卡在文档 2001px 处）。
+ * 两者不是一回事，详见 FEEDBACK/审计.md（ORD-32 §三.4）。 */
+const SCREEN_N = 8;
+
 let pass = 0, fail = 0, skip = 0;
 const chk = (name, cond, actual) => {
   if (cond) { pass++; console.log(`  PASS ${name}`); }
@@ -55,6 +64,12 @@ async function loadDom(file) {
   });
   await sleep(3200);
   return dom;
+}
+
+/* 剥掉 JS 注释 —— 所有「扫源码」型自检闸的通用前提。
+ * 不剥的话，注释里出现的键名会被当成代码，闸会先抓到自己。 */
+function stripComments(src) {
+  return src.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/^\s*\/\/.*$/gm, ' ');
 }
 
 /* 从卡片上取「品类显示名」。
@@ -99,7 +114,25 @@ async function runSearchTasks() {
   const inp = D.querySelector('#accSearch');
   if (!inp) { chk('配件页有搜索框', false, '找不到 #accSearch'); return; }
 
-  /* 每条 = [查询词, 期望主品类, 首屏8张里期望品类至少几张, 说明] */
+  /* ---- U0 · D3 开工基线（ORD-32 新增）----
+     测的是「新手第一眼能不能看到多个品类」：未搜索时，DOM 前 SCREEN_N 张里
+     出现了几个不同的品类。
+     当前实现把 CPU 排在最前 → 前 8 张全是 CPU → 不同品类数 = 1 → **这条是红的**。
+     这不是缺陷，是 D3（首屏重构）的开工基线：做完 D3（首屏给多品类入口 / 分组标题）后应 ≥ 3。
+     口径说明：jsdom 没有布局引擎，本表量的是「DOM 前 N 张」，不是「视口内 N 张」——
+     真机（Edge 156，1366×768）实测配件页视口内是 0 张卡，第一张卡在文档 2001px 处，
+     见 FEEDBACK/审计.md（ORD-32 §三.4）。所以这条比真机口径宽松，但方向一致。 */
+  {
+    const firstCards = [...D.querySelectorAll('.acc-card')].slice(0, SCREEN_N);
+    const firstDist = {};
+    firstCards.forEach(c => { const k = catOf(c); firstDist[k] = (firstDist[k] || 0) + 1; });
+    const distinctCats = Object.keys(firstDist).length;
+    chk('U0 未搜索时，前 ' + SCREEN_N + ' 张里出现的不同品类 ≥ 3（新手第一眼能不能看到多个品类 · D3 开工基线，当前为红）',
+      distinctCats >= 3,
+      { 前SCREEN_N张分布: firstDist, 不同品类数: distinctCats, 期望: '≥3' });
+  }
+
+  /* 每条 = [查询词, 期望主品类, 首屏N张里期望品类至少几张, 说明] */
   const TASKS = [
     ['DDR5',   '内存', 6, '内存代际词，内存条 47 款是主体，主板 specs 写「DDR5 双通道」不该压过'],
     /* 期望品类写「网络设备」而不是「网卡」：站内没有「网卡」这个品类，
@@ -122,13 +155,13 @@ async function runSearchTasks() {
     inp.value = q;
     inp.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
     await sleep(700);
-    const cards = [...D.querySelectorAll('.acc-card')].slice(0, 8);
+    const cards = [...D.querySelectorAll('.acc-card')].slice(0, SCREEN_N);
     const dist = {};
     cards.forEach(c => { const k = catOf(c); dist[k] = (dist[k] || 0) + 1; });
     const got = dist[want] || 0;
     const hint = D.querySelector('#accSearchHint');
     const hits = hint ? (hint.textContent.match(/命中 (\d+) 款/) || [])[1] : '?';
-    chk(`U 搜「${q}」首屏 8 张里「${want}」≥ ${min} 张（${why}）`,
+    chk(`U 搜「${q}」首屏 ${SCREEN_N} 张里「${want}」≥ ${min} 张（${why}）`,
       got >= min, { 首屏分布: dist, 期望品类: want, 至少: min, 实际: got, 总命中: hits });
   }
   /* ---- 追加三行（ORD-27 开工基线，由总控定稿；这三行现在是红的，就是 ORD-27 要做的事）----
@@ -156,18 +189,18 @@ async function runSearchTasks() {
     inp.value = t.q;
     inp.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
     await sleep(700);
-    const cards = [...D.querySelectorAll('.acc-card')].slice(0, 8);
+    const cards = [...D.querySelectorAll('.acc-card')].slice(0, SCREEN_N);
     const dist = {};
     cards.forEach(c => { const k = catOf(c); dist[k] = (dist[k] || 0) + 1; });
     const hint = D.querySelector('#accSearchHint');
     const hits = hint ? (hint.textContent.match(/命中 (\d+) 款/) || [])[1] : '?';
     if (t.cap) {
       const got = dist[t.cap] || 0;
-      chk(`U 搜「${t.q}」首屏 8 张里「${t.cap}」≤ ${t.max} 张（${t.why}）`,
+      chk(`U 搜「${t.q}」首屏 ${SCREEN_N} 张里「${t.cap}」≤ ${t.max} 张（${t.why}）`,
         got <= t.max, { 首屏分布: dist, 上限品类: t.cap, 最多: t.max, 实际: got, 总命中: hits });
     } else {
       const got = dist[t.want] || 0;
-      chk(`U 搜「${t.q}」首屏 8 张里「${t.want}」≥ ${t.min} 张（${t.why}）`,
+      chk(`U 搜「${t.q}」首屏 ${SCREEN_N} 张里「${t.want}」≥ ${t.min} 张（${t.why}）`,
         got >= t.min, { 首屏分布: dist, 期望品类: t.want, 至少: t.min, 实际: got, 总命中: hits });
     }
   }
@@ -183,7 +216,7 @@ async function runSearchTasks() {
     inp.value = q;
     inp.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
     await sleep(700);
-    const cards = [...D.querySelectorAll('.acc-card')].slice(0, 8);
+    const cards = [...D.querySelectorAll('.acc-card')].slice(0, SCREEN_N);
     const cats = cards.map(c => catOf(c));
     const gi = cats.indexOf('显卡');
     const pi = cats.indexOf('电源');
@@ -206,7 +239,7 @@ async function runSearchTasks() {
       await sleep(600);
       const h2 = D.querySelector('#accSearchHint');
       const m2 = h2 ? h2.textContent.match(/命中 (\d+) 款/) : null;
-      const c2 = [...D.querySelectorAll('.acc-card')].slice(0, 8).map(c => catOf(c)).join('|');
+      const c2 = [...D.querySelectorAll('.acc-card')].slice(0, SCREEN_N).map(c => catOf(c)).join('|');
       sigs.push(v + '→' + (m2 ? m2[1] : '0') + '|' + c2);
     }
     const uniq = new Set(sigs.map(s => s.split('→')[1]));
@@ -306,7 +339,7 @@ async function runSearchTasks() {
     const hint = D.querySelector('#accSearchHint');
     const hm = hint ? hint.textContent.match(/命中 (\d+) 款/) : null;
     const hits = hm ? +hm[1] : 0;
-    const cards = [...D.querySelectorAll('.acc-card')].slice(0, 8);
+    const cards = [...D.querySelectorAll('.acc-card')].slice(0, SCREEN_N);
     const dist = {};
     cards.forEach(c => { const k = catOf(c); dist[k] = (dist[k] || 0) + 1; });
     const shown = cards.length;
@@ -322,7 +355,7 @@ async function runSearchTasks() {
     }
 
     const got = dist[t.want] || 0;
-    chk('X 搜「' + t.q + '」首屏 8 张里「' + t.want + '」≥ ' + t.min + ' 张（' + t.why + '）',
+    chk('X 搜「' + t.q + '」首屏 ' + SCREEN_N + ' 张里「' + t.want + '」≥ ' + t.min + ' 张（' + t.why + '）',
       got >= t.min, { 首屏分布: dist, 期望品类: t.want, 至少: t.min, 实际: got, 总命中: hits });
   }
   dom.window.close();
@@ -342,19 +375,54 @@ async function runQuizTasks() {
   };
   const pick = (q, o) => click(`.q-opt[data-q="${q}"][data-o="${o}"]`);
 
-  /* [任务名, 答案序列, 期望部件数下限, 期望合计下限] */
+  /* [任务名, 答案序列, 期望部件数下限, 期望合计下限, 期望合计上限, [关键件行名, 关键件价格下限]]
+   *
+   * 为什么要从「下界断言」改成「区间 + 关键件」（ORD-32 / 审计 ORD-26 异议②）：
+   *   旧判据「合计下限 ≥ 4000」只防跌不防涨，也不防错 ——
+   *   把合计从 4200 改成 8000 它照样 PASS，把影像旗舰换成红米它也照样 PASS。
+   *   区间卡住「凑数」与「堆料」，关键件卡住「形态对但主体选错」。
+   *
+   * 区间取法（基于实测当前值，不是抄基线）：
+   *   手机·拍照   实测 [4200, 8000] → 收窄为 [4000, 8000]（旧下界 4000 保留，砍掉 1200 上浮空间）
+   *   手机·游戏   实测 [3800, 5200] → [3500, 5200]（旧下界 3500 保留，上浮 400）
+   *   台式·游戏   实测 [10500, 13000] → [9000, 13000]（旧下界 9000 保留，上浮 1500）
+   *   笔记本·办公 实测 [4500, 7500] → [4000, 7500]（旧下界 4000 保留，上浮 700）
+   *   上限留 12%~19% 弹性给行情波动；比旧判据紧，但仍不会因一次调价就红。
+   *
+   * 关键件判据（旧判据完全没有的）：
+   *   主体件必须在配置单里，且其参考价下限不能低于阈值 ——
+   *   「手机·拍照给出一台红米」这种形态对但主体错的情况，必须红。
+   */
   const TASKS = [
     ['手机·拍照', [['form','phone'],['use','p_photo'],['budget','b8500'],['pref','p_camera'],
-                   ['look','p_any'],['intensity','heavy'],['lifespan','y3'],['existing','none'],['focus','p_body']], 6, 4000],
+                   ['look','p_any'],['intensity','heavy'],['lifespan','y3'],['existing','none'],['focus','p_body']],
+     6, 4000, 8000, ['手机', 5000]],
     ['手机·游戏', [['form','phone'],['use','p_game'],['budget','b8500'],['pref','p_perf'],
-                   ['look','p_any'],['intensity','heavy'],['lifespan','y3'],['existing','none'],['focus','p_play']], 6, 3500],
+                   ['look','p_any'],['intensity','heavy'],['lifespan','y3'],['existing','none'],['focus','p_play']],
+     6, 3500, 5200, ['手机', 4000]],
     ['台式·游戏', [['form','desktop'],['use','game'],['budget','b8500'],['pref','value'],
-                   ['look','any'],['intensity','heavy'],['lifespan','y3'],['existing','none'],['focus','core']], 8, 9000],
+                   ['look','any'],['intensity','heavy'],['lifespan','y3'],['existing','none'],['focus','core']],
+     8, 9000, 13000, ['显卡', 2000]],
     ['笔记本·办公',[['form','laptop'],['use','office'],['budget','b6000'],['pref','value'],
-                   ['look','any'],['intensity','mid'],['lifespan','y3'],['existing','none'],['focus','core']], 5, 4000],
+                   ['look','any'],['intensity','mid'],['lifespan','y3'],['existing','none'],['focus','core']],
+     5, 4000, 7500, ['笔记本', 3000]],
   ];
 
-  for (const [name, ans, minParts, minTotal] of TASKS) {
+  /* 取配置单里某一行（按 .spec-part 行名）的参考价下限 */
+  function partPriceLo(partName) {
+    const rows = [...D.querySelectorAll('.smart-spec-table tbody tr')];
+    const tr = rows.find(r => {
+      const td = r.querySelector('td.spec-part');
+      return td && td.textContent.trim() === partName;
+    });
+    if (!tr) return null;
+    const td = tr.querySelector('td.spec-price');
+    if (!td) return null;
+    const m = td.textContent.match(/([\d,]+)/);
+    return m ? parseInt(m[1].replace(/,/g, ''), 10) : null;
+  }
+
+  for (const [name, ans, minParts, minTotal, maxTotal, keyPart] of TASKS) {
     if (click('.q-reset')) await sleep(60);
     let ok = true;
     for (const [q, o] of ans) {
@@ -369,8 +437,16 @@ async function runQuizTasks() {
     const parts = (body.match(/全套配置单（(\d+) 个部件）/) || [])[1];
     const tot = body.match(/合计[^¥]*¥([\d,]+)\s*-\s*¥?([\d,]+)/) || [];
     const lo = parseInt((tot[1] || '0').replace(/,/g, ''), 10);
+    const hi = parseInt((tot[2] || '0').replace(/,/g, ''), 10);
     chk(`V ${name} 产出配置单且部件数 ≥ ${minParts}`, !!parts && +parts >= minParts, { 部件数: parts });
-    chk(`V ${name} 合计下限 ≥ ${minTotal}`, lo >= minTotal, { 实测合计下限: lo, 期望: minTotal });
+    /* 区间：下限防「缩水」，上限防「堆料 / 顶配漂移」 */
+    chk(`V ${name} 合计落在区间 [${minTotal}, ${maxTotal}]`, lo >= minTotal && hi <= maxTotal,
+      { 实测区间: [lo, hi], 期望区间: [minTotal, maxTotal] });
+    /* 关键件：主体必须在，且价位不能低到离谱（形态对但主体选错也要红） */
+    const kLo = partPriceLo(keyPart[0]);
+    chk(`V ${name} 关键件「${keyPart[0]}」在配置单里且参考价下限 ≥ ${keyPart[1]}`,
+      kLo !== null && kLo >= keyPart[1],
+      { 行名: keyPart[0], 实测参考价下限: kLo, 期望下限: keyPart[1] });
   }
   dom.window.close();
 }
@@ -444,7 +520,9 @@ async function runSelfCheck() {
   const VIRTUAL = new Set(['整机方案']);
 
   /* 收集本文件里所有用到的期望值 */
-  const src = fs.readFileSync(__filename, 'utf8');
+  /* 剥掉注释再扫 —— 否则注释里写一句「以前写的是 want: '网卡'」就会把非法值扫进来。
+     「扫源码」型自检闸的通用前提：先剥注释。 */
+  const src = stripComments(fs.readFileSync(__filename, 'utf8'));
   const used = new Set();
   const re = /\b(?:want|cap)\s*:\s*'([^']+)'/g;
   let m;
@@ -457,11 +535,50 @@ async function runSelfCheck() {
 
   chk('S2 站内显示名全集非空（自检闸本身没瞎）', names.size >= 20, { 实际数量: names.size });
 
-  /* 首屏 8 张的常量必须与实现一致 —— GROUP_PAGE 改了尺子要跟着知道 */
+  /* S3：尺子的「前 N 张」与实现常量自洽。
+     判据改过的原因（ORD-32）：旧判据是 GROUP_PAGE >= 8，
+     但 GROUP_PAGE 是「每组渲染多少张」，尺子量的是「DOM 前 N 张」——
+     两者没有因果关系（每组 24 张不代表前 8 张里有 8 个不同品类），
+     属于「看起来在自检、实际不保护任何东西」的假自检。
+     新判据：GROUP_PAGE 必须 >= SCREEN_N（否则前 N 张都凑不满）。 */
   const rj = fs.readFileSync(path.join(ROOT, 'js', 'recommend.js'), 'utf8');
   const gp = rj.match(/GROUP_PAGE\s*=\s*(\d+)/);
-  chk('S3 尺子的「首屏 8 张」与实现常量自洽（GROUP_PAGE ≥ 8）',
-    !!gp && +gp[1] >= 8, { GROUP_PAGE: gp ? +gp[1] : '未找到' });
+  chk('S3 尺子的「前 N 张」与实现常量自洽（GROUP_PAGE ≥ SCREEN_N）',
+    !!gp && +gp[1] >= SCREEN_N, { GROUP_PAGE: gp ? +gp[1] : '未找到', SCREEN_N: SCREEN_N });
+
+  /* S4：测量点存在性 —— D3 的开工基线闸。
+     为什么必须有这条（ORD-32 §5.5）：本表所有 U/X 类判据都建立在
+     「DOM 前 N 张 .acc-card」这个测量点上。D3 若把分组折叠（每组只渲染标题），
+     .acc-card 数量 = 0 → 41 行会「整体变红」，但那不是「搜索变差」，
+     是「判据所依赖的测量点不存在了」——尺子自己却一句话都不会说。
+     这条自检把「失去意义」和「真的变红」分开。 */
+  {
+    const dom = await loadDom(ACC);
+    const D = dom.window.document;
+    const cardCount = D.querySelectorAll('.acc-card').length;
+    const groupCount = D.querySelectorAll('section.acc-group[data-cat]').length;
+    dom.window.close();
+    chk('S4 测量点存在（.acc-card 有卡 · 分组有 data-cat）—— 否则 U/X 类判据会失去意义',
+      cardCount > 0 && groupCount >= 20,
+      { '.acc-card 数量': cardCount, '分组数量': groupCount,
+        说明: cardCount === 0 ? '测量点消失（D3 折叠后?）—— 此时 U/X 类全红无意义，先修口径' : '' });
+  }
+
+  /* S5：期望值的键名白名单 —— S1 只扫 want:/cap: 两个键，
+     将来若新增 expect / category 之类的键，S1 会静默漏检。
+     这条自检把「尺子里用到的所有期望值键」列出来，对不上就红。 */
+  {
+    const src2 = stripComments(fs.readFileSync(__filename, 'utf8'));
+    const keyRe = /\b(want|cap|expect|category|expectCategory)\s*:/g;
+    const found = new Set();
+    let m2;
+    while ((m2 = keyRe.exec(src2))) found.add(m2[1]);
+    const KNOWN = new Set(['want', 'cap']);
+    const unknown = [...found].filter(k => !KNOWN.has(k));
+    chk('S5 期望值键名都在已知集合内（新增键必须同步登记，否则 S1 会漏检）',
+      unknown.length === 0,
+      { 尺子里出现的键: [...found].sort(), 已登记的键: [...KNOWN].sort(), 未登记: unknown });
+  }
 }
 
 /* ===================== 主流程 ===================== */
