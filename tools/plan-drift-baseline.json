@@ -1,0 +1,1099 @@
+{
+ "_note": "配置单行基线指纹。改动本文件等于承认「配置单行变了，且三段验证已跑过」。",
+ "_created": "2026-10-24T03:43:53.435Z",
+ "_rows": [
+  {
+   "plan": "t3000",
+   "part": "CPU",
+   "config": "AMD R5 8500G（核显）",
+   "price": "¥900-1300"
+  },
+  {
+   "plan": "t3000",
+   "part": "主板",
+   "config": "A620M（DDR5）",
+   "price": "¥550-700"
+  },
+  {
+   "plan": "t3000",
+   "part": "内存",
+   "config": "DDR5 16G（8G×2）",
+   "price": "¥1100-1500"
+  },
+  {
+   "plan": "t3000",
+   "part": "硬盘",
+   "config": "512G NVMe SSD",
+   "price": "¥450-550"
+  },
+  {
+   "plan": "t3000",
+   "part": "电源",
+   "config": "450W 铜牌（长城/航嘉级）",
+   "price": "¥220-260"
+  },
+  {
+   "plan": "t3000",
+   "part": "机箱",
+   "config": "先马 平头哥 M2",
+   "price": "¥109-149"
+  },
+  {
+   "plan": "t3000",
+   "part": "散热",
+   "config": "利民 AX120 R SE",
+   "price": "¥69-90"
+  },
+  {
+   "plan": "t3000",
+   "part": "显示器",
+   "config": "24\" 1080P 100Hz（Redmi 24A 级）",
+   "price": "¥430-500"
+  },
+  {
+   "plan": "t3000",
+   "part": "键鼠",
+   "config": "达尔优 DK100 + 百元鼠标",
+   "price": "¥120-160"
+  },
+  {
+   "plan": "t4500",
+   "part": "CPU",
+   "config": "Intel i3-14100F / R5 5500",
+   "price": "¥600-900"
+  },
+  {
+   "plan": "t4500",
+   "part": "显卡",
+   "config": "RTX 5060 / RX 7600",
+   "price": "¥2700-3500"
+  },
+  {
+   "plan": "t4500",
+   "part": "主板",
+   "config": "H610M / B650M",
+   "price": "¥550-700"
+  },
+  {
+   "plan": "t4500",
+   "part": "内存",
+   "config": "DDR4/DDR5 16G",
+   "price": "¥700-1500"
+  },
+  {
+   "plan": "t4500",
+   "part": "硬盘",
+   "config": "PCIe4.0 1TB SSD",
+   "price": "¥850-950"
+  },
+  {
+   "plan": "t4500",
+   "part": "电源",
+   "config": "鑫谷 GP650G（650W 金牌）",
+   "price": "¥320-450"
+  },
+  {
+   "plan": "t4500",
+   "part": "机箱",
+   "config": "先马 平头哥 M2",
+   "price": "¥109-149"
+  },
+  {
+   "plan": "t4500",
+   "part": "散热",
+   "config": "九州风神 玄冰400 V5",
+   "price": "¥69-110"
+  },
+  {
+   "plan": "t4500",
+   "part": "显示器",
+   "config": "24\" 1080P 高刷 / 27\" 2K 入门",
+   "price": "¥600-900"
+  },
+  {
+   "plan": "t4500",
+   "part": "键鼠",
+   "config": "狼蛛 F87 + 迈从 A5",
+   "price": "¥330-440"
+  },
+  {
+   "plan": "t6000",
+   "part": "CPU",
+   "config": "Intel i5-14600KF / R5 9600X",
+   "price": "¥1200-1700"
+  },
+  {
+   "plan": "t6000",
+   "part": "显卡",
+   "config": "RTX 5060 Ti 16G / RX 9060 XT 16G",
+   "price": "¥4400-5800"
+  },
+  {
+   "plan": "t6000",
+   "part": "主板",
+   "config": "B760M / B650M",
+   "price": "¥800-1100"
+  },
+  {
+   "plan": "t6000",
+   "part": "内存",
+   "config": "DDR5 32G（16G×2）",
+   "price": "¥2800-4000"
+  },
+  {
+   "plan": "t6000",
+   "part": "硬盘",
+   "config": "1TB PCIe4.0（原厂颗粒）",
+   "price": "¥1100-1400"
+  },
+  {
+   "plan": "t6000",
+   "part": "电源",
+   "config": "长城 X5 650W 金牌全模",
+   "price": "¥320-450"
+  },
+  {
+   "plan": "t6000",
+   "part": "机箱",
+   "config": "爱国者 星璨 岚",
+   "price": "¥289-449"
+  },
+  {
+   "plan": "t6000",
+   "part": "散热",
+   "config": "利民 PA120 SE",
+   "price": "¥150-180"
+  },
+  {
+   "plan": "t6000",
+   "part": "显示器",
+   "config": "27\" 2K 高刷（泰坦军团 P2710R2+）",
+   "price": "¥800-1000"
+  },
+  {
+   "plan": "t6000",
+   "part": "键鼠",
+   "config": "VGN V98 Pro V3 + 迈从 A5",
+   "price": "¥450-530"
+  },
+  {
+   "plan": "t8500",
+   "part": "CPU",
+   "config": "AMD R5 9600X / i5-14600KF",
+   "price": "¥1450-1700"
+  },
+  {
+   "plan": "t8500",
+   "part": "显卡",
+   "config": "RTX 5070 / RX 9070 XT",
+   "price": "¥5400-7500"
+  },
+  {
+   "plan": "t8500",
+   "part": "主板",
+   "config": "B650M / B760M",
+   "price": "¥900-1100"
+  },
+  {
+   "plan": "t8500",
+   "part": "内存",
+   "config": "DDR5 32G（16G×2）",
+   "price": "¥2800-4000"
+  },
+  {
+   "plan": "t8500",
+   "part": "硬盘",
+   "config": "2TB PCIe4.0（原厂颗粒）",
+   "price": "¥1800-2000"
+  },
+  {
+   "plan": "t8500",
+   "part": "电源",
+   "config": "长城 X8 750W 金牌全模",
+   "price": "¥650-800"
+  },
+  {
+   "plan": "t8500",
+   "part": "机箱",
+   "config": "乔思伯 D31 STANDARD",
+   "price": "¥299-399"
+  },
+  {
+   "plan": "t8500",
+   "part": "散热",
+   "config": "瓦尔基里 B360 / 利民 FP360",
+   "price": "¥360-500"
+  },
+  {
+   "plan": "t8500",
+   "part": "显示器",
+   "config": "27\" 2K 高刷（雷鸟 Q6 级）",
+   "price": "¥1200-1400"
+  },
+  {
+   "plan": "t8500",
+   "part": "键鼠",
+   "config": "VGN V98 Pro V3 + 雷蛇毒蝰V3极速版",
+   "price": "¥550-630"
+  },
+  {
+   "plan": "t12000",
+   "part": "CPU",
+   "config": "AMD R7 9700X / R7 9800X3D",
+   "price": "¥1750-3200"
+  },
+  {
+   "plan": "t12000",
+   "part": "显卡",
+   "config": "RTX 5070 Ti",
+   "price": "¥8000-10500"
+  },
+  {
+   "plan": "t12000",
+   "part": "主板",
+   "config": "B650E / X670E",
+   "price": "¥1300-1800"
+  },
+  {
+   "plan": "t12000",
+   "part": "内存",
+   "config": "DDR5 64G（32G×2）",
+   "price": "¥5500-9000"
+  },
+  {
+   "plan": "t12000",
+   "part": "硬盘",
+   "config": "PCIe4.0 2TB SSD",
+   "price": "¥1800-2400"
+  },
+  {
+   "plan": "t12000",
+   "part": "电源",
+   "config": "鑫谷 GP850G / 海韵 FOCUS GX-850",
+   "price": "¥439-800"
+  },
+  {
+   "plan": "t12000",
+   "part": "机箱",
+   "config": "爱国者 星璨 霄Air",
+   "price": "¥259-329"
+  },
+  {
+   "plan": "t12000",
+   "part": "散热",
+   "config": "Arctic LF III 360 / 乔思伯 TH-360",
+   "price": "¥389-700"
+  },
+  {
+   "plan": "t12000",
+   "part": "显示器",
+   "config": "27\" 4K 高色域（雷鸟 U6 级 / HKC T2755U）",
+   "price": "¥1300-1500"
+  },
+  {
+   "plan": "t12000",
+   "part": "键鼠",
+   "config": "静音机械 + 人体工学鼠标",
+   "price": "¥800-1200"
+  },
+  {
+   "plan": "t20000",
+   "part": "CPU",
+   "config": "Intel Ultra 9 285K / R9 7950X3D",
+   "price": "¥4299-5300"
+  },
+  {
+   "plan": "t20000",
+   "part": "显卡",
+   "config": "RTX 5080",
+   "price": "¥11000-15000"
+  },
+  {
+   "plan": "t20000",
+   "part": "主板",
+   "config": "Z890 / X870E 旗舰",
+   "price": "¥1700-3000"
+  },
+  {
+   "plan": "t20000",
+   "part": "内存",
+   "config": "DDR5 64G（32G×2）",
+   "price": "¥5500-9000"
+  },
+  {
+   "plan": "t20000",
+   "part": "硬盘",
+   "config": "PCIe5.0 2TB + 4TB 素材盘",
+   "price": "¥2500-4000"
+  },
+  {
+   "plan": "t20000",
+   "part": "电源",
+   "config": "海韵 FOCUS GX-1000（1000W）",
+   "price": "¥1080-1500"
+  },
+  {
+   "plan": "t20000",
+   "part": "机箱",
+   "config": "联力 L217 鬼斧",
+   "price": "¥806-869"
+  },
+  {
+   "plan": "t20000",
+   "part": "散热",
+   "config": "360 水冷（LF III / 乔思伯 TH-360）",
+   "price": "¥389-720"
+  },
+  {
+   "plan": "t20000",
+   "part": "显示器",
+   "config": "27\" 4K MiniLED（优派 VX2722 / 雷鸟 U8）",
+   "price": "¥3500-5000"
+  },
+  {
+   "plan": "t20000",
+   "part": "键鼠",
+   "config": "客制化键盘 + 旗舰鼠标 + 桌面音箱",
+   "price": "¥1500-2500"
+  },
+  {
+   "plan": "lt_light",
+   "part": "笔记本",
+   "config": "机械革命 无界14S 2026 / 联想 小新16 2026",
+   "price": "¥3800-6000"
+  },
+  {
+   "plan": "lt_light",
+   "part": "笔记本支架",
+   "config": "北弧/乐歌 铝合金升降支架",
+   "price": "¥100-220"
+  },
+  {
+   "plan": "lt_light",
+   "part": "拓展坞",
+   "config": "绿联 Type-C 7合1",
+   "price": "¥80-180"
+  },
+  {
+   "plan": "lt_light",
+   "part": "笔记本散热",
+   "config": "半导体散热器 / 散热底座",
+   "price": "¥100-260"
+  },
+  {
+   "plan": "lt_light",
+   "part": "便携键鼠",
+   "config": "轻薄无线键鼠",
+   "price": "¥150-400"
+  },
+  {
+   "plan": "lt_light",
+   "part": "耳机/音箱",
+   "config": "漫步者 R20 / 无线耳机",
+   "price": "¥150-400"
+  },
+  {
+   "plan": "lt_game",
+   "part": "笔记本",
+   "config": "华硕 天选6 / 联想 拯救者 Y7000P 2026",
+   "price": "¥6000-14000"
+  },
+  {
+   "plan": "lt_game",
+   "part": "笔记本散热",
+   "config": "压风式散热底座 / 半导体散热器",
+   "price": "¥150-400"
+  },
+  {
+   "plan": "lt_game",
+   "part": "外接显示器",
+   "config": "27\" 2K 高刷（泰坦军团 P2710R2+ 级）",
+   "price": "¥800-1000"
+  },
+  {
+   "plan": "lt_game",
+   "part": "键鼠",
+   "config": "VGN V98 Pro V3 + 迈从 A5",
+   "price": "¥450-530"
+  },
+  {
+   "plan": "lt_game",
+   "part": "耳机/音箱",
+   "config": "游戏耳机 / 桌面音箱",
+   "price": "¥200-500"
+  },
+  {
+   "plan": "lt_game",
+   "part": "笔记本支架",
+   "config": "铝合金散热支架",
+   "price": "¥100-250"
+  },
+  {
+   "plan": "lt_create",
+   "part": "笔记本",
+   "config": "ThinkBook 16p 2025 锐龙版 / MacBook Pro 14 M5",
+   "price": "¥12800-15900"
+  },
+  {
+   "plan": "lt_create",
+   "part": "外接显示器",
+   "config": "27\" 4K 高色域（雷鸟 U6 级 / HKC T2755U）",
+   "price": "¥1300-1500"
+  },
+  {
+   "plan": "lt_create",
+   "part": "拓展坞",
+   "config": "雷电 4 / Type-C 多口坞（绿联、贝尔金级）",
+   "price": "¥180-900"
+  },
+  {
+   "plan": "lt_create",
+   "part": "笔记本支架",
+   "config": "铝合金升降支架",
+   "price": "¥100-220"
+  },
+  {
+   "plan": "lt_create",
+   "part": "键鼠",
+   "config": "静音机械 + 人体工学鼠标",
+   "price": "¥800-1200"
+  },
+  {
+   "plan": "lt_create",
+   "part": "音频",
+   "config": "监听耳机 / 桌面音箱",
+   "price": "¥200-600"
+  },
+  {
+   "plan": "lt_light_pro",
+   "part": "笔记本",
+   "config": "苹果 MacBook Air M4 13.6 / 联想 ThinkBook 14+ 2026 锐龙版",
+   "price": "¥9000-11500"
+  },
+  {
+   "plan": "lt_light_pro",
+   "part": "外接显示器",
+   "config": "27\" 2K 高刷（泰坦军团 P2710R2+ 级）",
+   "price": "¥800-1000"
+  },
+  {
+   "plan": "lt_light_pro",
+   "part": "拓展坞",
+   "config": "雷电 4 / Type-C 多口坞（绿联、贝尔金级）",
+   "price": "¥300-600"
+  },
+  {
+   "plan": "lt_light_pro",
+   "part": "笔记本支架",
+   "config": "铝合金升降支架",
+   "price": "¥100-220"
+  },
+  {
+   "plan": "lt_light_pro",
+   "part": "便携键鼠",
+   "config": "轻薄无线键鼠 / 静音机械",
+   "price": "¥300-600"
+  },
+  {
+   "plan": "lt_light_pro",
+   "part": "耳机/音箱",
+   "config": "漫步者 D12 / 无线降噪耳机",
+   "price": "¥300-600"
+  },
+  {
+   "plan": "lt_game_pro",
+   "part": "笔记本",
+   "config": "联想 拯救者 Y9000P 2026 / ROG 魔霸新锐 2026 酷睿版",
+   "price": "¥14000-19000"
+  },
+  {
+   "plan": "lt_game_pro",
+   "part": "外接显示器",
+   "config": "27\" 4K 高刷（泰坦军团 P275MV 级）",
+   "price": "¥1800-3000"
+  },
+  {
+   "plan": "lt_game_pro",
+   "part": "笔记本散热",
+   "config": "压风式散热底座 / 半导体散热器",
+   "price": "¥300-600"
+  },
+  {
+   "plan": "lt_game_pro",
+   "part": "键鼠",
+   "config": "静音/客制化机械 + 轻量化鼠标",
+   "price": "¥700-1200"
+  },
+  {
+   "plan": "lt_game_pro",
+   "part": "耳机/音箱",
+   "config": "游戏耳机 / 桌面音箱",
+   "price": "¥400-1000"
+  },
+  {
+   "plan": "lt_game_pro",
+   "part": "笔记本支架",
+   "config": "铝合金散热支架",
+   "price": "¥150-300"
+  },
+  {
+   "plan": "lt_create_pro",
+   "part": "笔记本",
+   "config": "联想 ThinkBook 16p 2026 酷睿版 / 苹果 MacBook Pro 14 M5",
+   "price": "¥14500-19000"
+  },
+  {
+   "plan": "lt_create_pro",
+   "part": "显示器",
+   "config": "27\" 4K 广色域（优派 VX2722 / 雷鸟 U8 级）",
+   "price": "¥3500-5000"
+  },
+  {
+   "plan": "lt_create_pro",
+   "part": "拓展坞",
+   "config": "雷电 4/5 双 4K 坞（贝尔金级）",
+   "price": "¥600-1500"
+  },
+  {
+   "plan": "lt_create_pro",
+   "part": "硬盘",
+   "config": "2TB NVMe 素材盘（致态 TiPlus 7100 级）",
+   "price": "¥1800-2400"
+  },
+  {
+   "plan": "lt_create_pro",
+   "part": "键鼠",
+   "config": "静音机械 + 人体工学鼠标",
+   "price": "¥800-1500"
+  },
+  {
+   "plan": "lt_create_pro",
+   "part": "音频",
+   "config": "监听耳机 / 桌面音箱",
+   "price": "¥400-1000"
+  },
+  {
+   "plan": "lt_create_pro",
+   "part": "笔记本支架",
+   "config": "铝合金升降支架",
+   "price": "¥100-220"
+  },
+  {
+   "plan": "lt_light_ultra",
+   "part": "笔记本",
+   "config": "联想 ThinkPad X1 Carbon 2026 / ThinkPad X1 Yoga 2025 / 华为 MateBook X Pro",
+   "price": "¥15800-19200"
+  },
+  {
+   "plan": "lt_light_ultra",
+   "part": "外接显示器",
+   "config": "27\" 4K 高色域（优派 VX2722 级）",
+   "price": "¥1800-3000"
+  },
+  {
+   "plan": "lt_light_ultra",
+   "part": "拓展坞",
+   "config": "雷电 4 双 4K 坞（贝尔金 / 绿联级）",
+   "price": "¥600-1200"
+  },
+  {
+   "plan": "lt_light_ultra",
+   "part": "笔记本支架",
+   "config": "铝合金升降支架",
+   "price": "¥100-220"
+  },
+  {
+   "plan": "lt_light_ultra",
+   "part": "便携键鼠",
+   "config": "轻薄无线键鼠 / 静音机械",
+   "price": "¥300-700"
+  },
+  {
+   "plan": "lt_light_ultra",
+   "part": "耳机/音箱",
+   "config": "降噪耳机 / 桌面音箱",
+   "price": "¥400-1000"
+  },
+  {
+   "plan": "lt_game_ultra",
+   "part": "笔记本",
+   "config": "ROG 枪神9 超竞版 5080 / 联想 拯救者 Y9000P 2026 至尊版 / 外星人 AREA-51 18",
+   "price": "¥23000-26500"
+  },
+  {
+   "plan": "lt_game_ultra",
+   "part": "外接显示器",
+   "config": "27\" 4K 240Hz（泰坦军团 P275MV 级）",
+   "price": "¥2500-4500"
+  },
+  {
+   "plan": "lt_game_ultra",
+   "part": "笔记本散热",
+   "config": "压风式散热底座 / 半导体散热器",
+   "price": "¥400-900"
+  },
+  {
+   "plan": "lt_game_ultra",
+   "part": "键鼠",
+   "config": "客制化机械键盘 + 60g 级轻量化鼠标",
+   "price": "¥900-1800"
+  },
+  {
+   "plan": "lt_game_ultra",
+   "part": "耳机/音箱",
+   "config": "游戏耳机 / 桌面音箱",
+   "price": "¥500-1200"
+  },
+  {
+   "plan": "lt_game_ultra",
+   "part": "笔记本支架",
+   "config": "铝合金散热支架",
+   "price": "¥150-300"
+  },
+  {
+   "plan": "lt_create_ultra",
+   "part": "笔记本",
+   "config": "苹果 MacBook Pro 16 M5 Pro / MacBook Pro 14 M5 Max / ROG 幻16 Air 2026 5070Ti",
+   "price": "¥25000-38000"
+  },
+  {
+   "plan": "lt_create_ultra",
+   "part": "显示器",
+   "config": "27\" 4K 广色域专业屏（优派 VX2722 / 雷鸟 U8 级）",
+   "price": "¥3500-6000"
+  },
+  {
+   "plan": "lt_create_ultra",
+   "part": "拓展坞",
+   "config": "雷电 5 双 4K/8K 坞（贝尔金级）",
+   "price": "¥900-2000"
+  },
+  {
+   "plan": "lt_create_ultra",
+   "part": "硬盘",
+   "config": "4TB NVMe 素材盘 / 雷电阵列",
+   "price": "¥2500-6000"
+  },
+  {
+   "plan": "lt_create_ultra",
+   "part": "键鼠",
+   "config": "静音机械 + 人体工学鼠标",
+   "price": "¥900-1800"
+  },
+  {
+   "plan": "lt_create_ultra",
+   "part": "音频",
+   "config": "监听耳机 / 桌面监听音箱",
+   "price": "¥600-2000"
+  },
+  {
+   "plan": "lt_create_ultra",
+   "part": "笔记本支架",
+   "config": "铝合金升降支架",
+   "price": "¥100-220"
+  },
+  {
+   "plan": "mobile",
+   "part": "笔记本支架",
+   "config": "北弧/乐歌 铝合金升降支架",
+   "price": "¥100-220"
+  },
+  {
+   "plan": "mobile",
+   "part": "笔记本散热",
+   "config": "半导体散热器 / 散热底座",
+   "price": "¥100-260"
+  },
+  {
+   "plan": "mobile",
+   "part": "拓展坞",
+   "config": "绿联 Type-C 7合1",
+   "price": "¥80-180"
+  },
+  {
+   "plan": "mobile",
+   "part": "外接显示器",
+   "config": "27\" 2K（小米 Redmi A27Q，Type-C）",
+   "price": "¥620-900"
+  },
+  {
+   "plan": "mobile",
+   "part": "便携键鼠",
+   "config": "轻薄无线键鼠",
+   "price": "¥150-400"
+  },
+  {
+   "plan": "mobile",
+   "part": "耳机/音箱",
+   "config": "漫步者 R20 / 无线耳机",
+   "price": "¥150-400"
+  },
+  {
+   "plan": "ph_entry",
+   "part": "手机",
+   "config": "Redmi Note 14 Pro 5G / 荣耀 X60",
+   "price": "¥799-1700"
+  },
+  {
+   "plan": "ph_entry",
+   "part": "保护膜",
+   "config": "通用钢化玻璃膜",
+   "price": "¥10-30"
+  },
+  {
+   "plan": "ph_entry",
+   "part": "手机壳",
+   "config": "绿联 防摔保护壳",
+   "price": "¥50-90"
+  },
+  {
+   "plan": "ph_entry",
+   "part": "充电器",
+   "config": "45W 快充头",
+   "price": "¥60-120"
+  },
+  {
+   "plan": "ph_entry",
+   "part": "数据线",
+   "config": "Type-C 数据线 1.5m",
+   "price": "¥20-40"
+  },
+  {
+   "plan": "ph_entry",
+   "part": "耳机",
+   "config": "有线入耳耳机 / 半入耳无线耳机",
+   "price": "¥99-299"
+  },
+  {
+   "plan": "ph_main",
+   "part": "手机",
+   "config": "Redmi K80 / 一加 13R / iQOO Z10",
+   "price": "¥1199-3200"
+  },
+  {
+   "plan": "ph_main",
+   "part": "手机壳",
+   "config": "绿联 磁吸透明壳",
+   "price": "¥60-100"
+  },
+  {
+   "plan": "ph_main",
+   "part": "保护膜",
+   "config": "绿联 全屏防窥膜",
+   "price": "¥40-70"
+  },
+  {
+   "plan": "ph_main",
+   "part": "充电器",
+   "config": "绿联 氮化镓 65W",
+   "price": "¥130-180"
+  },
+  {
+   "plan": "ph_main",
+   "part": "移动电源",
+   "config": "绿联 移动电源 mini 10000mAh",
+   "price": "¥90-130"
+  },
+  {
+   "plan": "ph_main",
+   "part": "耳机/音箱",
+   "config": "半入耳无线耳机",
+   "price": "¥150-300"
+  },
+  {
+   "plan": "ph_main",
+   "part": "手表",
+   "config": "小米手环 10 / 华为手环 9",
+   "price": "¥249-349"
+  },
+  {
+   "plan": "ph_game",
+   "part": "手机",
+   "config": "iQOO 16 / iQOO 15",
+   "price": "¥4200-6500"
+  },
+  {
+   "plan": "ph_game",
+   "part": "散热配件",
+   "config": "绿联 手机散热背夹",
+   "price": "¥130-230"
+  },
+  {
+   "plan": "ph_game",
+   "part": "移动电源",
+   "config": "倍思 移动电源 20000mAh 65W",
+   "price": "¥140-180"
+  },
+  {
+   "plan": "ph_game",
+   "part": "游戏手柄",
+   "config": "八位堂 黑武士 3 Pro",
+   "price": "¥400-500"
+  },
+  {
+   "plan": "ph_game",
+   "part": "手机壳",
+   "config": "Spigen Tough Armor 防摔壳",
+   "price": "¥130-180"
+  },
+  {
+   "plan": "ph_game",
+   "part": "充电器",
+   "config": "绿联 氮化镓 100W",
+   "price": "¥200-280"
+  },
+  {
+   "plan": "ph_photo",
+   "part": "手机",
+   "config": "vivo X500 Pro Max / 荣耀 Magic 9 Pro Max",
+   "price": "¥6000-9000"
+  },
+  {
+   "plan": "ph_photo",
+   "part": "移动电源",
+   "config": "Anker 移动电源 20000mAh 100W",
+   "price": "¥200-280"
+  },
+  {
+   "plan": "ph_photo",
+   "part": "存储",
+   "config": "高速存储卡 / OTG 硬盘",
+   "price": "¥150-400"
+  },
+  {
+   "plan": "ph_photo",
+   "part": "手机壳",
+   "config": "绿联 磁吸透明壳",
+   "price": "¥60-100"
+  },
+  {
+   "plan": "ph_photo",
+   "part": "稳定器",
+   "config": "智云 手机稳定器",
+   "price": "¥300-500"
+  },
+  {
+   "plan": "ph_photo",
+   "part": "充电器",
+   "config": "绿联 氮化镓 140W",
+   "price": "¥330-400"
+  },
+  {
+   "plan": "ph_photo",
+   "part": "耳机",
+   "config": "索尼 WF-1000XM5 / 华为 FreeBuds 7",
+   "price": "¥899-1499"
+  },
+  {
+   "plan": "ph_fold",
+   "part": "手机",
+   "config": "华为 Mate X6 / 三星 Galaxy Z Fold6 / 荣耀 Magic V3",
+   "price": "¥9900-16000"
+  },
+  {
+   "plan": "ph_fold",
+   "part": "保护膜",
+   "config": "折叠屏专用柔性膜",
+   "price": "¥100-300"
+  },
+  {
+   "plan": "ph_fold",
+   "part": "手机壳",
+   "config": "折叠屏专用保护套",
+   "price": "¥150-400"
+  },
+  {
+   "plan": "ph_fold",
+   "part": "手写笔",
+   "config": "支持手写的折叠屏笔",
+   "price": "¥300-600"
+  },
+  {
+   "plan": "ph_fold",
+   "part": "移动电源",
+   "config": "Anker 磁吸移动电源",
+   "price": "¥290-370"
+  },
+  {
+   "plan": "ph_fold",
+   "part": "耳机/音箱",
+   "config": "半入耳无线耳机",
+   "price": "¥150-300"
+  },
+  {
+   "plan": "tb_entry",
+   "part": "平板",
+   "config": "联想 小新 Pad 11 / 华为 MatePad SE",
+   "price": "¥1099-1800"
+  },
+  {
+   "plan": "tb_entry",
+   "part": "保护膜",
+   "config": "邦克仕 类纸膜",
+   "price": "¥30-60"
+  },
+  {
+   "plan": "tb_entry",
+   "part": "平板键盘",
+   "config": "外接蓝牙键盘",
+   "price": "¥150-300"
+  },
+  {
+   "plan": "tb_entry",
+   "part": "充电器",
+   "config": "30W 氮化镓头",
+   "price": "¥60-100"
+  },
+  {
+   "plan": "tb_entry",
+   "part": "数据线",
+   "config": "Type-C 数据线 1.5m",
+   "price": "¥20-40"
+  },
+  {
+   "plan": "tb_entry",
+   "part": "手写笔",
+   "config": "通用触控笔（有线版）",
+   "price": "¥39-99"
+  },
+  {
+   "plan": "tb_main",
+   "part": "平板",
+   "config": "小米平板 7 Pro / 华为 MatePad 11.5",
+   "price": "¥2600-3600"
+  },
+  {
+   "plan": "tb_main",
+   "part": "拓展坞",
+   "config": "绿联 Type-C 7 合 1 拓展坞",
+   "price": "¥130-200"
+  },
+  {
+   "plan": "tb_main",
+   "part": "平板键盘",
+   "config": "外接蓝牙键盘 / 罗技 Keys-To-Go 2",
+   "price": "¥230-300"
+  },
+  {
+   "plan": "tb_main",
+   "part": "保护膜",
+   "config": "邦克仕 类纸膜",
+   "price": "¥30-60"
+  },
+  {
+   "plan": "tb_main",
+   "part": "耳机/音箱",
+   "config": "半入耳无线耳机",
+   "price": "¥150-300"
+  },
+  {
+   "plan": "ph_std",
+   "part": "手机",
+   "config": "小米 17 / 一加 13 / iQOO 15",
+   "price": "¥4200-8000"
+  },
+  {
+   "plan": "ph_std",
+   "part": "存储",
+   "config": "高速存储卡 / OTG 硬盘",
+   "price": "¥150-400"
+  },
+  {
+   "plan": "ph_std",
+   "part": "手机壳",
+   "config": "绿联 防撑保护壳",
+   "price": "¥50-90"
+  },
+  {
+   "plan": "ph_std",
+   "part": "充电器",
+   "config": "绿联 氮化锡 100W",
+   "price": "¥200-280"
+  },
+  {
+   "plan": "ph_std",
+   "part": "移动电源",
+   "config": "Anker 移动电源 20000mAh 100W",
+   "price": "¥200-280"
+  },
+  {
+   "plan": "ph_std",
+   "part": "耳机/音箱",
+   "config": "半入耳无线耳机",
+   "price": "¥150-300"
+  },
+  {
+   "plan": "tb_mid",
+   "part": "平板",
+   "config": "小米平板 7 Ultra / 小米平板 6 Pro / 乐观 Y700 2026",
+   "price": "¥3599-5200"
+  },
+  {
+   "plan": "tb_mid",
+   "part": "手写笔",
+   "config": "小米 触控笔 2 / 购笔倾角手写笔",
+   "price": "¥200-600"
+  },
+  {
+   "plan": "tb_mid",
+   "part": "平板键盘",
+   "config": "外接蓝牙键盘 / 罗技 Keys-To-Go 2",
+   "price": "¥230-300"
+  },
+  {
+   "plan": "tb_mid",
+   "part": "拓展坞",
+   "config": "绿联 Type-C 7 合 1 拓展坞",
+   "price": "¥130-200"
+  },
+  {
+   "plan": "tb_mid",
+   "part": "保护膜",
+   "config": "邦克仕 类纸膜",
+   "price": "¥30-60"
+  },
+  {
+   "plan": "tb_mid",
+   "part": "耳机/音箱",
+   "config": "半入耳无线耳机",
+   "price": "¥150-300"
+  },
+  {
+   "plan": "tb_create",
+   "part": "平板",
+   "config": "iPad Air 11 M4 / iPad Pro 11 M5 / 华为 MatePad Pro 13.2",
+   "price": "¥4500-12000"
+  },
+  {
+   "plan": "tb_create",
+   "part": "手写笔",
+   "config": "Apple Pencil（二代）/ 华为手写笔（三代）",
+   "price": "¥400-1000"
+  },
+  {
+   "plan": "tb_create",
+   "part": "平板键盘",
+   "config": "罗技 Combo Touch / 华为磁吸键盘",
+   "price": "¥500-1100"
+  },
+  {
+   "plan": "tb_create",
+   "part": "保护膜",
+   "config": "邦克仕 类纸膜",
+   "price": "¥30-60"
+  },
+  {
+   "plan": "tb_create",
+   "part": "拓展坞",
+   "config": "绿联 Type-C 7 合 1 拓展坞",
+   "price": "¥130-200"
+  },
+  {
+   "plan": "tb_create",
+   "part": "耳机/音箱",
+   "config": "头戴式监听耳机",
+   "price": "¥300-800"
+  }
+ ],
+ "_print": 182
+}

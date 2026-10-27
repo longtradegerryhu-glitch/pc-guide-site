@@ -44,6 +44,10 @@ const REQUIRED = [
   'tests/e2e-merge.cjs',
   'tests/e2e-inject-test.cjs',
   'tools/check-wr-refs.cjs',
+  /* 漂移闸：改配置单行 → 改目标价 → 改选件 → 改兼容性（跨线传导链 #1） */
+  'tools/plan-drift.cjs',
+  /* 承诺兑现闸：页面上说的功能必须真的存在（2026-10-27 总控自评产物） */
+  'tests/promises.cjs',
   /* 自指：元闸不跑，就等于没人看着「闸有没有被删」 */
   'tests/gate-registry.cjs'
 ];

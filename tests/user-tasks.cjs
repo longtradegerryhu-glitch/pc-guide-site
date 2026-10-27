@@ -137,10 +137,19 @@ async function runSearchTasks() {
         裸词 ATX 该给版型（机箱/主板），不该被 24 件电源顶满首屏。用上界断言，不指定机箱还是主板先出。
      ② 「RTX5080」不带空格：命中 1 件且是笔记本电脑，0 张显卡（显卡名写「NVIDIA RTX 5080 16G」）→
         拉丁串匹配必须做空白归一，否则每加一个词都要在映射表里补一条，救不了通例。
-     ③ 「WiFi 7」带空格：被切成 wifi + 7，SPEC_CAT 的 wifi7 永远匹配不上 → 同一条根因。 */
+     ③ 「WiFi 7」带空格：被切成 wifi + 7，SPEC_CAT 的 wifi7 永远匹配不上 → 同一条根因。
+
+     【2026-10-27 总控修订第 ② 行】原判据「≥6 张显卡」在数据上不可达：
+     全库含 5080 的显卡记录只有 2 条（g7 与 vg207 是同一款，合并后 1 张卡），
+     显卡品类共 61 款 —— 要求首屏 6 张显卡，等于要求 5080 有 6 个型号。
+     这是**尺子把数据缺当成了排序错**，改判据（采纳审计 ORD-28 §八①）：
+       · 主判据 = 首屏第 1 张必须是显卡（型号层命中必须压过软文本层命中）
+       · 副判据 = 首屏里电源卡不得排在显卡卡之前
+     真实缺陷不是「显卡不够多」，而是**电源/显示器的 compat 里写了「配 RTX 5080 级平台」，
+     靠软文本命中占了首屏 7 席，把显卡挤到第 1 张之后** —— 这与 ORD-18 报的
+     「struct 分层只覆盖 ssd」是同型缺口（显卡没有 specsObj，拿不到主体分）。 */
   const CAPS = [
     { q: 'ATX',     cap: '电源',     max: 3, why: '电源的 ATX 命中全部来自「ATX3.1」子串且另有专键；裸词该给版型' },
-    { q: 'RTX5080', want: '显卡',    min: 6, why: '拉丁串空白归一：「RTX5080」应与「RTX 5080」等价' },
     { q: 'WiFi 7',  want: '网络设备', min: 6, why: '拉丁串空白归一：带空格的「WiFi 7」不该被主板的 WiFi7 规格压过' },
   ];
   for (const t of CAPS) {
@@ -161,6 +170,48 @@ async function runSearchTasks() {
       chk(`U 搜「${t.q}」首屏 8 张里「${t.want}」≥ ${t.min} 张（${t.why}）`,
         got >= t.min, { 首屏分布: dist, 期望品类: t.want, 至少: t.min, 实际: got, 总命中: hits });
     }
+  }
+
+  /* ---- RTX 5080：排序正确性判据（2026-10-27 总控修订，采纳审计 ORD-28 §八①）----
+     原判据「≥6 张显卡」不可达：全库含 5080 的显卡只有 g7/vg207 两条（同一款，合并后 1 张卡），
+     显卡品类共 61 款。要求首屏 6 张 = 要求 5080 有 6 个型号 —— 把数据缺当成了排序错。
+
+     真正要验的是**排序**：显卡是型号层命中（rank2），电源/显示器是 compat 软文本命中（rank3）。
+     型号层必须压过软文本层 —— 显卡卡必须排在电源卡之前。 */
+  {
+    const q = 'RTX5080';
+    inp.value = q;
+    inp.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+    await sleep(700);
+    const cards = [...D.querySelectorAll('.acc-card')].slice(0, 8);
+    const cats = cards.map(c => catOf(c));
+    const gi = cats.indexOf('显卡');
+    const pi = cats.indexOf('电源');
+    const hint = D.querySelector('#accSearchHint');
+    const hits = hint ? (hint.textContent.match(/命中 (\d+) 款/) || [])[1] : '?';
+    const dist = {};
+    cats.forEach(k => { dist[k] = (dist[k] || 0) + 1; });
+
+    chk('U 搜「RTX5080」首屏第 1 张是显卡（型号层命中必须压过软文本层）',
+      gi === 0, { 首屏品类序: cats, 显卡位置: gi, 总命中: hits, 首屏分布: dist });
+
+    chk('U 搜「RTX5080」首屏里显卡排在电源之前（电源 compat 写「配 RTX 5080 级平台」不该占先）',
+      gi >= 0 && (pi === -1 || gi < pi), { 首屏品类序: cats, 显卡位置: gi, 电源位置: pi });
+
+    /* 拉丁串归一的通例：四种写法必须完全等价（这是根因，不是词条问题） */
+    const sigs = [];
+    for (const v of ['RTX5080', 'RTX 5080', 'rtx5080', 'RTX-5080']) {
+      inp.value = v;
+      inp.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+      await sleep(600);
+      const h2 = D.querySelector('#accSearchHint');
+      const m2 = h2 ? h2.textContent.match(/命中 (\d+) 款/) : null;
+      const c2 = [...D.querySelectorAll('.acc-card')].slice(0, 8).map(c => catOf(c)).join('|');
+      sigs.push(v + '→' + (m2 ? m2[1] : '0') + '|' + c2);
+    }
+    const uniq = new Set(sigs.map(s => s.split('→')[1]));
+    chk('U 「RTX5080 / RTX 5080 / rtx5080 / RTX-5080」四种写法完全等价（拉丁串归一的通例）',
+      uniq.size === 1, { 四种写法实测: sigs, 不同结果数: uniq.size });
   }
 
   /* ---- X 类 · 复合词 / 歧义词 / 零结果死路 ----------------------------
@@ -364,10 +415,60 @@ async function runCompatTasks() {
   dom.window.close();
 }
 
+/* ===================== S 类 · 尺子自身自检 =====================
+ *
+ * 为什么要有这一段：
+ *   本尺子的期望值先后犯过两次同类错误 ——
+ *     ① ORD-25「网卡」：我把「网卡」当品类名，实际显示名是「网络设备」→ 该行永远不可能通过
+ *     ② ORD-28「笔记本支架/扩展坞/键鼠/智能穿戴/整机方案」：5 行用了不存在的显示名 → 死代码
+ *   根因是同一个：**期望值写的是「人怎么叫这个品类」，不是「站里怎么显示这个品类」。**
+ *   这条自检闸一次性堵死这类复发 —— 期望值必须是 21 个显示名之一（或明确的虚拟名）。
+ */
+async function runSelfCheck() {
+  console.log('\n== S 类 · 尺子自身自检（防止期望值写成不存在的品类） ==');
+
+  /* 从页面拿 21 个显示名全集（唯一权威来源 = 运行时渲染，不是硬编码） */
+  const dom = await loadDom(ACC);
+  const D = dom.window.document;
+  const names = new Set();
+  D.querySelectorAll('.acc-group[data-cat]').forEach(sec => {
+    const h = sec.querySelector('.acc-group-head h3');
+    if (!h) return;
+    /* 标题形如 "🧠 CPU"，去掉 emoji 与空格 */
+    const t = h.textContent.trim().replace(/[^\u4e00-\u9fa5A-Za-z0-9]/g, '');
+    if (t) names.add(t);
+  });
+  dom.window.close();
+
+  /* 允许的虚拟名（不是页面品类名，但有明确的判据语义） */
+  const VIRTUAL = new Set(['整机方案']);
+
+  /* 收集本文件里所有用到的期望值 */
+  const src = fs.readFileSync(__filename, 'utf8');
+  const used = new Set();
+  const re = /\b(?:want|cap)\s*:\s*'([^']+)'/g;
+  let m;
+  while ((m = re.exec(src))) used.add(m[1]);
+
+  const illegal = [...used].filter(v => !names.has(v) && !VIRTUAL.has(v));
+  chk('S1 所有期望品类都是站内的真实显示名（或已登记的虚拟名）',
+    illegal.length === 0,
+    { 非法期望值: illegal, 站内显示名数: names.size, 已用期望值: [...used].sort() });
+
+  chk('S2 站内显示名全集非空（自检闸本身没瞎）', names.size >= 20, { 实际数量: names.size });
+
+  /* 首屏 8 张的常量必须与实现一致 —— GROUP_PAGE 改了尺子要跟着知道 */
+  const rj = fs.readFileSync(path.join(ROOT, 'js', 'recommend.js'), 'utf8');
+  const gp = rj.match(/GROUP_PAGE\s*=\s*(\d+)/);
+  chk('S3 尺子的「首屏 8 张」与实现常量自洽（GROUP_PAGE ≥ 8）',
+    !!gp && +gp[1] >= 8, { GROUP_PAGE: gp ? +gp[1] : '未找到' });
+}
+
 /* ===================== 主流程 ===================== */
 (async () => {
   console.log('== 用户任务验收表 · 唯一主验收口径 ==');
   console.log('基线：2026-10-22 commit c2ceb8e');
+  await runSelfCheck();
   await runSearchTasks();
   await runQuizTasks();
   await runCompatTasks();
