@@ -26,6 +26,7 @@
     "data:rebuild": "node tools/rebuild-models.cjs && node tools/derive-specs-obj.cjs",
     "test:user": "node tests/user-tasks.cjs",
     "test:promises": "node tests/promises.cjs",
+    "test:content": "node tests/content-gen.cjs",
     "audit:drift": "node tools/plan-drift.cjs --check"
   },
   "devDependencies": {

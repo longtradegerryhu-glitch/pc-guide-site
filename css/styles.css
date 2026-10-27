@@ -1854,3 +1854,55 @@ button.btn-primary { border: 0; }
   margin: 10px 0 0; padding: 8px 12px; font-size: 13px;
   color: var(--color-text-soft); border-left: 2px solid var(--color-border);
 }
+
+/* ===== 价格时效标注（ORD-31 任务 7） =====
+   data.js 顶部的 categoryUpdated 是核验账本，之前只给脚本读、页面从没显示过。
+   显示出来是为了让「这组价格是几月核的」对用户可见 ——
+   全站只写一句「2026-10 参考行情」时，用户无法判断某个品类是不是掉队了。 */
+.acc-group-upd {
+  font-size: 12px; color: var(--color-text-soft);
+  border: 1px solid var(--color-border); border-radius: 999px;
+  padding: 1px 9px; white-space: nowrap;
+}
+.plan-updated {
+  display: inline-block; font-size: 12px; font-weight: 500;
+  color: var(--color-text-soft); margin-left: 8px;
+  border-left: 1px solid var(--color-border); padding-left: 8px;
+}
+
+/* ===== 覆盖率诚实提示（ORD-31 任务 6） =====
+   品牌偏好只能从库里已有的型号里挑。某个品牌的型号数明显少于其他品牌时，
+   必须在结果页说清楚，而不是让用户以为「推荐结果就这些」。 */
+.cover-note {
+  margin: 10px 0 4px; padding: 11px 15px; border-radius: var(--radius-sm);
+  background: var(--color-bg-alt); border: 1px solid var(--color-border);
+  font-size: 13.5px; line-height: 1.7; color: var(--color-text-soft);
+}
+.cover-note b { color: var(--color-text); }
+
+/* ===== 首页第一屏方案入口（ORD-31 任务 3） =====
+   站最稀缺的能力是「按你的情况给一套装得上、说得清理由的清单」，
+   它必须出现在第一屏之后，而不是第 4 个板块。四张卡按「不知道买什么 → 只知道预算
+   → 想自己挑 → 只查一件」的决策顺序排，第 1 张是主路径。 */
+.hero-what {
+  margin: 14px 0 0; font-size: 13.5px; line-height: 1.7;
+  color: var(--color-text-soft);
+  border-left: 2px solid var(--color-border); padding-left: 10px;
+}
+.start-grid {
+  display: grid; gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+.start-card {
+  display: flex; flex-direction: column; gap: 6px;
+  padding: 18px 18px 16px; border-radius: var(--radius);
+  background: var(--color-card); border: 1px solid var(--color-border);
+  text-decoration: none; color: inherit;
+  transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
+}
+.start-card:hover { border-color: var(--color-primary); box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+.start-card-main { border-color: var(--color-primary); background: linear-gradient(180deg, var(--color-primary-soft), transparent 70%); }
+.start-step { font-size: 12px; font-weight: 700; color: var(--color-primary); letter-spacing: .02em; }
+.start-title { font-size: 17px; font-weight: 700; color: var(--color-text); }
+.start-desc { font-size: 13.5px; line-height: 1.7; color: var(--color-text-soft); }
+.start-go { margin-top: auto; padding-top: 8px; font-size: 13px; font-weight: 600; color: var(--color-primary); }

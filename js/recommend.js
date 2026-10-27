@@ -676,6 +676,44 @@
       return fn;
     }
 
+    /* 覆盖率诚实告知（ORD-31 任务 6）。
+       品牌偏好只能在「库里已有的型号」里挑，而库里的苹果手机只有 6 款，
+       小米/华为各几十款 —— 选了苹果，拿到的方案必然是「库里就这么多」的结果。
+       ORD-29 补全品牌选项解决的是「选了苹果能不能得到苹果」，
+       解决不了「站里 iPhone 型号太少」这个事实。事实就得说出来：
+       不说，用户会以为「推荐结果就这些」；说了，他才知道该自己去比。
+       判据：该形态下这个品牌的型号数少于 10 款，**或**不到最多品牌的三分之一。
+       两条满足其一就说：6 款 iPhone 对 12 款华为（本库手机品类实测）不算「三分之一」，
+       但对用户来说「只有 6 款可选」是必须知道的事实。 */
+    var BRAND_LABEL = { b_apple: "苹果", b_huawei: "华为", b_xiaomi: "小米", b_lenovo: "联想", b_samsung: "三星" };
+    function brandCoverageNote(form, brandPref) {
+      var re = BRAND_RE[brandPref];
+      if (!re) return "";
+      var catId = form === "phone" ? "phone" : form === "tablet" ? "tablet" : "laptop";
+      var cat = D.categories.filter(function (c) { return c.id === catId; })[0];
+      var items = (cat && cat.items) || [];
+      if (!items.length) return "";
+      var mine = items.filter(function (it) { return re.test(String(it.brand || "")); }).length;
+      var byBrand = {}, top = 0, topName = "";
+      items.forEach(function (it) {
+        var b = String(it.brand || "(未标)");
+        byBrand[b] = (byBrand[b] || 0) + 1;
+        if (byBrand[b] > top) { top = byBrand[b]; topName = b; }
+      });
+      if (!mine) {
+        return '<div class="cover-note">本站' + (cat ? esc(cat.name) : "") + "里没有「" + BRAND_LABEL[brandPref] +
+          "」品牌的型号，下面的方案在品牌上不会命中你的偏好。可以改选「不限品牌」，或到" +
+          '<a href="accessories.html">配件与榜单</a>按型号自己查。</div>';
+      }
+      if (mine >= 10 && mine * 3 >= top) return "";
+      /* 只陈述数字与后果，不做「覆盖很差」这种评价 ——
+         9 款对 12 款说「明显少」是夸大，但「只有这 9 款可选」是事实。 */
+      return '<div class="cover-note">本站「' + BRAND_LABEL[brandPref] + "」的" + (cat ? esc(cat.name) : "型号") +
+        "能查到 <b>" + mine + " 款</b>（本类目最多的 " + esc(topName) + " 有 " + top +
+        " 款，全类目 " + items.length + " 款）。下面的方案只在这个范围里挑，价格区间也容易跳档；" +
+        "想要更完整的横向对比，可以改选「不限品牌」再看一遍。</div>";
+    }
+
   /* 挑 top1 + 2 备选：配置单同款置顶，其余按价位距离 + 等级排序 */
   function pickOne(items, target, rowText, allItems, minAnchorMid, bias, preferOverAnchor) {
     if (!items.length) return null;
@@ -1549,9 +1587,25 @@
         .replace(/([a-z])[ \t]+(?=[0-9])/g, "$1")
         .replace(/([0-9])[ \t]+(?=[a-z])/g, "$1");
     }
+    /* 拉丁串与汉字的边界切分（ORD-31 任务 1.5）。
+       中国用户的真实写法是连写：「DDR5内存」「2K显示器」，中间不空格。
+       而 tokens() 只按空格切词，整串进 haystack 一个也找不到 ——
+       实测搜「DDR5内存」0 命中、「DDR5 内存」49 命中；「2K显示器」0、「2K 显示器」41。
+       这不是词表缺条目：给「DDR5内存」补一条映射，用户下次打「DDR5内存条」「ddr5内存」
+       还得再补，写法有无穷多种。要修的是切词规则本身。
+       只切「拉丁字母/数字」与「汉字」的交界；汉字之间的空格一个字节不动
+       （「机械 键盘」是两个词，另有语义）。 */
+    function splitCJK(s) {
+      return String(s)
+        .replace(/([a-z0-9])([\u4e00-\u9fa5])/g, "$1 $2")
+        .replace(/([\u4e00-\u9fa5])([a-z0-9])/g, "$1 $2");
+    }
+    /* 这里只按空格切，不做拉丁/汉字边界切分 —— 边界切分放在 segmentQuery 里做，
+       因为「整串本身就是一个已知词」的必须先判（例如「CPU散热器」「笔记本支架」
+       整串在 ALIAS 里；先切就会变成 cpu ∧ 散热器 两个条件同时成立 → 必然 0 结果）。 */
     function tokens(q) { return normLatin(q).split(/\s+/).filter(Boolean); }
     /* 高亮要用用户原文，不能用归一后的串（归一后「wifi7」在「WiFi 7」里找不到，整页不高亮） */
-    function rawTokens(q) { return String(q).toLowerCase().split(/\s+/).filter(Boolean); }
+    function rawTokens(q) { return splitCJK(String(q).toLowerCase()).split(/\s+/).filter(Boolean); }
 
     /* 中文没有空格分词，「长续航手机」「折叠屏手机」会被当成整串去匹配而落空。
        先用 ALIAS / NEED 的词表做贪心切分，把整串拆成可判定的语义单元。 */
@@ -1578,19 +1632,34 @@
       var keys = Object.keys(ALIAS).concat(Object.keys(NEED)).concat(Object.keys(SPEC_CAT)).concat(extra)
         .filter(function (k) { return k.length > 1; })
         .sort(function (a, b) { return b.length - a.length; });
+      var keyset = {};
+      keys.forEach(function (k) { keyset[k] = 1; });
+
       var out = [];
       raw.forEach(function (t) {
-        if (out.length || !/^[\u4e00-\u9fa5]+$/.test(t)) { out.push(t); return; }
-        var rest = t, buf = "", i = 0;
-        while (i < rest.length) {
-          var hit = null;
-          for (var j = 0; j < keys.length; j++) {
-            if (rest.slice(i, i + keys[j].length) === keys[j]) { hit = keys[j]; break; }
+        /* 一、整串本身就是一个已知词 → 不再拆。
+           「CPU散热器」「笔记本支架」「机械键盘」整串都在 ALIAS 里；
+           先切就会变成 cpu ∧ 散热器 两个条件同时成立，结果必然是 0 ——
+           这正是 ORD-27 修过的那批复合词，不许在这里退回去。 */
+        if (keyset[t]) { out.push(t); return; }
+        /* 二、拉丁/汉字连写要在交界处切开（「DDR5内存」→ ddr5 + 内存）。
+           只切交界：汉字之间的空格与连写一个字节不动。 */
+        splitCJK(t).split(/\s+/).filter(Boolean).forEach(function (seg) {
+          if (!/^[\u4e00-\u9fa5]+$/.test(seg) || keyset[seg]) { out.push(seg); return; }
+          /* 三、纯汉字段再做贪心切分（长度优先、命中才切）。
+             每个汉字段都切（原来只切第一个）：连写切出来的汉字段可能落在第二位，
+             「DDR5内存条」这类组合否则就再也切不动。 */
+          var rest = seg, buf = "", i = 0;
+          while (i < rest.length) {
+            var hit = null;
+            for (var j = 0; j < keys.length; j++) {
+              if (rest.slice(i, i + keys[j].length) === keys[j]) { hit = keys[j]; break; }
+            }
+            if (hit) { if (buf) { out.push(buf); buf = ""; } out.push(hit); i += hit.length; }
+            else { buf += rest[i]; i += 1; }
           }
-          if (hit) { if (buf) { out.push(buf); buf = ""; } out.push(hit); i += hit.length; }
-          else { buf += rest[i]; i += 1; }
-        }
-        if (buf) out.push(buf);
+          if (buf) out.push(buf);
+        });
       });
       return out.length ? out : raw;
     }
@@ -2306,6 +2375,13 @@
           '<div class="acc-group-head">' +
             "<h3>" + g.cat.icon + " " + esc(g.cat.name) + "</h3>" +
             '<span class="acc-group-count">' + total + " \u6b3e</span>" +
+            /* 价格时效：categoryUpdated 是 data.js 顶部的核验账本（21 个品类都填了），
+               但页面上从来没显示过 —— 用户只能说「2026-10 参考行情」，
+               却不知道这一组是不是同一批核验的。按品类贴出来，
+               等某个品类掉队（下一季度只核了一部分）用户就能一眼看见。 */
+            (D.categoryUpdated && D.categoryUpdated[cid]
+              ? '<span class="acc-group-upd" title="该品类价格的最近核验月份">价格核验 ' + esc(D.categoryUpdated[cid]) + "</span>"
+              : "") +
           "</div>" +
           '<div class="acc-group-body">' +
             '<div class="acc-grid">' + slice.map(function (o) { return cardHtml(o, toks); }).join("") + "</div>" +
@@ -2409,9 +2485,33 @@
   /* =========================================================
    * 二、搭配计划（#plans）
    * ========================================================= */
+  /* 站内对外发布的方案深链（index.html 三张方案卡的「查看该方案配置单」指向它们）。
+     为什么单独登记一份字面量：卡片 id 是渲染时拼的（"plan-" + pl.id），
+     只在运行时存在；而浏览器解析 #fragment 发生在渲染之前，所以要渲染完再补一次定位，
+     否则用户点了锚点只会落在页面顶部（这正是 ORD-31 修的 3 条死锚点）。
+     这份清单同时是「站内到底发布了哪几条深链」的唯一记录，
+     静态检查（tests/promises.cjs 的 P2）也只能查到字面量。 */
+  var PLAN_DEEPLINK = ["plan-t3000", "plan-t6000", "plan-t12000"];
+
   function initPlans() {
     var wrap = document.getElementById("plansWrap");
     if (!wrap) return;
+
+    /* 这套配置的「价格核验月份」= 它所有部件里最旧的那一个。
+       取最旧而不是最新：用户要知道的是「这套单子里最不可信的那个数是什么时候核的」。
+       部件名靠 PART_CAT 映射回品类，再查 data.js 的 categoryUpdated 账本。 */
+    function planUpdatedOf(pl) {
+      var map = D.categoryUpdated || {};
+      var months = [];
+      (pl.parts || []).forEach(function (r) {
+        var cid = PART_CAT[r[0]];
+        var m = cid && map[cid];
+        if (m && months.indexOf(m) === -1) months.push(m);
+      });
+      if (!months.length) return "";
+      months.sort();
+      return months[0];
+    }
 
     // 人群画像速览
     var pWrap = document.getElementById("personasWrap");
@@ -2442,6 +2542,7 @@
             '<span class="plan-icon">' + pl.icon + "</span>" +
             '<div><h3 class="plan-name">' + esc(pl.name) + "</h3>" +
             '<span class="plan-budget">参考预算 ' + fmtPrice(pl.price) + "</span>" +
+            (planUpdatedOf(pl) ? '<span class="plan-updated">价格核验 ' + esc(planUpdatedOf(pl)) + "</span>" : "") +
             (pl.budgetLabel ? '<span class="plan-tier">' + esc(pl.budgetLabel) + "</span>" : "") +
             "</div>" +
           "</div>" +
@@ -2452,6 +2553,21 @@
         "</article>"
       );
     }).join("");
+
+    /* 深链补定位：卡片刚渲染完，浏览器不会再解析一次 #fragment，
+       必须自己滚到目标卡。只在真的是 #plan-* 时做，避免干扰普通访问。
+       jsdom 没有布局引擎（scrollIntoView 是空实现），所以这段的验证靠
+       「调用证据」而不是「滚到了哪」——见 wr 文件的任务 2 一节。 */
+    var hash = String(window.location.hash || "").replace(/^#/, "");
+    if (hash && /^plan-/.test(hash)) {
+      var target = document.getElementById(hash);
+      if (target && target.scrollIntoView) {
+        target.scrollIntoView({ behavior: "smooth", block: "start" });
+      } else if (PLAN_DEEPLINK.indexOf(hash) > -1) {
+        /* 对外发布的深链落空 = 站内死链。宁可留痕，也不要静默落回页面顶部。 */
+        if (window.console && window.console.warn) window.console.warn("[plans] 深链目标不存在：" + hash);
+      }
+    }
   }
 
   /* =========================================================
@@ -2629,6 +2745,56 @@
   /* =========================================================
    * 四、个性化测评（#quiz）：问答 → 生成方案
    * ========================================================= */
+  function isMobileForm(form) {
+    return form === "phone" || form === "tablet";
+  }
+
+  // 取避坑条目（HTML 渲染与文本导出共用）
+  function pitfallItems(uses, form) {
+    var map = (window.PC_DATA && window.PC_DATA.pitfalls) || {};
+    var keys = [];
+    /* 手机/平板只给移动向避坑：装机、显卡、DDR4 那一套对它们是噪音，
+       而"问题必须始终对这个人成立"同样适用于结果页里的建议。 */
+    if (isMobileForm(form)) {
+      keys.push(form === "tablet" ? "tablet" : "mobile");
+      var seenM = {}, itemsM = [];
+      keys.forEach(function (k) {
+        (map[k] || []).forEach(function (x) { if (x && !seenM[x]) { seenM[x] = 1; itemsM.push(x); } });
+      });
+      return itemsM;
+    }
+    if (Array.isArray(uses)) {
+      uses.forEach(function (u) { if (u && u !== "all") keys.push(u); });
+      keys.push("common");
+    } else if (typeof uses === "string" && uses && uses !== "all") {
+      keys.push(uses); keys.push("common");
+    } else {
+      keys.push("common");
+    }
+    var seen = {}, items = [];
+    keys.forEach(function (k) {
+      (map[k] || []).forEach(function (t) {
+        if (t && !seen[t]) { seen[t] = 1; items.push(t); }
+      });
+    });
+    return items;
+  }
+
+  function pitfallsHTML(uses, form, exp) {
+    var items = pitfallItems(uses, form);
+    /* 经验这一题不改型号（配置单同款优先），但必须改变"接下来怎么做"：
+       纯新手多一条装机顺序提示，老玩家不占版面。 */
+    if (exp === "new" && !isMobileForm(form)) {
+      items = items.concat(["第一次自己装机：先把 CPU、内存、散热装到主板上再进机箱，最后接电源线；不确定就走「使用指南」的装机步骤，或约京东上门装机（约 100-200 元）。"]);
+    }
+    if (!items.length) return "";
+    return '<div class="res-section"><span class="res-label">避坑提示：这几处最容易翻车</span>' +
+      '<div class="look-pitfalls">' +
+      items.map(function (t) { return '<div class="pitfall">' + esc(t) + "</div>"; }).join("") +
+      "</div></div>";
+  }
+
+
   function initQuiz() {
     var box = document.getElementById("quizBox");
     if (!box) return;
@@ -2725,9 +2891,6 @@
       return answers[qid] || [];
     }
 
-    function isMobileForm(form) {
-      return form === "phone" || form === "tablet";
-    }
 
     /* 选项查表：形态相关的 id（p_photo / t_draw）要映射回方案池的四种用途，
        不能直接把新 id 丢给 pickPlan —— 那里的 uses 只有 office/game/create/portable。 */
@@ -2776,50 +2939,7 @@
     /* 偏好打分：只决定"同类里挑哪件"，绝不越过价位窗口。
        把 360 水冷换成百元风冷是另一种错，所以偏好只在窗口内做筛选。 */
 
-    // 取避坑条目（HTML 渲染与文本导出共用）
-    function pitfallItems(uses, form) {
-      var map = (window.PC_DATA && window.PC_DATA.pitfalls) || {};
-      var keys = [];
-      /* 手机/平板只给移动向避坑：装机、显卡、DDR4 那一套对它们是噪音，
-         而"问题必须始终对这个人成立"同样适用于结果页里的建议。 */
-      if (isMobileForm(form)) {
-        keys.push(form === "tablet" ? "tablet" : "mobile");
-        var seenM = {}, itemsM = [];
-        keys.forEach(function (k) {
-          (map[k] || []).forEach(function (x) { if (x && !seenM[x]) { seenM[x] = 1; itemsM.push(x); } });
-        });
-        return itemsM;
-      }
-      if (Array.isArray(uses)) {
-        uses.forEach(function (u) { if (u && u !== "all") keys.push(u); });
-        keys.push("common");
-      } else if (typeof uses === "string" && uses && uses !== "all") {
-        keys.push(uses); keys.push("common");
-      } else {
-        keys.push("common");
-      }
-      var seen = {}, items = [];
-      keys.forEach(function (k) {
-        (map[k] || []).forEach(function (t) {
-          if (t && !seen[t]) { seen[t] = 1; items.push(t); }
-        });
-      });
-      return items;
-    }
 
-    function pitfallsHTML(uses, form, exp) {
-      var items = pitfallItems(uses, form);
-      /* 经验这一题不改型号（配置单同款优先），但必须改变"接下来怎么做"：
-         纯新手多一条装机顺序提示，老玩家不占版面。 */
-      if (exp === "new" && !isMobileForm(form)) {
-        items = items.concat(["第一次自己装机：先把 CPU、内存、散热装到主板上再进机箱，最后接电源线；不确定就走「使用指南」的装机步骤，或约京东上门装机（约 100-200 元）。"]);
-      }
-      if (!items.length) return "";
-      return '<div class="res-section"><span class="res-label">避坑提示：这几处最容易翻车</span>' +
-        '<div class="look-pitfalls">' +
-        items.map(function (t) { return '<div class="pitfall">' + esc(t) + "</div>"; }).join("") +
-        "</div></div>";
-    }
 
     function generate() {
       var form = answerOf("form")[0] || "";
@@ -3011,6 +3131,7 @@
           '<h3 class="result-title">你的个性化方案</h3>' +
           '<div class="result-persona"><span class="res-label">需求画像</span>' + profile + "</div>" +
           '<div class="result-persona"><span class="res-label">适合人群</span>' + personas + "</div>" +
+          brandCoverageNote(form, brandPref) +
           lookHtml +
           '<div class="smart-res-head reveal in">' +
             (sets.length > 1 ? "为你匹配 " + sets.length + " 套方案，点标签切换对比；每套都含全套配置单" : "你的全套配置单") +
@@ -3325,10 +3446,43 @@
       return (D.partCatalog || []).filter(function (c) { return c.key === key; })[0] || null;
     }
 
+    /* 「¥900-1300」→ 900。
+       原来写的是 replace(/[^0-9]/g,"")，区间会被拼成 9001300 ——
+       于是 defaultOpt 永远挑到目录里最贵的那一件：¥5000 预算选到核显入门档，
+       配置单里却是 Ultra 9 285K + DDR5 64G，合计 ¥26799。
+       功能没挂载过，所以这个 bug 一直没人看见（本次挂上去才暴露）。
+       取区间下限作为「参考价」：配置单写的就是这个档位的起步价。 */
+    function refPriceOf(s) {
+      var m = String(s == null ? "" : s).replace(/,/g, "").match(/\d+/);
+      return m ? parseInt(m[0], 10) : 0;
+    }
+
+    /* 型号里的可比串：i5-14600KF → i5 / 14600kf、DDR5 32G → ddr5 / 32g。
+       只留长度 ≥3 的：'r5' 'i5' 这类系列名在不同档位里重复出现，拿它比必然误配，
+       而 '32g' '16g' 这种容量串恰恰是要比的。 */
+    function modelKeys(s) {
+      return (String(s || "").match(/[A-Za-z]*\d+[A-Za-z0-9]*/g) || [])
+        .map(function (x) { return x.toLowerCase(); })
+        .filter(function (x) { return x.length >= 3; });
+    }
+
     function defaultOpt(part) {
       var cat = catalogOf(part[0]);
       if (!cat) return -1;
-      var refPrice = parseInt(String(part[2]).replace(/[^0-9]/g, ""), 10) || 0;
+      /* 配置单这一行已经点名了型号，目录里若有同型号的档位，先认它。
+         只按价位最近挑会挑出冲突件：核显入门档的 CPU 行（R5 8500G ¥900-1300）
+         最近的是「i3-14100F / R5 5500 ¥800」——14100F 没有核显，
+         而这条方案里根本没有独显行，点上就是一台点不亮的机器。
+         按「命中几个型号串」打分而不是「命中任意一个」：
+         'RTX 5060 Ti 16G' 与 'RTX 5060' 共有一个 5060，只看有无就会挑到便宜那档。 */
+      var want = modelKeys(part[1]);
+      var named = -1, namedScore = 0;
+      cat.options.forEach(function (o, i) {
+        var hit = modelKeys(o.n).filter(function (k) { return want.indexOf(k) > -1; }).length;
+        if (hit > namedScore) { namedScore = hit; named = i; }
+      });
+      if (named > -1) return named;
+      var refPrice = refPriceOf(part[2]);
       var best = 0, bd = Infinity;
       cat.options.forEach(function (o, i) {
         var d = Math.abs(o.p - refPrice);
@@ -3344,7 +3498,7 @@
         var cat = catalogOf(part[0]);
         var price = opt >= 0
           ? cat.options[opt].p
-          : (parseInt(String(part[2]).replace(/[^0-9]/g, ""), 10) || 0);
+          : refPriceOf(part[2]);
         var name = opt >= 0 ? cat.options[opt].n : part[1];
         return { part: part, opt: opt, price: price, name: name };
       });
